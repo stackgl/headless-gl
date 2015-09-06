@@ -2739,12 +2739,22 @@ gl.shaderSource = function shaderSource(shader, source) {
     setError(this, gl.INVALID_VALUE)
     return
   }
-  source += ''
-  if(!isValidString(source)) {
+
+  var lines = source.split('\n');
+  var N = lines.length;
+  var newLines = [];
+  for (var i = 0; i < N; ++i) {
+    if (lines[i].indexOf('precision') != -1) continue;
+    else newLines.push(lines[i]);
+  }
+  var newSource = newLines.join('\n')
+
+  newSource += ''
+  if(!isValidString(newSource)) {
     setError(this, gl.INVALID_VALUE)
     return
   } else if(checkWrapper(this, shader, WebGLShader)) {
-    return _shaderSource.call(this, shader._|0, source)
+    return _shaderSource.call(this, shader._|0, newSource)
   }
 }
 
