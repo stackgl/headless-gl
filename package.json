@@ -13,7 +13,8 @@
   "scripts": {
     "test": "tape test/*.js",
     "build": "node-gyp rebuild --verbose",
-    "install": "npm run build"
+    "configure_angle": "(cd angle ; git submodule init ; git submodule update)"
+    "install": "npm run configure_angle ; npm run build"
   },
   "dependencies": {
     "bindings": "^1.2.1",
