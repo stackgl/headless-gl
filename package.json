@@ -19,8 +19,7 @@
     "bindings": "^1.2.1",
     "bit-twiddle": "^1.0.2",
     "nan": "^1.8.4",
-    "node-gyp": "^2.0.2",
-    "prebuild": "^2.5.1"
+    "node-gyp": "^2.0.2"
   },
   "devDependencies": {
     "gl-conformance": "^1.0.0",
