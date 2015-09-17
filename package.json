@@ -13,7 +13,7 @@
   "scripts": {
     "test": "tape test/*.js",
     "build": "node-gyp rebuild --verbose",
-    "install": "node-gyp rebuild"
+    "install": "git submodule init ; git submodule update ; node-gyp rebuild"
   },
   "dependencies": {
     "bindings": "^1.2.1",

@@ -1,3 +1,3 @@
 [submodule "angle"]
 	path = angle
-	url = git@github.com:mikolalysenko/angle.git
+	url = https://github.com/mikolalysenko/angle.git
