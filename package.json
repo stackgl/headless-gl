@@ -14,7 +14,7 @@
     "test": "tape test/*.js",
     "build": "node-gyp rebuild --verbose",
     "prebuild": "prebuild -t 0.10.40 -t 0.12.7 -t 1.0.4 -t 1.8.4 -t 2.4.0",
-    "install": "prebuild --download"
+    "install": "npm run build"
   },
   "dependencies": {
     "bindings": "^1.2.1",
