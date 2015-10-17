@@ -12,7 +12,6 @@
 
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
-#include <GLES3/gl3ext.h>
 
 enum GLObjectType {
   GLOBJECT_TYPE_BUFFER,
@@ -116,9 +115,6 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static NAN_METHOD(SetError);
   static NAN_METHOD(GetError);
 
-  //Display resizing
-  static NAN_METHOD(Resize);
-
   //Destructors
   void dispose();
 
@@ -126,6 +122,10 @@ struct WebGLRenderingContext : public node::ObjectWrap {
 
   static NAN_METHOD(New);
   static NAN_METHOD(Destroy);
+
+  static NAN_METHOD(VertexAttribDivisor);
+  static NAN_METHOD(DrawArraysInstanced);
+  static NAN_METHOD(DrawElementsInstanced);
 
   static NAN_METHOD(Uniform1f);
   static NAN_METHOD(Uniform2f);

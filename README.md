@@ -37,12 +37,17 @@ For general information on building native modules, see the [`node-gyp`](https:/
 * Python 2.7
 * XCode
 
-#### Linux
+#### Ubuntu/Debian
 
 * Python 2.7
 * A GNU C++ environment (available via the `build-essential` package on `apt`)
+* libxi-dev
 * Working and up to date OpenGL drivers
 * GLEW
+
+```
+$ sudo apt-get install -y build-essential libxi-dev libglu1-mesa-dev
+```
 
 #### Windows
 
@@ -111,20 +116,25 @@ It depends on what you are trying to do.  [node-webgl](https://github.com/mikese
 
 ### How are `<image>` and `<video>` elements implemented?
 
-They aren't for now.  If you want to upload data to a texture, you will need to unpack the pixels into a `Uint8Array` and stick on the GPU yourself.
+They aren't for now.  If you want to upload data to a texture, you will need to unpack the pixels into a `Uint8Array` and feed it into `texImage2D`.
 
 ### What extensions are supported?
 
-None at the moment
+See https://github.com/stackgl/headless-gl/issues/5 for current status.
 
 ### How is the development environment set up?
 
-1. Clone this repo
-1. Init the ANGLE git submodule
-1. Run `npm install`
-1. To do a partial rebuild, `cd` into the build directory and run `make`
-1. To do a full rebuild, run `npm build`
-1. To run all the test cases, run `npm test`
+1. Clone this repo: `git clone git@github.com:stackgl/headless-gl.git`
+1. Switch to the headless gl directory: `cd headless-gl`
+1. Initialize the angle submodule: `git submodule init`
+1. Update the angle submodule: `git submodule update`
+1. Install npm dependencies: `npm install`
+1. Run node-gyp to generate build scripts: `npm run build`
+
+Once this is done, you should be good to go!  A few more things
+
+* To run the test cases, use the command `npm test`, or execute specific by just running it using node.
+* On a Unix-like platform, you can do incremental rebuilds by going into the `build/` directory and running `make`
 
 This should work on most environments, but hasn't been tested thoroughly with windows.
 

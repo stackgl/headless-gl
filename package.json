@@ -1,6 +1,6 @@
 {
   "name": "gl",
-  "version": "2.1.2",
+  "version": "2.1.4",
   "description": "Creates a WebGL context without a window",
   "main": "index.js",
   "directories": {
@@ -8,22 +8,25 @@
   },
   "browser": "browser_index.js",
   "engines": {
-    "node": ">=0.7.0"
+    "node": ">=0.8.0"
   },
   "scripts": {
     "test": "tape test/*.js",
+    "rebuild": "node-gyp rebuild --verbose",
     "build": "node-gyp rebuild --verbose",
-    "install": "git submodule init ; git submodule update ; node-gyp rebuild"
+    "prebuild": "prebuild",
+    "install": "prebuild --download"
   },
   "dependencies": {
     "bindings": "^1.2.1",
     "bit-twiddle": "^1.0.2",
-    "nan": "^1.8.4",
-    "node-gyp": "^2.0.2"
+    "glsl-tokenizer": "^2.0.2",
+    "nan-typedarrays": "^1.0.0",
+    "node-gyp": "^3.0.2",
+    "prebuild": "^2.5.1"
   },
   "devDependencies": {
-    "gl-conformance": "^1.0.0",
-    "prebuild": "^2.4.0",
+    "gl-conformance": "^1.0.4",
     "tape": "^4.0.1"
   },
   "repository": {

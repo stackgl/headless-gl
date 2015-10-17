@@ -66,7 +66,7 @@ function createContext(width, height, options) {
   gl._activeRenderbuffer       = null
 
   //Initialize texture units
-  var numTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS)
+  var numTextures = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS)
   gl._textureUnits = new Array(numTextures)
   for(var i=0; i<numTextures; ++i) {
     gl._textureUnits[i] = new webgl.WebGLTextureUnit(i)
@@ -75,6 +75,8 @@ function createContext(width, height, options) {
   gl.activeTexture(gl.TEXTURE0)
 
   gl._errorStack = []
+
+  gl.isContextLost = false
 
   //Initialize vertex attributes
   var numAttribs = gl.getParameter(gl.MAX_VERTEX_ATTRIBS)
@@ -95,6 +97,9 @@ function createContext(width, height, options) {
 
   //Allocate framebuffer
   webgl.allocateDrawingBuffer(gl, width, height)
+
+  var attrib0Buffer = gl.createBuffer()
+  gl._attrib0Buffer = attrib0Buffer
 
   //Initialize defaults
   gl.bindBuffer(gl.ARRAY_BUFFER, null)

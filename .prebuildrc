@@ -1,0 +1,20 @@
+# strip debug info from resulting webgl.node
+strip=true
+
+# abi 11
+target[] = 0.10.40
+
+# abi 14
+target[] = 0.12.7
+
+# abi 42
+target[] = 1.0.4
+
+# abi 43
+target[] = 1.8.4
+
+# abi 44
+target[] = 2.4.0
+
+target[] = 3.3.1
+target[] = 4.1.1

@@ -22,7 +22,7 @@
           'src/webgl.cc'
       ],
       'include_dirs': [
-        "<!(node -e \"require('nan')\")",
+        "<!(node -e \"require('nan-typedarrays')\")",
         '<(module_root_dir)/deps/include',
         "angle/include"
       ],
@@ -33,7 +33,6 @@
         ['OS=="mac"', {
             'libraries': [
                 '-framework QuartzCore',
-                '-framework CoreGraphics',
                 '-framework Quartz'
             ],
         }],

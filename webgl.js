@@ -2,8 +2,13 @@
 
 var bits = require('bit-twiddle')
 var nativeGL = require('bindings')('webgl')
+var tokenize = require('glsl-tokenizer/string')
 
 var HEADLESS_VERSION = require('./package.json').version
+
+//These are defined by the WebGL spec
+var MAX_UNIFORM_LENGTH        = 256
+var MAX_ATTRIBUTE_LENGTH      = 256
 
 //We need to wrap some of the native WebGL functions to handle certain error codes and check input values
 var gl = nativeGL.WebGLRenderingContext.prototype
@@ -27,6 +32,8 @@ function WebGLProgram(_, ctx) {
   this._ctx           = ctx
   this._linkCount     = 0
   this._pendingDelete = false
+  this._linkStatus    = false
+  this._linkInfoLog   = 'not linked'
   this._references    = []
   this._refCount      = 0
   this._attributes    = []
@@ -34,12 +41,16 @@ function WebGLProgram(_, ctx) {
 }
 exports.WebGLProgram = WebGLProgram
 
-function WebGLShader(_, ctx) {
+function WebGLShader(_, ctx, type) {
   this._              = _
+  this._type          = type
   this._ctx           = ctx
   this._pendingDelete = false
   this._references    = []
   this._refCount      = 0
+  this._source        = ''
+  this._compileStatus = false
+  this._compileInfo   = ''
 }
 exports.WebGLShader = WebGLShader
 
@@ -62,6 +73,10 @@ function WebGLFramebuffer(_, ctx) {
   this._pendingDelete = false
   this._references    = []
   this._refCount      = 0
+
+  this._width         = 0
+  this._height        = 0
+
   this._attachments   = {}
   this._attachments[gl.COLOR_ATTACHMENT0]        = null
   this._attachments[gl.DEPTH_ATTACHMENT]         = null
@@ -117,8 +132,8 @@ function WebGLActiveInfo(_) {
 exports.WebGLActiveInfo = WebGLActiveInfo
 
 function WebGLShaderPrecisionFormat(_) {
-  this.rangeMin = _.rangeMin
-  this.rangeMax = _.rangeMax
+  this.rangeMin  = _.rangeMin
+  this.rangeMax  = _.rangeMax
   this.precision = _.precision
 }
 exports.WebGLShaderPrecisionFormat = WebGLShaderPrecisionFormat
@@ -160,6 +175,11 @@ function WebGLVertexAttribute(ctx, idx) {
   this._pointerOffset = 0
   this._pointerSize   = 0
   this._pointerStride = 0
+  this._pointerType   = gl.FLOAT
+  this._pointerNormal = false
+  this._inputSize     = 4
+  this._inputStride   = 0
+  this._data          = new Float32Array([0,0,0,1])
 }
 exports.WebGLVertexAttribute = WebGLVertexAttribute
 
@@ -190,7 +210,9 @@ function unpackTypedArray(array) {
 
 //Don't allow: ", $, `, @, \, ', \0
 function isValidString(str) {
-    return !(/[\"\$\`\@\\\'\0]/.test(str))
+  //Remove comments first
+  var c = str.replace(/(?:\/\*(?:[\s\S]*?)\*\/)|(?:([\s;])+\/\/(?:.*)$)/gm, '')
+  return !(/[\"\$\`\@\\\'\0]/.test(c))
 }
 
 function isTypedArray(data) {
@@ -304,6 +326,9 @@ function precheckFramebufferStatus(framebuffer) {
      (colorWidth !== width || colorHeight !== height)) {
     return gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS
   }
+
+  framebuffer._width  = colorWidth
+  framebuffer._height = colorHeight
 
   return gl.FRAMEBUFFER_COMPLETE
 }
@@ -473,7 +498,8 @@ function checkOwns(context, object) {
 
 function checkUniform(program, location) {
   return location instanceof WebGLUniformLocation &&
-         location._program === program
+         location._program   === program &&
+         location._linkCount === program._linkCount
 }
 
 function checkLocation(context, location) {
@@ -586,7 +612,6 @@ function setFramebufferAttachment(framebuffer, object, attachment) {
   link(framebuffer, object)
 }
 
-var _resize = gl.resize
 gl.resize = function(width, height) {
   width  = width | 0
   height = height | 0
@@ -669,7 +694,7 @@ gl.bindAttribLocation = function bindAttribLocation(program, index, name) {
     throw new TypeError('bindAttribLocation(WebGLProgram, GLint, String)')
   }
   name += ''
-  if(!isValidString(name)) {
+  if(!isValidString(name) || name.length > MAX_ATTRIBUTE_LENGTH) {
     setError(this, gl.INVALID_VALUE)
     return
   } else if(/^_?webgl_a/.test(name)) {
@@ -1150,12 +1175,83 @@ gl.colorMask = function colorMask(red, green, blue, alpha) {
 }
 
 var _compileShader = gl.compileShader
+
+function validGLSLIdentifier(str) {
+  if(str.indexOf('webgl_') === 0 ||
+     str.indexOf('_webgl_') === 0 ||
+     str.length > 256) {
+    return false
+  }
+  return true
+}
+
+function checkShaderSource(context, shader) {
+  var type   = shader._type
+  var source = shader._source
+
+  var tokens = tokenize(source)
+
+  var errorStatus = false
+  var errorLog = []
+
+  for(var i=0; i<tokens.length; ++i) {
+    var tok = tokens[i]
+    switch(tok.type) {
+      case 'ident':
+        if(!validGLSLIdentifier(tok.data)) {
+          errorStatus = true
+          errorLog.push(tok.line + ':' + tok.column +
+            ' invalid identifier - ' + tok.data)
+        }
+      break
+      case 'preprocessor':
+        var bodyToks = tokenize(tok.data.match(/^\s*\#\s*(.*)$/)[1])
+        for(var j=0; j<bodyToks.length; ++j) {
+          var btok = bodyToks[j]
+          if(btok.type === 'ident' || btok.type === void 0) {
+            if(!validGLSLIdentifier(btok.data)) {
+              errorStatus = true
+              errorLog.push(tok.line + ':' + btok.column +
+                ' invalid identifier - ' +  btok.data)
+            }
+          }
+        }
+      break
+      case 'keyword':
+        switch(tok.data) {
+          case 'do':
+            errorStatus = true
+            errorLog.push(tok.line + ':' + tok.column + ' do not supported')
+          break
+        }
+      break
+    }
+  }
+
+  if(errorStatus) {
+    shader._compileInfo = errorLog.join('\n')
+  }
+  return !errorStatus
+}
+
 gl.compileShader = function compileShader(shader) {
   if(!checkObject(shader)) {
     throw new TypeError('compileShader(WebGLShader)')
   }
-  if(checkWrapper(this, shader, WebGLShader)) {
-    return _compileShader.call(this, shader._)
+  if(checkWrapper(this, shader, WebGLShader) &&
+     checkShaderSource(this, shader)) {
+    var prevError = this.getError()
+    _compileShader.call(this, shader._|0)
+    var error = this.getError()
+    shader._compileStatus = !!_getShaderParameter.call(
+      this,
+      shader._|0,
+      gl.COMPILE_STATUS)
+    shader._compileInfo = _getShaderInfoLog.call(
+      this,
+      shader._|0)
+    this.getError()
+    setError(this, prevError || error)
   }
 }
 
@@ -1266,8 +1362,8 @@ gl.cullFace = function cullFace(mode) {
 //Object constructor methods
 function createObject(method, wrapper, refset) {
   var native = gl[method]
-  gl[method] = function(type) {
-    var id = native.call(this, type)
+  gl[method] = function() {
+    var id = native.call(this)
     if(id <= 0) {
       return null
     } else {
@@ -1280,14 +1376,27 @@ var _createBuffer       = gl.createBuffer
 var _createFramebuffer  = gl.createFramebuffer
 var _createProgram      = gl.createProgram
 var _createRenderbuffer = gl.createRenderbuffer
-var _createShader       = gl.createShader
 var _createTexture      = gl.createTexture
 createObject('createBuffer',       WebGLBuffer,       '_buffers')
 createObject('createFramebuffer',  WebGLFramebuffer,  '_framebuffers')
 createObject('createProgram',      WebGLProgram,      '_programs')
 createObject('createRenderbuffer', WebGLRenderbuffer, '_renderbuffers')
-createObject('createShader',       WebGLShader,       '_shaders')
 createObject('createTexture',      WebGLTexture,      '_textures')
+
+var _createShader       = gl.createShader
+gl.createShader = function(type) {
+  type |= 0
+  if(type !== gl.FRAGMENT_SHADER &&
+     type !== gl.VERTEX_SHADER) {
+    setError(this, gl.INVALID_ENUM)
+    return null
+  }
+  var id = _createShader.call(this, type)
+  if(id < 0) {
+    return null
+  }
+  return this._shaders[id] = new WebGLShader(id, this, type)
+}
 
 //Generic object deletion method
 function deleteObject(name, type, refset) {
@@ -1583,7 +1692,61 @@ gl.disableVertexAttribArray = function disableVertexAttribArray(index) {
   this._vertexAttribs[index]._isPointer = false
 }
 
+var _vertexAttribDivisor = gl.vertexAttribDivisor
+gl.vertexAttribDivisor = void 0
+
+function beginAttrib0Hack(context) {
+  _bindBuffer.call(context, gl.ARRAY_BUFFER, context._attrib0Buffer._)
+  _bufferData.call(
+    context,
+    gl.ARRAY_BUFFER,
+    context._vertexAttribs[0]._data,
+    gl.STREAM_DRAW)
+  _enableVertexAttribArray.call(context, 0)
+  _vertexAttribPointer.call(context, 0, 4, gl.FLOAT, false, 0, 0)
+  _vertexAttribDivisor.call(context, 0, 1)
+}
+
+function endAttrib0Hack(context) {
+  var attrib = context._vertexAttribs[0]
+  if(attrib._pointerBuffer) {
+    _bindBuffer.call(context, gl.ARRAY_BUFFER, attrib._pointerBuffer._)
+  } else {
+    _bindBuffer.call(context, gl.ARRAY_BUFFER, 0)
+  }
+  _vertexAttribPointer.call(context,
+    0,
+    attrib._inputSize,
+    attrib._pointerType,
+    attrib._pointerNormal,
+    attrib._inputStride,
+    attrib._pointerOffset)
+  _vertexAttribDivisor.call(context, 0, 0)
+  _disableVertexAttribArray.call(context, 0)
+  if(context._activeArrayBuffer) {
+    _bindBuffer.call(context, gl.ARRAY_BUFFER, context._activeArrayBuffer._)
+  } else {
+    _bindBuffer.call(context, gl.ARRAY_BUFFER, 0)
+  }
+}
+
+function checkStencilState(context) {
+  if(context.getParameter(gl.STENCIL_WRITEMASK) !==
+      context.getParameter(gl.STENCIL_BACK_WRITEMASK) ||
+     context.getParameter(gl.STENCIL_VALUE_MASK) !==
+      context.getParameter(gl.STENCIL_BACK_VALUE_MASK) ||
+     context.getParameter(gl.STENCIL_REF) !==
+      context.getParameter(gl.STENCIL_BACK_REF)) {
+    setError(context, gl.INVALID_OPERATION)
+    return false
+  }
+  return true
+}
+
+
 var _drawArrays = gl.drawArrays
+var _drawArraysInstanced = gl.drawArraysInstanced
+gl.drawArraysInstanced = void 0
 gl.drawArrays = function drawArrays(mode, first, count) {
   mode  |= 0
   first |= 0
@@ -1591,6 +1754,10 @@ gl.drawArrays = function drawArrays(mode, first, count) {
 
   if(first < 0 || count < 0) {
     setError(this, gl.INVALID_VALUE)
+    return
+  }
+
+  if(!checkStencilState(this)) {
     return
   }
 
@@ -1613,19 +1780,31 @@ gl.drawArrays = function drawArrays(mode, first, count) {
     maxIndex = (count + first - 1)>>>0
   }
   if(checkVertexAttribState(this, maxIndex)) {
-    return _drawArrays.call(this, mode, first, reducedCount)
+    if(this._vertexAttribs[0]._isPointer) {
+      return _drawArrays.call(this, mode, first, reducedCount)
+    } else {
+      beginAttrib0Hack(this)
+      _drawArraysInstanced.call(this, mode, first, reducedCount, 1)
+      endAttrib0Hack(this)
+    }
   }
 }
 
 var _drawElements = gl.drawElements
-gl.drawElements = function drawElements(mode, count, type, offset) {
+var _drawElementsInstanced = gl.drawElementsInstanced
+gl.drawElementsInstanced = void 0
+gl.drawElements = function drawElements(mode, count, type, ioffset) {
   mode    |= 0
   count   |= 0
   type    |= 0
-  offset  |= 0
+  ioffset |= 0
 
-  if(count < 0 || offset < 0) {
+  if(count < 0 || ioffset < 0) {
     setError(this, gl.INVALID_VALUE)
+    return
+  }
+
+  if(!checkStencilState(this)) {
     return
   }
 
@@ -1637,6 +1816,7 @@ gl.drawElements = function drawElements(mode, count, type, offset) {
 
   //Unpack element data
   var elementData = null
+  var offset = ioffset
   if(type === gl.UNSIGNED_SHORT) {
     if(offset % 2) {
       setError(this, gl.INVALID_OPERATION)
@@ -1711,7 +1891,13 @@ gl.drawElements = function drawElements(mode, count, type, offset) {
 
   if(checkVertexAttribState(this, maxIndex)) {
     if(reducedCount > 0) {
-      return _drawElements.call(this, mode, reducedCount, type, offset)
+      if(this._vertexAttribs[0]._isPointer) {
+        return _drawElements.call(this, mode, reducedCount, type, ioffset)
+      } else {
+        beginAttrib0Hack(this)
+        _drawElementsInstanced.call(this, mode, reducedCount, type, ioffset, 1)
+        endAttrib0Hack(this)
+      }
     }
   }
 }
@@ -1720,10 +1906,6 @@ var _enable = gl.enable
 gl.enable = function enable(cap) {
   cap |= 0
   _enable.call(this, cap)
-  if(cap === gl.TEXTURE_2D ||
-     cap === gl.TEXTURE_CUBE_MAP) {
-    activeTextureUnit(this)._mode = cap
-  }
 }
 
 var _enableVertexAttribArray = gl.enableVertexAttribArray
@@ -1901,7 +2083,7 @@ gl.framebufferTexture2D = function framebufferTexture2D(
   }
 
   framebuffer._attachmentLevel[attachment] = level
-  framebuffer._attachmentFace[attachment]  = target
+  framebuffer._attachmentFace[attachment]  = textarget
   setFramebufferAttachment(framebuffer, texture, attachment)
   updateFramebufferAttachments(framebuffer)
 }
@@ -1976,12 +2158,12 @@ gl.getAttribLocation = function getAttribLocation(program, name) {
     throw new TypeError('getAttribLocation(WebGLProgram, String)')
   }
   name += ''
-  if(!isValidString(name)) {
+  if(!isValidString(name) || name.length > MAX_ATTRIBUTE_LENGTH) {
     setError(this, gl.INVALID_VALUE)
   } else if(checkWrapper(this, program, WebGLProgram)) {
     return _getAttribLocation.call(this, program._|0, name+'')
   }
-  return null
+  return -1
 }
 
 var _getParameter = gl.getParameter
@@ -2224,6 +2406,8 @@ gl.getProgramParameter = function getProgramParameter(program, pname) {
         return program._pendingDelete
 
       case gl.LINK_STATUS:
+        return program._linkStatus
+
       case gl.VALIDATE_STATUS:
         return !!_getProgramParameter.call(this, program._, pname)
 
@@ -2242,7 +2426,7 @@ gl.getProgramInfoLog = function getProgramInfoLog(program) {
   if(!checkObject(program)) {
     throw new TypeError('getProgramInfoLog(WebGLProgram)')
   } else if(checkWrapper(this, program, WebGLProgram)) {
-    return _getProgramInfoLog.call(this, program._|0)
+    return program._linkInfoLog
   }
   return ''
 }
@@ -2289,9 +2473,9 @@ gl.getShaderParameter = function getShaderParameter(shader, pname) {
       case gl.DELETE_STATUS:
         return shader._pendingDelete
       case gl.COMPILE_STATUS:
-        return !!_getShaderParameter.call(this, shader._, pname)
+        return shader._compileStatus
       case gl.SHADER_TYPE:
-        return _getShaderParameter.call(this, shader._, pname)|0
+        return shader._type
     }
     setError(this, gl.INVALID_ENUM)
   }
@@ -2303,7 +2487,7 @@ gl.getShaderInfoLog = function getShaderInfoLog(shader) {
   if(!checkObject(shader)) {
     throw new TypeError('getShaderInfoLog(WebGLShader)')
   } else if(checkWrapper(this, shader, WebGLShader)) {
-    return _getShaderInfoLog.call(this, shader._|0)
+    return shader._compileInfo
   }
   return ''
 }
@@ -2313,7 +2497,7 @@ gl.getShaderSource = function getShaderSource(shader) {
   if(!checkObject(shader)) {
     throw new TypeError('Input to getShaderSource must be an object')
   } else if(checkWrapper(this, shader, WebGLShader)) {
-    return _getShaderSource.call(this, shader._|0)
+    return shader._source
   }
   return ''
 }
@@ -2356,8 +2540,11 @@ gl.getUniform = function getUniform(program, location) {
     return null
   } else if(!location) {
     return null
-  } else if(checkWrapper(this, program, WebGLProgram) &&
-     checkUniform(program, location)) {
+  } else if(checkWrapper(this, program, WebGLProgram)) {
+    if(!checkUniform(program, location)) {
+      setError(this, gl.INVALID_OPERATION)
+      return null
+    }
     var data = _getUniform.call(this, program._|0, location._|0)
     if(!data) {
       return null
@@ -2477,27 +2664,62 @@ gl.getVertexAttrib = function getVertexAttrib(index, pname) {
     setError(this, gl.INVALID_VALUE)
     return null
   }
+  var attrib = this._vertexAttribs[index]
   switch(pname) {
     case gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
-      return this._vertexAttribs[index]._pointerBuffer
+      return attrib._pointerBuffer
+    case gl.VERTEX_ATTRIB_ARRAY_ENABLED:
+      return attrib._isPointer
+    case gl.VERTEX_ATTRIB_ARRAY_SIZE:
+      return attrib._inputSize
+    case gl.VERTEX_ATTRIB_ARRAY_STRIDE:
+      return attrib._inputStride
+    case gl.VERTEX_ATTRIB_ARRAY_TYPE:
+      return attrib._pointerType
+    case gl.VERTEX_ATTRIB_ARRAY_NORMALIZED:
+      return attrib._pointerNormal
     case gl.CURRENT_VERTEX_ATTRIB:
-      return new Float32Array(_getVertexAttrib.call(this, index, pname))
+      return new Float32Array(attrib._data)
     default:
-      return _getVertexAttrib.call(this, index, pname)
+      setError(this, gl.INVALID_ENUM)
+      return null
   }
 }
 
 var _getVertexAttribOffset = gl.getVertexAttribOffset
 gl.getVertexAttribOffset = function getVertexAttribOffset(index, pname) {
-  if(pname === gl.CURRENT_VERTEX_ATTRIB) {
-    return new Float32Array(_getVertexAttribOffset(index|0, pname|0))
+  index |= 0
+  pname |= 0
+  if(index < 0 || index >= this._vertexAttribs.length) {
+    setError(this, gl.INVALID_VALUE)
+    return null
   }
-  return _getVertexAttribOffset.call(this, index|0, pname|0)
+  if(pname === gl.VERTEX_ATTRIB_ARRAY_POINTER) {
+    return this._vertexAttribs[index]._pointerOffset
+  } else {
+    setError(this, gl.INVALID_ENUM)
+    return null
+  }
 }
 
 var _hint = gl.hint
 gl.hint = function hint(target, mode) {
-  return _hint.call(this, target|0, mode|0)
+  target |= 0
+  mode |= 0
+
+  if(target !== gl.GENERATE_MIPMAP_HINT) {
+    setError(this, gl.INVALID_ENUM)
+    return
+  }
+
+  if(mode !== gl.FASTEST &&
+     mode !== gl.NICEST &&
+     mode !== gl.DONT_CARE) {
+    setError(this, gl.INVALID_ENUM)
+    return
+  }
+
+  return _hint.call(this, target, mode)
 }
 
 function isObject(method, wrapper) {
@@ -2533,6 +2755,59 @@ gl.lineWidth = function lineWidth(width) {
 }
 
 var _linkProgram = gl.linkProgram
+
+function fixupLink(context, program) {
+
+  if(!_getProgramParameter.call(context, program._, gl.LINK_STATUS)) {
+    program._linkInfoLog = _getProgramInfoLog.call(context, program)
+    return false
+  }
+
+  //Record attribute locations
+  var numAttribs = context.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES)
+  var names = new Array(numAttribs)
+  program._attributes.length = numAttribs
+  for(var i=0; i<numAttribs; ++i) {
+    names[i] = context.getActiveAttrib(program, i).name
+    program._attributes[i] = context.getAttribLocation(program, names[i])|0
+  }
+
+  //Check attribute names
+  for(var i=0; i<names.length; ++i) {
+    if(names[i].length > MAX_ATTRIBUTE_LENGTH) {
+      program._linkInfoLog = 'attribute ' + names[i] + ' is too long'
+      return false
+    }
+  }
+
+  for(var i=0; i<numAttribs; ++i) {
+    _bindAttribLocation.call(
+      context,
+      program._|0,
+      program._attributes[i],
+      names[i])
+  }
+
+  _linkProgram.call(context, program._|0)
+
+  var numUniforms = context.getProgramParameter(program, gl.ACTIVE_UNIFORMS)
+  program._uniforms.length = numUniforms
+  for(var i=0; i<numUniforms; ++i) {
+    program._uniforms[i] = context.getActiveUniform(program, i)
+  }
+
+  //Check attribute and uniform name lengths
+  for(var i=0; i<program._uniforms.length; ++i) {
+    if(program._uniforms[i].name.length > MAX_UNIFORM_LENGTH) {
+      program._linkInfoLog = 'uniform ' + program._uniforms[i].name + ' is too long'
+      return false
+    }
+  }
+
+  program._linkInfoLog = ''
+  return true
+}
+
 gl.linkProgram = function linkProgram(program) {
   if(!checkObject(program)) {
     throw new TypeError('linkProgram(WebGLProgram)')
@@ -2540,38 +2815,14 @@ gl.linkProgram = function linkProgram(program) {
   if(checkWrapper(this, program, WebGLProgram)) {
     program._linkCount += 1
     program._attributes = []
-    saveError(this)
+    var prevError = this.getError()
     _linkProgram.call(this, program._|0)
     var error = this.getError()
-    if(error === gl.NO_ERROR &&
-       this.getProgramParameter(program, gl.LINK_STATUS)) {
-
-      //Record attribute locations
-      var numAttribs = this.getProgramParameter(program, gl.ACTIVE_ATTRIBUTES)
-      var names = new Array(numAttribs)
-      program._attributes.length = numAttribs
-      for(var i=0; i<numAttribs; ++i) {
-        names[i] = this.getActiveAttrib(program, i).name
-        program._attributes[i] = this.getAttribLocation(program, names[i])|0
-      }
-
-      for(var i=0; i<numAttribs; ++i) {
-        _bindAttribLocation.call(
-          this,
-          program._|0,
-          program._attributes[i],
-          names[i])
-      }
-
-      _linkProgram.call(this, program._|0)
-
-      var numUniforms = this.getProgramParameter(program, gl.ACTIVE_UNIFORMS)
-      program._uniforms.length = numUniforms
-      for(var i=0; i<numUniforms; ++i) {
-        program._uniforms[i] = this.getActiveUniform(program, i)
-      }
+    if(error === gl.NO_ERROR) {
+      program._linkStatus = fixupLink(this, program)
     }
-    restoreError(this, error)
+    this.getError()
+    setError(this, prevError || error)
   }
 }
 
@@ -2644,6 +2895,7 @@ gl.readPixels = function readPixels(x, y, width, height, format, type, pixels) {
   if(rowStride % this._packAlignment !== 0) {
     rowStride += this._packAlignment - (rowStride % this._packAlignment)
   }
+
   var imageSize = rowStride * (height-1) + width*4
   if(imageSize <= 0) {
     return
@@ -2653,15 +2905,87 @@ gl.readPixels = function readPixels(x, y, width, height, format, type, pixels) {
     return
   }
 
-  _readPixels.call(
-    this,
-    x,
-    y,
-    width,
-    height,
-    format,
-    type,
-    unpackTypedArray(pixels))
+  //Handle reading outside the window
+  var viewWidth   = this.drawingBufferWidth
+  var viewHeight  = this.drawingBufferHeight
+
+  if(this._activeFramebuffer) {
+    viewWidth   = this._activeFramebuffer._width
+    viewHeight  = this._activeFramebuffer._height
+  }
+
+  var pixelData   = unpackTypedArray(pixels)
+
+  if(x >= viewWidth  || x + width  <= 0 ||
+     y >= viewHeight || y + height <= 0) {
+    for(var i=0; i<pixelData.length; ++i) {
+      pixelData[i] = 0
+    }
+  } else if(x < 0 || x + width > viewWidth ||
+            y < 0 || y + height > viewHeight) {
+
+    for(var i=0; i<pixelData.length; ++i) {
+      pixelData[i] = 0
+    }
+
+    var nx = x
+    var nwidth = width
+    if(x < 0) {
+      nwidth += x
+      nx = 0
+    }
+    if(nx + width > viewWidth) {
+      nwidth = viewWidth - nx
+    }
+    var ny = y
+    var nheight = height
+    if(y < 0) {
+      nheight += y
+      ny = 0
+    }
+    if(ny + height > viewHeight) {
+      nheight = viewHeight - ny
+    }
+
+    var nRowStride = nwidth * 4
+    if(nRowStride % this._packAlignment !== 0) {
+      nRowStride += this._packAlignment - (nRowStride % this._packAlignment)
+    }
+
+    if(nwidth > 0 && nheight > 0) {
+      var subPixels = new Uint8Array(nRowStride * nheight)
+      _readPixels.call(
+        this,
+        nx,
+        ny,
+        nwidth,
+        nheight,
+        format,
+        type,
+        subPixels)
+
+      var offset = 4 * (nx - x) + (ny - y) * rowStride
+      for(var j=0; j<nheight; ++j) {
+        for(var i=0; i<nwidth; ++i) {
+          for(var k=0; k<4; ++k) {
+            pixelData[offset + j*rowStride + 4*i + k] =
+              subPixels[j*nRowStride + 4*i + k]
+          }
+        }
+      }
+    }
+
+  } else {
+    _readPixels.call(
+      this,
+      x,
+      y,
+      width,
+      height,
+      format,
+      type,
+      pixelData)
+  }
 }
 
 var _renderbufferStorage = gl.renderbufferStorage
@@ -2729,6 +3053,9 @@ gl.scissor = function scissor(x, y, width, height) {
   return _scissor.call(this, x|0, y|0, width|0, height|0)
 }
 
+function wrapShader(type, source) {
+  return '#define gl_MaxDrawBuffers 1\n' + source
+}
 
 var _shaderSource = gl.shaderSource
 gl.shaderSource = function shaderSource(shader, source) {
@@ -2739,22 +3066,13 @@ gl.shaderSource = function shaderSource(shader, source) {
     setError(this, gl.INVALID_VALUE)
     return
   }
-
-  var lines = source.split('\n');
-  var N = lines.length;
-  var newLines = [];
-  for (var i = 0; i < N; ++i) {
-    if (lines[i].indexOf('precision') != -1) continue;
-    else newLines.push(lines[i]);
-  }
-  var newSource = newLines.join('\n')
-
-  newSource += ''
-  if(!isValidString(newSource)) {
+  source += ''
+  if(!isValidString(source)) {
     setError(this, gl.INVALID_VALUE)
     return
   } else if(checkWrapper(this, shader, WebGLShader)) {
-    return _shaderSource.call(this, shader._|0, newSource)
+    _shaderSource.call(this, shader._|0, wrapShader(shader._type, source))
+    shader._source = source
   }
 }
 
@@ -2799,14 +3117,14 @@ function computePixelSize(context, type, internalformat) {
       return pixelSize
     case gl.UNSIGNED_SHORT_5_6_5:
       if(internalformat !== gl.RGB) {
-        setError(this, gl.INVALID_OPERATION)
+        setError(context, gl.INVALID_OPERATION)
         break
       }
       return 2
     case gl.UNSIGNED_SHORT_4_4_4_4:
     case gl.UNSIGNED_SHORT_5_5_5_1:
       if(internalformat !== gl.RGBA) {
-        setError(this, gl.INVALID_OPERATION)
+        setError(context, gl.INVALID_OPERATION)
         break
       }
       return 2
@@ -2852,7 +3170,9 @@ function convertPixels(pixels) {
   if(typeof pixels === 'object' && pixels !== null) {
     if(pixels instanceof ArrayBuffer) {
       return new Uint8Array(pixels)
-    } else if(pixels instanceof Uint8Array) {
+    } else if(pixels instanceof Uint8Array  ||
+              pixels instanceof Uint16Array ||
+              pixels instanceof Uint8ClampedArray) {
       return unpackTypedArray(pixels)
     } else if (pixels instanceof Buffer) {
       return new Uint8Array(pixels);
@@ -2883,13 +3203,13 @@ gl.texImage2D = function texImage2D(
 
   if (arguments.length === 6) {
     pixels = border
-    type = height
+    type   = height
     format = width
 
     if (typeof pixels !== 'object' || typeof pixels.data !== 'object') {
       throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLenum, GLenum, ImageData)')
     }
-    width = pixels.width
+    width  = pixels.width
     height = pixels.height
     pixels = pixels.data
   }
@@ -2900,6 +3220,7 @@ gl.texImage2D = function texImage2D(
   width          |= 0
   height         |= 0
   border         |= 0
+  format         |= 0
   type           |= 0
 
   if(typeof pixels !== 'object' && pixels !== void 0) {
@@ -2994,13 +3315,13 @@ gl.texSubImage2D = function texSubImage2D(
 
   if (arguments.length === 7) {
     pixels = format
-    type = height
+    type   = height
     format = width
 
     if (typeof pixels !== 'object' || typeof pixels.data !== 'object') {
       throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLenum, GLenum, ImageData)')
     }
-    width = pixels.width
+    width  = pixels.width
     height = pixels.height
     pixels = pixels.data
   }
@@ -3103,6 +3424,35 @@ gl.texParameteri = function texParameteri(target, pname, param) {
   }
 }
 
+function uniformTypeSize(type) {
+  switch(type) {
+    case gl.BOOL_VEC4:
+    case gl.INT_VEC4:
+    case gl.FLOAT_VEC4:
+      return 4
+
+    case gl.BOOL_VEC3:
+    case gl.INT_VEC3:
+    case gl.FLOAT_VEC3:
+      return 3
+
+    case gl.BOOL_VEC2:
+    case gl.INT_VEC2:
+    case gl.FLOAT_VEC2:
+      return 2
+
+    case gl.BOOL:
+    case gl.INT:
+    case gl.FLOAT:
+    case gl.SAMPLER_2D:
+    case gl.SAMPLER_CUBE:
+      return 1
+
+    default:
+      return 0
+  }
+}
+
 //Generate uniform binding code
 function makeUniforms() {
   function makeMatrix(i) {
@@ -3159,12 +3509,32 @@ function makeUniforms() {
       var func = 'uniform' + i + type
       var native = gl[func]
 
-      gl[func] = function(location, x, y, z, w) {
+      var base = gl[func] = function(location, x, y, z, w) {
         if(!checkObject(location)) {
           throw new TypeError(func + '(WebGLUniformLocation, ...)')
         } else if(!location) {
           return
         } else if(checkLocationActive(this, location)) {
+          var utype = location._activeInfo.type
+          if(utype === gl.SAMPLER_2D ||
+             utype === gl.SAMPLER_CUBE) {
+            if(i !== 1) {
+              setError(this, gl.INVALID_VALUE)
+              return
+            }
+            if(type !== 'i') {
+              setError(this, gl.INVALID_OPERATION)
+              return
+            }
+            if(x < 0 || x >= this._textureUnits.length) {
+              setError(this, gl.INVALID_VALUE)
+              return
+            }
+          }
+          if(uniformTypeSize(utype) > i) {
+            setError(this, gl.INVALID_OPERATION)
+            return
+          }
           return native.call(this, location._|0, x, y, z, w)
         }
       }
@@ -3179,6 +3549,9 @@ function makeUniforms() {
           return
         } else if(typeof v !== 'object' || !v || typeof v.length !== 'number') {
           throw new TypeError('Second argument to ' + func + 'v must be array')
+        } else if(uniformTypeSize(location._activeInfo.type) > i) {
+          setError(this, gl.INVALID_OPERATION)
+          return
         } else if(v.length >= i &&
            v.length % i === 0) {
           if(location._array) {
@@ -3203,11 +3576,17 @@ function makeUniforms() {
             return
           } else if(v.length === i) {
             switch(i) {
-              case 1: return native.call(this, location._|0, v[0])
-              case 2: return native.call(this, location._|0, v[0], v[1])
-              case 3: return native.call(this, location._|0, v[0], v[1], v[2])
-              case 4: return native.call(this, location._|0, v[0], v[1], v[2], v[3])
+              case 1:
+                return base.call(this, location, v[0])
+              case 2:
+                return base.call(this, location, v[0], v[1])
+              case 3:
+                return base.call(this, location, v[0], v[1], v[2])
+              case 4:
+                return base.call(this, location, v[0], v[1], v[2], v[3])
             }
+          } else {
+            setError(this, gl.INVALID_OPERATION)
           }
         }
         setError(this, gl.INVALID_VALUE)
@@ -3245,7 +3624,13 @@ gl.useProgram = function useProgram(program) {
 var _validateProgram = gl.validateProgram
 gl.validateProgram = function validateProgram(program) {
   if(checkWrapper(this, program, WebGLProgram)) {
-    return _validateProgram.call(this, program._|0)
+    _validateProgram.call(this, program._|0)
+    var error = this.getError()
+    if(error === gl.NO_ERROR) {
+      program._linkInfoLog = _getProgramInfoLog.call(this, program._|0)
+    }
+    this.getError()
+    setError(this, error)
   }
 }
 
@@ -3253,18 +3638,34 @@ function makeVertexAttribs() {
   function makeVertex(i) {
     var func = 'vertexAttrib' + i + 'f'
     var native = gl[func]
-    gl[func] = function(idx, x, y, z, w) {
+
+    var base = gl[func] = function(idx, x, y, z, w) {
+      idx |= 0
+      if(idx < 0 || idx >= this._vertexAttribs.length) {
+        setError(this, gl.INVALID_VALUE)
+        return
+      }
+      var data = this._vertexAttribs[idx]._data
+      data[3] = 1
+      data[0] = data[1] = data[2] = 0.0
+      switch(i) {
+        case 4:   data[3] = w
+        case 3:   data[2] = z
+        case 2:   data[1] = y
+        case 1:   data[0] = x
+      }
       return native.call(this, idx|0, +x, +y, +z, +w)
     }
+
     gl[func+'v'] = function(idx, v) {
       if(typeof v === 'object' &&
          v !== null &&
          v.length === i) {
         switch(i) {
-          case 1: return native.call(this, idx|0, +v[0])
-          case 2: return native.call(this, idx|0, +v[0], +v[1])
-          case 3: return native.call(this, idx|0, +v[0], +v[1], +v[2])
-          case 4: return native.call(this, idx|0, +v[0], +v[1], +v[2], +v[3])
+          case 1: return base.call(this, idx|0, +v[0], 0, 0, 0)
+          case 2: return base.call(this, idx|0, +v[0], +v[1], 0, 0)
+          case 3: return base.call(this, idx|0, +v[0], +v[1], +v[2], 0)
+          case 4: return base.call(this, idx|0, +v[0], +v[1], +v[2], +v[3])
         }
       }
       setError(this, gl.INVALID_OPERATION)
@@ -3282,6 +3683,11 @@ gl.vertexAttribPointer = function vertexAttribPointer(
   normalized,
   stride,
   offset) {
+
+  if(stride < 0 || offset < 0) {
+    setError(this, gl.INVALID_VALUE)
+    return
+  }
 
   index  |= 0
   size   |= 0
@@ -3324,11 +3730,6 @@ gl.vertexAttribPointer = function vertexAttribPointer(
     return
   }
 
-  if(offset >= this._activeArrayBuffer._size) {
-    setError(this, gl.INVALID_VALUE)
-    return
-  }
-
   //Call vertex attrib pointer
   _vertexAttribPointer.call(this, index, size, type, normalized, stride, offset)
 
@@ -3346,6 +3747,10 @@ gl.vertexAttribPointer = function vertexAttribPointer(
   attrib._pointerSize   = size * byteSize
   attrib._pointerOffset = offset
   attrib._pointerStride = stride || (size * byteSize)
+  attrib._pointerType   = type
+  attrib._pointerNormal = normalized
+  attrib._inputStride   = stride
+  attrib._inputSize     = size
 }
 
 var _viewport = gl.viewport
@@ -3388,7 +3793,7 @@ function resizeDrawingBuffer(context, width, height) {
 
   //Update color attachment
   _bindTexture.call(
-    context,
+      context,
     gl.TEXTURE_2D,
     drawingBuffer._color)
   var colorFormat = contextAttributes.alpha ? gl.RGBA : gl.RGB

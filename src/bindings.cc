@@ -8,41 +8,37 @@
 #include <cstdlib>
 #include "webgl.h"
 
-v8::Persistent<v8::FunctionTemplate> WEBGL_TEMPLATE;
+Nan::Persistent<v8::FunctionTemplate> WEBGL_TEMPLATE;
 
 #define JS_GL_METHOD(webgl_name, method_name) \
-  webgl_template->PrototypeTemplate()->Set(\
-    NanNew<v8::String>(webgl_name),\
-    NanNew<v8::FunctionTemplate>(\
-      WebGLRenderingContext:: method_name)->GetFunction())
+  Nan::SetPrototypeTemplate(\
+      webgl_template \
+    , webgl_name\
+    , Nan::New<v8::FunctionTemplate>(\
+        WebGLRenderingContext:: method_name)->GetFunction())
 
 #define JS_CONSTANT(x, v) \
-  webgl_template->PrototypeTemplate()->Set(\
-    NanNew<v8::String>(#x), NanNew<v8::Integer>(v))
-
-/*
-#define JS_GL_STR_CONSTANT(name) \
-  webgl_template->PrototypeTemplate()->Set(\
-    NanNew<v8::String>(#name), NanNew<v8::String>(GL_ ## name))
-*/
+  Nan::SetPrototypeTemplate( \
+      webgl_template \
+    , #x \
+    , Nan::New<v8::Integer>(v))
 
 #define JS_GL_CONSTANT(name) JS_CONSTANT(name, GL_ ## name)
 
-extern "C" {
-void init(v8::Handle<v8::Object> exports)
-{
-  //Create the WebGL template
+NAN_MODULE_INIT(Init) {
   v8::Local<v8::FunctionTemplate> webgl_template =
-    NanNew<v8::FunctionTemplate>(WebGLRenderingContext::New);
+    Nan::New<v8::FunctionTemplate>(WebGLRenderingContext::New);
 
   webgl_template->InstanceTemplate()->SetInternalFieldCount(1);
-  webgl_template->SetClassName(NanNew<v8::String>("WebGLRenderingContext"));
+  webgl_template->SetClassName(
+    Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked());
 
-  //Add methods
-  JS_GL_METHOD("resize", Resize);
+  /* WebGL methods */
+  JS_GL_METHOD("drawArraysInstanced", DrawArraysInstanced);
+  JS_GL_METHOD("drawElementsInstanced", DrawElementsInstanced);
+  JS_GL_METHOD("vertexAttribDivisor", VertexAttribDivisor);
 
   JS_GL_METHOD("getUniform", GetUniform);
-
   JS_GL_METHOD("uniform1f", Uniform1f);
   JS_GL_METHOD("uniform2f", Uniform2f);
   JS_GL_METHOD("uniform3f", Uniform3f);
@@ -58,9 +54,7 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_METHOD("uniformMatrix2fv", UniformMatrix2fv);
   JS_GL_METHOD("uniformMatrix3fv", UniformMatrix3fv);
   JS_GL_METHOD("uniformMatrix4fv", UniformMatrix4fv);
-
   JS_GL_METHOD("generateMipmap", GenerateMipmap);
-
   JS_GL_METHOD("getAttribLocation", GetAttribLocation);
   JS_GL_METHOD("depthFunc", DepthFunc);
   JS_GL_METHOD("viewport", Viewport);
@@ -76,7 +70,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_METHOD("getUniformLocation", GetUniformLocation);
   JS_GL_METHOD("clearColor", ClearColor);
   JS_GL_METHOD("clearDepth", ClearDepth);
-
   JS_GL_METHOD("disable", Disable);
   JS_GL_METHOD("createTexture", CreateTexture);
   JS_GL_METHOD("bindTexture", BindTexture);
@@ -101,12 +94,10 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_METHOD("drawElements", DrawElements);
   JS_GL_METHOD("flush", Flush);
   JS_GL_METHOD("finish", Finish);
-
   JS_GL_METHOD("vertexAttrib1f", VertexAttrib1f);
   JS_GL_METHOD("vertexAttrib2f", VertexAttrib2f);
   JS_GL_METHOD("vertexAttrib3f", VertexAttrib3f);
   JS_GL_METHOD("vertexAttrib4f", VertexAttrib4f);
-
   JS_GL_METHOD("blendColor", BlendColor);
   JS_GL_METHOD("blendEquationSeparate", BlendEquationSeparate);
   JS_GL_METHOD("blendFuncSeparate", BlendFuncSeparate);
@@ -122,7 +113,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_METHOD("isEnabled", IsEnabled);
   JS_GL_METHOD("lineWidth", LineWidth);
   JS_GL_METHOD("polygonOffset", PolygonOffset);
-
   JS_GL_METHOD("scissor", Scissor);
   JS_GL_METHOD("stencilFunc", StencilFunc);
   JS_GL_METHOD("stencilFuncSeparate", StencilFuncSeparate);
@@ -132,7 +122,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_METHOD("stencilOpSeparate", StencilOpSeparate);
   JS_GL_METHOD("bindRenderbuffer", BindRenderbuffer);
   JS_GL_METHOD("createRenderbuffer", CreateRenderbuffer);
-
   JS_GL_METHOD("deleteBuffer", DeleteBuffer);
   JS_GL_METHOD("deleteFramebuffer", DeleteFramebuffer);
   JS_GL_METHOD("deleteProgram", DeleteProgram);
@@ -142,18 +131,15 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_METHOD("detachShader", DetachShader);
   JS_GL_METHOD("framebufferRenderbuffer", FramebufferRenderbuffer);
   JS_GL_METHOD("getVertexAttribOffset", GetVertexAttribOffset);
-
   JS_GL_METHOD("isBuffer", IsBuffer);
   JS_GL_METHOD("isFramebuffer", IsFramebuffer);
   JS_GL_METHOD("isProgram", IsProgram);
   JS_GL_METHOD("isRenderbuffer", IsRenderbuffer);
   JS_GL_METHOD("isShader", IsShader);
   JS_GL_METHOD("isTexture", IsTexture);
-
   JS_GL_METHOD("renderbufferStorage", RenderbufferStorage);
   JS_GL_METHOD("getShaderSource", GetShaderSource);
   JS_GL_METHOD("validateProgram", ValidateProgram);
-
   JS_GL_METHOD("texSubImage2D", TexSubImage2D);
   JS_GL_METHOD("readPixels", ReadPixels);
   JS_GL_METHOD("getTexParameter", GetTexParameter);
@@ -169,37 +155,25 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_METHOD("getSupportedExtensions", GetSupportedExtensions);
   JS_GL_METHOD("getExtension", GetExtension);
   JS_GL_METHOD("checkFramebufferStatus", CheckFramebufferStatus);
-
   JS_GL_METHOD("getShaderPrecisionFormat", GetShaderPrecisionFormat);
-
   JS_GL_METHOD("frontFace", FrontFace);
   JS_GL_METHOD("sampleCoverage", SampleCoverage);
   JS_GL_METHOD("destroy", Destroy);
 
   // OpenGL ES 2.1 constants
-
   JS_GL_CONSTANT(MAX_VERTEX_UNIFORM_VECTORS);
   JS_GL_CONSTANT(MAX_VARYING_VECTORS);
   JS_GL_CONSTANT(MAX_FRAGMENT_UNIFORM_VECTORS);
   JS_GL_CONSTANT(RGB565);
   JS_GL_CONSTANT(STENCIL_INDEX8);
   JS_GL_CONSTANT(FRAMEBUFFER_INCOMPLETE_DIMENSIONS);
-
-  JS_CONSTANT(STENCIL_INDEX, 0x1901);
   JS_GL_CONSTANT(DEPTH_STENCIL);
   JS_GL_CONSTANT(DEPTH_STENCIL_ATTACHMENT);
-
-
-  /* ClearBufferMask */
   JS_GL_CONSTANT(DEPTH_BUFFER_BIT);
   JS_GL_CONSTANT(STENCIL_BUFFER_BIT);
   JS_GL_CONSTANT(COLOR_BUFFER_BIT);
-
-  /* Boolean */
   JS_GL_CONSTANT(FALSE);
   JS_GL_CONSTANT(TRUE);
-
-  /* BeginMode */
   JS_GL_CONSTANT(POINTS);
   JS_GL_CONSTANT(LINES);
   JS_GL_CONSTANT(LINE_LOOP);
@@ -207,18 +181,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(TRIANGLES);
   JS_GL_CONSTANT(TRIANGLE_STRIP);
   JS_GL_CONSTANT(TRIANGLE_FAN);
-
-  /* AlphaFunction (not supported in ES20) */
-  /*      GL_NEVER */
-  /*      GL_LESS */
-  /*      GL_EQUAL */
-  /*      GL_LEQUAL */
-  /*      GL_GREATER */
-  /*      GL_NOTEQUAL */
-  /*      GL_GEQUAL */
-  /*      GL_ALWAYS */
-
-  /* BlendingFactorDest */
   JS_GL_CONSTANT(ZERO);
   JS_GL_CONSTANT(ONE);
   JS_GL_CONSTANT(SRC_COLOR);
@@ -227,29 +189,15 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(ONE_MINUS_SRC_ALPHA);
   JS_GL_CONSTANT(DST_ALPHA);
   JS_GL_CONSTANT(ONE_MINUS_DST_ALPHA);
-
-  /* BlendingFactorSrc */
-  /*      GL_ZERO */
-  /*      GL_ONE */
   JS_GL_CONSTANT(DST_COLOR);
   JS_GL_CONSTANT(ONE_MINUS_DST_COLOR);
   JS_GL_CONSTANT(SRC_ALPHA_SATURATE);
-  /*      GL_SRC_ALPHA */
-  /*      GL_ONE_MINUS_SRC_ALPHA */
-  /*      GL_DST_ALPHA */
-  /*      GL_ONE_MINUS_DST_ALPHA */
-
-  /* BlendEquationSeparate */
   JS_GL_CONSTANT(FUNC_ADD);
   JS_GL_CONSTANT(BLEND_EQUATION);
-  JS_GL_CONSTANT(BLEND_EQUATION_RGB);    /* same as BLEND_EQUATION */
+  JS_GL_CONSTANT(BLEND_EQUATION_RGB);
   JS_GL_CONSTANT(BLEND_EQUATION_ALPHA);
-
-  /* BlendSubtract */
   JS_GL_CONSTANT(FUNC_SUBTRACT);
   JS_GL_CONSTANT(FUNC_REVERSE_SUBTRACT);
-
-  /* Separate Blend Functions */
   JS_GL_CONSTANT(BLEND_DST_RGB);
   JS_GL_CONSTANT(BLEND_SRC_RGB);
   JS_GL_CONSTANT(BLEND_DST_ALPHA);
@@ -259,38 +207,19 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(CONSTANT_ALPHA);
   JS_GL_CONSTANT(ONE_MINUS_CONSTANT_ALPHA);
   JS_GL_CONSTANT(BLEND_COLOR);
-
-  /* Buffer Objects */
   JS_GL_CONSTANT(ARRAY_BUFFER);
   JS_GL_CONSTANT(ELEMENT_ARRAY_BUFFER);
   JS_GL_CONSTANT(ARRAY_BUFFER_BINDING);
   JS_GL_CONSTANT(ELEMENT_ARRAY_BUFFER_BINDING);
-
   JS_GL_CONSTANT(STREAM_DRAW);
   JS_GL_CONSTANT(STATIC_DRAW);
   JS_GL_CONSTANT(DYNAMIC_DRAW);
-
   JS_GL_CONSTANT(BUFFER_SIZE);
   JS_GL_CONSTANT(BUFFER_USAGE);
-
   JS_GL_CONSTANT(CURRENT_VERTEX_ATTRIB);
-
-  /* CullFaceMode */
   JS_GL_CONSTANT(FRONT);
   JS_GL_CONSTANT(BACK);
   JS_GL_CONSTANT(FRONT_AND_BACK);
-
-  /* DepthFunction */
-  /*      GL_NEVER */
-  /*      GL_LESS */
-  /*      GL_EQUAL */
-  /*      GL_LEQUAL */
-  /*      GL_GREATER */
-  /*      GL_NOTEQUAL */
-  /*      GL_GEQUAL */
-  /*      GL_ALWAYS */
-
-  /* EnableCap */
   JS_GL_CONSTANT(TEXTURE_2D);
   JS_GL_CONSTANT(CULL_FACE);
   JS_GL_CONSTANT(BLEND);
@@ -301,19 +230,13 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(POLYGON_OFFSET_FILL);
   JS_GL_CONSTANT(SAMPLE_ALPHA_TO_COVERAGE);
   JS_GL_CONSTANT(SAMPLE_COVERAGE);
-
-  /* ErrorCode */
   JS_GL_CONSTANT(NO_ERROR);
   JS_GL_CONSTANT(INVALID_ENUM);
   JS_GL_CONSTANT(INVALID_VALUE);
   JS_GL_CONSTANT(INVALID_OPERATION);
   JS_GL_CONSTANT(OUT_OF_MEMORY);
-
-  /* FrontFaceDirection */
   JS_GL_CONSTANT(CW);
   JS_GL_CONSTANT(CCW);
-
-  /* GetPName */
   JS_GL_CONSTANT(LINE_WIDTH);
   JS_GL_CONSTANT(ALIASED_POINT_SIZE_RANGE);
   JS_GL_CONSTANT(ALIASED_LINE_WIDTH_RANGE);
@@ -340,7 +263,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(STENCIL_BACK_WRITEMASK);
   JS_GL_CONSTANT(VIEWPORT);
   JS_GL_CONSTANT(SCISSOR_BOX);
-  /*      GL_SCISSOR_TEST */
   JS_GL_CONSTANT(COLOR_CLEAR_VALUE);
   JS_GL_CONSTANT(COLOR_WRITEMASK);
   JS_GL_CONSTANT(UNPACK_ALIGNMENT);
@@ -355,31 +277,17 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(DEPTH_BITS);
   JS_GL_CONSTANT(STENCIL_BITS);
   JS_GL_CONSTANT(POLYGON_OFFSET_UNITS);
-  /*      GL_POLYGON_OFFSET_FILL */
   JS_GL_CONSTANT(POLYGON_OFFSET_FACTOR);
   JS_GL_CONSTANT(TEXTURE_BINDING_2D);
   JS_GL_CONSTANT(SAMPLE_BUFFERS);
   JS_GL_CONSTANT(SAMPLES);
   JS_GL_CONSTANT(SAMPLE_COVERAGE_VALUE);
   JS_GL_CONSTANT(SAMPLE_COVERAGE_INVERT);
-
-  /* GetTextureParameter */
-  /*      GL_TEXTURE_MAG_FILTER */
-  /*      GL_TEXTURE_MIN_FILTER */
-  /*      GL_TEXTURE_WRAP_S */
-  /*      GL_TEXTURE_WRAP_T */
-
   JS_GL_CONSTANT(COMPRESSED_TEXTURE_FORMATS);
-
-  /* HintMode */
   JS_GL_CONSTANT(DONT_CARE);
   JS_GL_CONSTANT(FASTEST);
   JS_GL_CONSTANT(NICEST);
-
-  /* HintTarget */
   JS_GL_CONSTANT(GENERATE_MIPMAP_HINT);
-
-  /* DataType */
   JS_GL_CONSTANT(BYTE);
   JS_GL_CONSTANT(UNSIGNED_BYTE);
   JS_GL_CONSTANT(SHORT);
@@ -387,22 +295,15 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(INT);
   JS_GL_CONSTANT(UNSIGNED_INT);
   JS_GL_CONSTANT(FLOAT);
-
-  /* PixelFormat */
   JS_GL_CONSTANT(DEPTH_COMPONENT);
   JS_GL_CONSTANT(ALPHA);
   JS_GL_CONSTANT(RGB);
   JS_GL_CONSTANT(RGBA);
   JS_GL_CONSTANT(LUMINANCE);
   JS_GL_CONSTANT(LUMINANCE_ALPHA);
-
-  /* PixelType */
-  /*      GL_UNSIGNED_BYTE */
   JS_GL_CONSTANT(UNSIGNED_SHORT_4_4_4_4);
   JS_GL_CONSTANT(UNSIGNED_SHORT_5_5_5_1);
   JS_GL_CONSTANT(UNSIGNED_SHORT_5_6_5);
-
-  /* Shaders */
   JS_GL_CONSTANT(FRAGMENT_SHADER);
   JS_GL_CONSTANT(VERTEX_SHADER);
   JS_GL_CONSTANT(MAX_VERTEX_ATTRIBS);
@@ -418,8 +319,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(ACTIVE_ATTRIBUTES);
   JS_GL_CONSTANT(SHADING_LANGUAGE_VERSION);
   JS_GL_CONSTANT(CURRENT_PROGRAM);
-
-  /* StencilFunction */
   JS_GL_CONSTANT(NEVER);
   JS_GL_CONSTANT(LESS);
   JS_GL_CONSTANT(EQUAL);
@@ -428,9 +327,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(NOTEQUAL);
   JS_GL_CONSTANT(GEQUAL);
   JS_GL_CONSTANT(ALWAYS);
-
-  /* StencilOp */
-  /*      GL_ZERO */
   JS_GL_CONSTANT(KEEP);
   JS_GL_CONSTANT(REPLACE);
   JS_GL_CONSTANT(INCR);
@@ -438,34 +334,20 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(INVERT);
   JS_GL_CONSTANT(INCR_WRAP);
   JS_GL_CONSTANT(DECR_WRAP);
-
-  /* StringName */
   JS_GL_CONSTANT(VENDOR);
   JS_GL_CONSTANT(RENDERER);
   JS_GL_CONSTANT(VERSION);
-
-  /* TextureMagFilter */
   JS_GL_CONSTANT(NEAREST);
   JS_GL_CONSTANT(LINEAR);
-
-  /* TextureMinFilter */
-  /*      GL_NEAREST */
-  /*      GL_LINEAR */
   JS_GL_CONSTANT(NEAREST_MIPMAP_NEAREST);
   JS_GL_CONSTANT(LINEAR_MIPMAP_NEAREST);
   JS_GL_CONSTANT(NEAREST_MIPMAP_LINEAR);
   JS_GL_CONSTANT(LINEAR_MIPMAP_LINEAR);
-
-  /* TextureParameterName */
   JS_GL_CONSTANT(TEXTURE_MAG_FILTER);
   JS_GL_CONSTANT(TEXTURE_MIN_FILTER);
   JS_GL_CONSTANT(TEXTURE_WRAP_S);
   JS_GL_CONSTANT(TEXTURE_WRAP_T);
-
-  /* TextureTarget */
-  /*      GL_TEXTURE_2D */
   JS_GL_CONSTANT(TEXTURE);
-
   JS_GL_CONSTANT(TEXTURE_CUBE_MAP);
   JS_GL_CONSTANT(TEXTURE_BINDING_CUBE_MAP);
   JS_GL_CONSTANT(TEXTURE_CUBE_MAP_POSITIVE_X);
@@ -475,8 +357,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(TEXTURE_CUBE_MAP_POSITIVE_Z);
   JS_GL_CONSTANT(TEXTURE_CUBE_MAP_NEGATIVE_Z);
   JS_GL_CONSTANT(MAX_CUBE_MAP_TEXTURE_SIZE);
-
-  /* TextureUnit */
   JS_GL_CONSTANT(TEXTURE0);
   JS_GL_CONSTANT(TEXTURE1);
   JS_GL_CONSTANT(TEXTURE2);
@@ -510,13 +390,9 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(TEXTURE30);
   JS_GL_CONSTANT(TEXTURE31);
   JS_GL_CONSTANT(ACTIVE_TEXTURE);
-
-  /* TextureWrapMode */
   JS_GL_CONSTANT(REPEAT);
   JS_GL_CONSTANT(CLAMP_TO_EDGE);
   JS_GL_CONSTANT(MIRRORED_REPEAT);
-
-  /* Uniform Types */
   JS_GL_CONSTANT(FLOAT_VEC2);
   JS_GL_CONSTANT(FLOAT_VEC3);
   JS_GL_CONSTANT(FLOAT_VEC4);
@@ -532,8 +408,6 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(FLOAT_MAT4);
   JS_GL_CONSTANT(SAMPLER_2D);
   JS_GL_CONSTANT(SAMPLER_CUBE);
-
-  /* Vertex Arrays */
   JS_GL_CONSTANT(VERTEX_ATTRIB_ARRAY_ENABLED);
   JS_GL_CONSTANT(VERTEX_ATTRIB_ARRAY_SIZE);
   JS_GL_CONSTANT(VERTEX_ATTRIB_ARRAY_STRIDE);
@@ -541,26 +415,18 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(VERTEX_ATTRIB_ARRAY_NORMALIZED);
   JS_GL_CONSTANT(VERTEX_ATTRIB_ARRAY_POINTER);
   JS_GL_CONSTANT(VERTEX_ATTRIB_ARRAY_BUFFER_BINDING);
-
-
-  /* Shader Source */
   JS_GL_CONSTANT(COMPILE_STATUS);
-
   JS_GL_CONSTANT(LOW_FLOAT);
   JS_GL_CONSTANT(MEDIUM_FLOAT);
   JS_GL_CONSTANT(HIGH_FLOAT);
   JS_GL_CONSTANT(LOW_INT);
   JS_GL_CONSTANT(MEDIUM_INT);
   JS_GL_CONSTANT(HIGH_INT);
-
-  /* Framebuffer Object. */
   JS_GL_CONSTANT(FRAMEBUFFER);
   JS_GL_CONSTANT(RENDERBUFFER);
-
   JS_GL_CONSTANT(RGBA4);
   JS_GL_CONSTANT(RGB5_A1);
   JS_GL_CONSTANT(DEPTH_COMPONENT16);
-
   JS_GL_CONSTANT(RENDERBUFFER_WIDTH);
   JS_GL_CONSTANT(RENDERBUFFER_HEIGHT);
   JS_GL_CONSTANT(RENDERBUFFER_INTERNAL_FORMAT);
@@ -570,52 +436,41 @@ void init(v8::Handle<v8::Object> exports)
   JS_GL_CONSTANT(RENDERBUFFER_ALPHA_SIZE);
   JS_GL_CONSTANT(RENDERBUFFER_DEPTH_SIZE);
   JS_GL_CONSTANT(RENDERBUFFER_STENCIL_SIZE);
-
   JS_GL_CONSTANT(FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE);
   JS_GL_CONSTANT(FRAMEBUFFER_ATTACHMENT_OBJECT_NAME);
   JS_GL_CONSTANT(FRAMEBUFFER_ATTACHMENT_TEXTURE_LEVEL);
   JS_GL_CONSTANT(FRAMEBUFFER_ATTACHMENT_TEXTURE_CUBE_MAP_FACE);
-
   JS_GL_CONSTANT(COLOR_ATTACHMENT0);
   JS_GL_CONSTANT(DEPTH_ATTACHMENT);
   JS_GL_CONSTANT(STENCIL_ATTACHMENT);
-
   JS_GL_CONSTANT(NONE);
-
   JS_GL_CONSTANT(FRAMEBUFFER_COMPLETE);
   JS_GL_CONSTANT(FRAMEBUFFER_INCOMPLETE_ATTACHMENT);
   JS_GL_CONSTANT(FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT);
   JS_GL_CONSTANT(FRAMEBUFFER_UNSUPPORTED);
-
   JS_GL_CONSTANT(FRAMEBUFFER_BINDING);
   JS_GL_CONSTANT(RENDERBUFFER_BINDING);
   JS_GL_CONSTANT(MAX_RENDERBUFFER_SIZE);
-
   JS_GL_CONSTANT(INVALID_FRAMEBUFFER_OPERATION);
 
   /* WebGL-specific enums */
+  JS_CONSTANT(STENCIL_INDEX, 0x1901);
   JS_CONSTANT(UNPACK_FLIP_Y_WEBGL, 0x9240);
   JS_CONSTANT(UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0x9241);
   JS_CONSTANT(CONTEXT_LOST_WEBGL, 0x9242);
   JS_CONSTANT(UNPACK_COLORSPACE_CONVERSION_WEBGL, 0x9243);
   JS_CONSTANT(BROWSER_DEFAULT_WEBGL, 0x9244);
 
-  //Export function
-  NanAssignPersistent(WEBGL_TEMPLATE, webgl_template);
-  exports->Set(
-    NanNew<v8::String>("WebGLRenderingContext"),
-    webgl_template->GetFunction());
+  //Export template
+  WEBGL_TEMPLATE.Reset(webgl_template);
+  Nan::Set(
+      target
+    , Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked()
+    , webgl_template->GetFunction());
 
-  exports->Set(
-    NanNew<v8::String>("cleanup"),
-    NanNew<v8::FunctionTemplate>(
-      WebGLRenderingContext::DisposeAll)->GetFunction());
-
-  exports->Set(
-    NanNew<v8::String>("setError"),
-    NanNew<v8::FunctionTemplate>(
-      WebGLRenderingContext::SetError)->GetFunction());
+  //Export helper methods for clean up and error handling
+  Nan::Export(target, "cleanup", WebGLRenderingContext::DisposeAll);
+  Nan::Export(target, "setError", WebGLRenderingContext::SetError);
 }
 
-NODE_MODULE(webgl, init)
-} // extern "C"
+NODE_MODULE(webgl, Init)
