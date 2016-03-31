@@ -938,30 +938,30 @@ gl.blendEquationSeparate = function blendEquationSeparate (modeRGB, modeAlpha) {
 
 function validBlendFunc (factor) {
   return factor === gl.ZERO ||
-  factor === gl.ONE ||
-  factor === gl.SRC_COLOR ||
-  factor === gl.ONE_MINUS_SRC_COLOR ||
-  factor === gl.DST_COLOR ||
-  factor === gl.ONE_MINUS_DST_COLOR ||
-  factor === gl.SRC_ALPHA ||
-  factor === gl.ONE_MINUS_SRC_ALPHA ||
-  factor === gl.DST_ALPHA ||
-  factor === gl.ONE_MINUS_DST_ALPHA ||
-  factor === gl.SRC_ALPHA_SATURATE ||
-  factor === gl.CONSTANT_COLOR ||
-  factor === gl.ONE_MINUS_CONSTANT_COLOR ||
-  factor === gl.CONSTANT_ALPHA ||
-  factor === gl.ONE_MINUS_CONSTANT_ALPHA
+    factor === gl.ONE ||
+    factor === gl.SRC_COLOR ||
+    factor === gl.ONE_MINUS_SRC_COLOR ||
+    factor === gl.DST_COLOR ||
+    factor === gl.ONE_MINUS_DST_COLOR ||
+    factor === gl.SRC_ALPHA ||
+    factor === gl.ONE_MINUS_SRC_ALPHA ||
+    factor === gl.DST_ALPHA ||
+    factor === gl.ONE_MINUS_DST_ALPHA ||
+    factor === gl.SRC_ALPHA_SATURATE ||
+    factor === gl.CONSTANT_COLOR ||
+    factor === gl.ONE_MINUS_CONSTANT_COLOR ||
+    factor === gl.CONSTANT_ALPHA ||
+    factor === gl.ONE_MINUS_CONSTANT_ALPHA
 }
 
 function isConstantBlendFunc (factor) {
   return (
-  factor === gl.ZERO ||
-  factor === gl.ONE ||
-  factor === gl.CONSTANT_COLOR ||
-  factor === gl.ONE_MINUS_CONSTANT_COLOR ||
-  factor === gl.CONSTANT_ALPHA ||
-  factor === gl.ONE_MINUS_CONSTANT_ALPHA)
+    factor === gl.ZERO ||
+    factor === gl.ONE ||
+    factor === gl.CONSTANT_COLOR ||
+    factor === gl.ONE_MINUS_CONSTANT_COLOR ||
+    factor === gl.CONSTANT_ALPHA ||
+    factor === gl.ONE_MINUS_CONSTANT_ALPHA)
 }
 
 var _blendFunc = gl.blendFunc
@@ -992,15 +992,15 @@ gl.blendFuncSeparate = function blendFuncSeparate (
   dstAlpha |= 0
 
   if (!(validBlendFunc(srcRGB) &&
-    validBlendFunc(dstRGB) &&
-    validBlendFunc(srcAlpha) &&
-    validBlendFunc(dstAlpha))) {
+        validBlendFunc(dstRGB) &&
+        validBlendFunc(srcAlpha) &&
+        validBlendFunc(dstAlpha))) {
     setError(this, gl.INVALID_ENUM)
     return
   }
 
   if ((isConstantBlendFunc(srcRGB) && isConstantBlendFunc(dstRGB)) ||
-    (isConstantBlendFunc(srcAlpha) && isConstantBlendFunc(dstAlpha))) {
+      (isConstantBlendFunc(srcAlpha) && isConstantBlendFunc(dstAlpha))) {
     setError(this, gl.INVALID_OPERATION)
     return
   }
@@ -1296,8 +1296,12 @@ gl.copyTexImage2D = function copyTexImage2D (
     return
   }
 
-  if (internalformat !== gl.RGBA) {
-    setError(this, gl.INVALID_VALUE)
+  if (internalformat !== gl.RGBA &&
+      internalformat !== gl.RGB &&
+      internalformat !== gl.ALPHA &&
+      internalformat !== gl.LUMINANCE &&
+      internalformat !== gl.LUMINANCE_ALPHA) {
+    setError(this, gl.INVALID_ENUM)
     return
   }
 
@@ -3014,12 +3018,12 @@ gl.renderbufferStorage = function renderbufferStorage (
   }
 
   if (internalformat !== gl.RGBA4 &&
-    internalformat !== gl.RGBA565 &&
-    internalformat !== gl.RGB5_A1 &&
-    internalformat !== gl.DEPTH_COMPONENT16 &&
-    internalformat !== gl.STENCIL_INDEX &&
-    internalformat !== gl.STENCIL_INDEX8 &&
-    internalformat !== gl.DEPTH_STENCIL) {
+      internalformat !== gl.RGB565 &&
+      internalformat !== gl.RGB5_A1 &&
+      internalformat !== gl.DEPTH_COMPONENT16 &&
+      internalformat !== gl.STENCIL_INDEX &&
+      internalformat !== gl.STENCIL_INDEX8 &&
+      internalformat !== gl.DEPTH_STENCIL) {
     setError(this, gl.INVALID_ENUM)
     return
   }
@@ -3201,6 +3205,14 @@ function computeRowStride (context, width, pixelSize) {
   return rowStride
 }
 
+function checkFormat (format) {
+  return (
+    format === gl.ALPHA ||
+    format === gl.LUMINANCE_ALPHA ||
+    format === gl.RGB ||
+    format === gl.RGBA)
+}
+
 var _texImage2D = gl.texImage2D
 gl.texImage2D = function texImage2D (
   target,
@@ -3238,6 +3250,11 @@ gl.texImage2D = function texImage2D (
     throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
   }
 
+  if (!checkFormat(format) || !checkFormat(internalformat)) {
+    setError(this, gl.INVALID_ENUM)
+    return
+  }
+
   var texture = getTexImage(this, target)
   if (!texture || format !== internalformat) {
     setError(this, gl.INVALID_OPERATION)
@@ -3269,7 +3286,7 @@ gl.texImage2D = function texImage2D (
   var imageSize = rowStride * height
 
   if (data && data.length < imageSize) {
-    setError(this, gl.INVALID_VALUE)
+    setError(this, gl.INVALID_OPERATION)
     return
   }
 
@@ -3684,7 +3701,7 @@ function makeVertexAttribs () {
     gl[func + 'v'] = function (idx, v) {
       if (typeof v === 'object' &&
         v !== null &&
-        v.length === i) {
+        v.length >= i) {
         switch (i) {
           case 1:
             return base.call(this, idx | 0, +v[0], 0, 0, 0)
