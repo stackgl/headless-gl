@@ -89,14 +89,21 @@ function main () {
   // draw
   gl.drawArrays(gl.TRIANGLES, 0, 6)
 
-  var files = [
-    utils.replaceExt(__filename, '.jpg')
+  var frames = [
+    { 'format': '.jpg', 'quality': 1 },
+    { 'format': '.jpg', 'quality': 25 },
+    { 'format': '.jpg', 'quality': 50 },
+    { 'format': '.jpg', 'quality': 75 },
+    { 'format': '.jpg', 'quality': 100 },
+    { 'format': '.ppm', 'quality': 100 }
   ]
 
-  for (var i = 0; i < files.length; i++) {
-    var filename = files[i]
+  for (var i = 0; i < frames.length; i++) {
+    var filename = utils.replaceExt(__filename, '_' + frames[i]['quality'] + '_' + frames[i]['format'])
     log.info(__line, 'rendering ' + filename)
-    utils.bufferToFile(gl, width, height, filename)
+    utils.bufferToFile(gl, width, height, filename, {
+      quality: frames[i]['quality']
+    })
     log.info(__line, 'finished rendering ' + filename)
   }
 

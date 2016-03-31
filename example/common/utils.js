@@ -11,10 +11,10 @@ function writePixels (array, filepath, format, options, cb) {
     .on('close', cb)
 }
 
-function bufferToFile (gl, width, height, filename) {
+function bufferToFile (gl, width, height, filename, options) {
   var extension = path.extname(filename)
-
   var pixels = new Uint8Array(width * height * 4)
+
   gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
   if (extension === '.ppm') {
@@ -30,7 +30,7 @@ function bufferToFile (gl, width, height, filename) {
     }
   } else {
     var ext = extension.substring(1, extension.length)
-    writePixels(ndarray(pixels, [width, height, 4]), filename, ext, null, function () {})
+    writePixels(ndarray(pixels, [width, height, 4], [4, 4 * width, 1], 0), filename, ext, options, function () {})
   }
 }
 
@@ -114,7 +114,8 @@ function setRectangle (gl, x, y, width, height) {
     x1, y2,
     x1, y2,
     x2, y1,
-    x2, y2]), gl.STATIC_DRAW)
+    x2, y2
+  ]), gl.STATIC_DRAW)
 }
 
 function replaceExt (filename, ext) {
