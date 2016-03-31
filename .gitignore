@@ -10,4 +10,5 @@ angle/build/*
 example/**/*.ppm
 example/**/*.jpg
 example/**/*.png
+example/**/*.gif
 !example/data
