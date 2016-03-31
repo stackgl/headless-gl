@@ -938,30 +938,30 @@ gl.blendEquationSeparate = function blendEquationSeparate (modeRGB, modeAlpha) {
 
 function validBlendFunc (factor) {
   return factor === gl.ZERO ||
-    factor === gl.ONE ||
-    factor === gl.SRC_COLOR ||
-    factor === gl.ONE_MINUS_SRC_COLOR ||
-    factor === gl.DST_COLOR ||
-    factor === gl.ONE_MINUS_DST_COLOR ||
-    factor === gl.SRC_ALPHA ||
-    factor === gl.ONE_MINUS_SRC_ALPHA ||
-    factor === gl.DST_ALPHA ||
-    factor === gl.ONE_MINUS_DST_ALPHA ||
-    factor === gl.SRC_ALPHA_SATURATE ||
-    factor === gl.CONSTANT_COLOR ||
-    factor === gl.ONE_MINUS_CONSTANT_COLOR ||
-    factor === gl.CONSTANT_ALPHA ||
-    factor === gl.ONE_MINUS_CONSTANT_ALPHA
+  factor === gl.ONE ||
+  factor === gl.SRC_COLOR ||
+  factor === gl.ONE_MINUS_SRC_COLOR ||
+  factor === gl.DST_COLOR ||
+  factor === gl.ONE_MINUS_DST_COLOR ||
+  factor === gl.SRC_ALPHA ||
+  factor === gl.ONE_MINUS_SRC_ALPHA ||
+  factor === gl.DST_ALPHA ||
+  factor === gl.ONE_MINUS_DST_ALPHA ||
+  factor === gl.SRC_ALPHA_SATURATE ||
+  factor === gl.CONSTANT_COLOR ||
+  factor === gl.ONE_MINUS_CONSTANT_COLOR ||
+  factor === gl.CONSTANT_ALPHA ||
+  factor === gl.ONE_MINUS_CONSTANT_ALPHA
 }
 
 function isConstantBlendFunc (factor) {
   return (
-    factor === gl.ZERO ||
-    factor === gl.ONE ||
-    factor === gl.CONSTANT_COLOR ||
-    factor === gl.ONE_MINUS_CONSTANT_COLOR ||
-    factor === gl.CONSTANT_ALPHA ||
-    factor === gl.ONE_MINUS_CONSTANT_ALPHA)
+  factor === gl.ZERO ||
+  factor === gl.ONE ||
+  factor === gl.CONSTANT_COLOR ||
+  factor === gl.ONE_MINUS_CONSTANT_COLOR ||
+  factor === gl.CONSTANT_ALPHA ||
+  factor === gl.ONE_MINUS_CONSTANT_ALPHA)
 }
 
 var _blendFunc = gl.blendFunc
@@ -992,15 +992,15 @@ gl.blendFuncSeparate = function blendFuncSeparate (
   dstAlpha |= 0
 
   if (!(validBlendFunc(srcRGB) &&
-        validBlendFunc(dstRGB) &&
-        validBlendFunc(srcAlpha) &&
-        validBlendFunc(dstAlpha))) {
+    validBlendFunc(dstRGB) &&
+    validBlendFunc(srcAlpha) &&
+    validBlendFunc(dstAlpha))) {
     setError(this, gl.INVALID_ENUM)
     return
   }
 
   if ((isConstantBlendFunc(srcRGB) && isConstantBlendFunc(dstRGB)) ||
-      (isConstantBlendFunc(srcAlpha) && isConstantBlendFunc(dstAlpha))) {
+    (isConstantBlendFunc(srcAlpha) && isConstantBlendFunc(dstAlpha))) {
     setError(this, gl.INVALID_OPERATION)
     return
   }
@@ -3014,12 +3014,12 @@ gl.renderbufferStorage = function renderbufferStorage (
   }
 
   if (internalformat !== gl.RGBA4 &&
-      internalformat !== gl.RGBA565 &&
-      internalformat !== gl.RGB5_A1 &&
-      internalformat !== gl.DEPTH_COMPONENT16 &&
-      internalformat !== gl.STENCIL_INDEX &&
-      internalformat !== gl.STENCIL_INDEX8 &&
-      internalformat !== gl.DEPTH_STENCIL) {
+    internalformat !== gl.RGBA565 &&
+    internalformat !== gl.RGB5_A1 &&
+    internalformat !== gl.DEPTH_COMPONENT16 &&
+    internalformat !== gl.STENCIL_INDEX &&
+    internalformat !== gl.STENCIL_INDEX8 &&
+    internalformat !== gl.DEPTH_STENCIL) {
     setError(this, gl.INVALID_ENUM)
     return
   }

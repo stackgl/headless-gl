@@ -17,10 +17,16 @@ function main () {
   gl.colorMask(true, true, true, true)
   gl.clear(gl.COLOR_BUFFER_BIT)
 
-  var filename = __filename + '.ppm' // eslint-disable-line
-  log.info(__line, 'rendering ' + filename)
-  utils.bufferToFile(gl, width, height, filename)
-  log.info(__line, 'finished rendering ' + filename)
+  var files = [
+    utils.replaceExt(__filename, '.jpg')
+  ]
+
+  for (var i = 0; i < files.length; i++) {
+    var filename = files[i]
+    log.info(__line, 'rendering ' + filename)
+    utils.bufferToFile(gl, width, height, filename)
+    log.info(__line, 'finished rendering ' + filename)
+  }
 
   gl.destroy()
 }

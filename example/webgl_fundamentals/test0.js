@@ -12,16 +12,16 @@ function main () {
   var gl = createContext(width, height)
 
   var vertex_src = `
-        attribute vec2 a_position
+        attribute vec2 a_position;
 
         void main() {
-          gl_Position = vec4(a_position, 0, 1)
+          gl_Position = vec4(a_position, 0, 1);
         }
     `
 
   var fragment_src = `
         void main() {
-          gl_FragColor = vec4(0, 1, 0, 1)  // green
+          gl_FragColor = vec4(0, 1, 0, 1);  // green
         }
     `
 
@@ -52,10 +52,16 @@ function main () {
   // draw
   gl.drawArrays(gl.TRIANGLES, 0, 6)
 
-  var filename = __filename + '.ppm' // eslint-disable-line
-  log.info(__line, 'rendering ' + filename)
-  utils.bufferToFile(gl, width, height, filename)
-  log.info(__line, 'finished rendering ' + filename)
+  var files = [
+    utils.replaceExt(__filename, '.jpg')
+  ]
+
+  for (var i = 0; i < files.length; i++) {
+    var filename = files[i]
+    log.info(__line, 'rendering ' + filename)
+    utils.bufferToFile(gl, width, height, filename)
+    log.info(__line, 'finished rendering ' + filename)
+  }
 
   gl.destroy()
 }

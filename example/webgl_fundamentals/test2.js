@@ -1,16 +1,18 @@
-var path = require('path');
-var createContext = require('../../index');
-var utils = require('../common/utils.js');
-var utils_log = require('../common/utils_log.js');
-var log = new utils_log.Log(path.basename(__filename), "DEBUG");
+/* globals __line */
 
-function main() {
-    // Create context
-    var width = 512
-    var height = 512
-    var gl = createContext(width, height)
+var path = require('path')
+var createContext = require('../../index')
+var utils = require('../common/utils.js')
+var utils_log = require('../common/utils_log.js')
+var log = new utils_log.Log(path.basename(__filename), 'DEBUG')
 
-    var vertex_src = `
+function main () {
+  // Create context
+  var width = 512
+  var height = 512
+  var gl = createContext(width, height)
+
+  var vertex_src = `
         precision mediump float;
         attribute vec2 a_position;
 
@@ -28,59 +30,68 @@ function main() {
 
             gl_Position = vec4(clipSpace, 0, 1);
         }
-    `;
+    `
 
-    var fragment_src = `
+  var fragment_src = `
         precision mediump float;
         uniform vec4 u_color;
 
         void main() {
             gl_FragColor = u_color;
         }
-    `;
+    `
 
-    // setup a GLSL program
-    var program = utils.createProgramFromSources(gl, [vertex_src, fragment_src]);
-    gl.useProgram(program);
+  // setup a GLSL program
+  var program = utils.createProgramFromSources(gl, [vertex_src, fragment_src])
+  gl.useProgram(program)
 
-    // look up where the vertex data needs to go.
-    var positionLocation = gl.getAttribLocation(program, "a_position");
+  // look up where the vertex data needs to go.
+  var positionLocation = gl.getAttribLocation(program, 'a_position')
 
-    // set the resolution
-    var colorLocation = gl.getUniformLocation(program, "u_color");
-    var resolutionLocation = gl.getUniformLocation(program, "u_resolution");
-    gl.uniform2f(resolutionLocation, width, height);
+  // set the resolution
+  var colorLocation = gl.getUniformLocation(program, 'u_color')
+  var resolutionLocation = gl.getUniformLocation(program, 'u_resolution')
+  gl.uniform2f(resolutionLocation, width, height)
 
-    // Create a buffer
-    var buffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.enableVertexAttribArray(positionLocation);
-    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+  // Create a buffer
+  var buffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+  gl.enableVertexAttribArray(positionLocation)
+  gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0)
 
-    // draw 50 random rectangles in random colors
-    for (var ii = 0; ii < 50; ++ii) {
-        // Setup a random rectangle
-        utils.setRectangle(
-            gl,
-            utils.randomInt(300),
-            utils.randomInt(300),
-            utils.randomInt(300),
-            utils.randomInt(300)
-        );
+  // draw 50 random rectangles in random colors
+  for (var ii = 0; ii < 50; ++ii) {
+    // Setup a random rectangle
+    utils.setRectangle(
+      gl,
+      utils.randomInt(300),
+      utils.randomInt(300),
+      utils.randomInt(300),
+      utils.randomInt(300)
+    )
 
-        // Set a random color.
-        gl.uniform4f(colorLocation, Math.random(), Math.random(), Math.random(), 1);
+    // Set a random color.
+    gl.uniform4f(colorLocation, Math.random(), Math.random(), Math.random(), 1)
 
-        // Draw the rectangle.
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-    }
+    // Draw the rectangle.
+    gl.drawArrays(gl.TRIANGLES, 0, 6)
+  }
 
-    var filename = __filename + ".ppm";
-    log.info(__line, "rendering " + filename);
-    utils.bufferToFile(gl, width, height, filename);
-    log.info(__line, "finished rendering " + filename);
+  var files = [
+    // utils.replaceExt(__filename, '.png'),
+    // utils.replaceExt(__filename, '.gif'),
+    // utils.replaceExt(__filename, '.ppm'),
+    utils.replaceExt(__filename, '.jpg')
+  ]
 
-    gl.destroy();
+  for (var i = 0; i < files.length; i++) {
+    var filename = files[i]
+    log.info(__line, 'rendering ' + filename)
+    utils.bufferToFile(gl, width, height, filename)
+    log.info(__line, 'finished rendering ' + filename)
+  }
+
+  gl.destroy()
 }
 
-main();
+main()

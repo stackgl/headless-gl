@@ -1,24 +1,36 @@
 var fs = require('fs')
+var savePixels = require('save-pixels')
+var ndarray = require('ndarray')
+var path = require('path')
 
-function bufferToStdout (gl, width, height) {
-  // Write output
-  var pixels = new Uint8Array(width * height * 4)
-  gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-  process.stdout.write(['P3\n# gl.ppm\n', width, ' ', height, '\n255\n'].join(''))
-  for (var i = 0; i < pixels.length; i += 4) {
-    process.stdout.write(pixels[i] + ' ' + pixels[i + 1] + ' ' + pixels[i + 2] + ' ')
-  }
+function writePixels (array, filepath, format, options, cb) {
+  var out = fs.createWriteStream(filepath)
+  var pxstream = savePixels(array, format, options)
+  pxstream.pipe(out)
+    .on('error', cb)
+    .on('close', cb)
 }
 
 function bufferToFile (gl, width, height, filename) {
-  var file = fs.createWriteStream(filename)
+  var extension = path.extname(filename)
 
-  // Write output
   var pixels = new Uint8Array(width * height * 4)
   gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-  file.write(['P3\n# gl.ppm\n', width, ' ', height, '\n255\n'].join(''))
-  for (var i = 0; i < pixels.length; i += 4) {
-    file.write(pixels[i] + ' ' + pixels[i + 1] + ' ' + pixels[i + 2] + ' ')
+
+  if (extension === '.ppm') {
+    // Special case, ppm file (TODO: Maybe adding ppm support into save-pixels)
+    var file = fs.createWriteStream(filename)
+
+    file.write(['P3\n# gl.ppm\n', width, ' ', height, '\n255\n'].join(''))
+    for (var x = 0; x < width; x++) {
+      for (var y = 0; y < height; y++) {
+        var offset = y * width * 4 + x * 4
+        file.write(pixels[offset] + ' ' + pixels[offset + 1] + ' ' + pixels[offset + 2] + ' ')
+      }
+    }
+  } else {
+    var ext = extension.substring(1, extension.length)
+    writePixels(ndarray(pixels, [width, height, 4]), filename, ext, null, function () {})
   }
 }
 
@@ -52,19 +64,11 @@ function loadShader (gl, shaderSource, shaderType) {
   return shader
 }
 
-function createProgram (gl, shaders, opt_attribs, opt_locations) {
+function createProgram (gl, shaders) {
   var program = gl.createProgram()
   shaders.forEach(function (shader) {
     gl.attachShader(program, shader)
   })
-  if (opt_attribs) {
-    opt_attribs.forEach(function (attrib, ndx) {
-      gl.bindAttribLocation(
-        program,
-        opt_locations ? opt_locations[ndx] : ndx,
-        attrib)
-    })
-  }
   gl.linkProgram(program)
 
   // Check the link status
@@ -93,9 +97,35 @@ function createProgramFromSources (gl, shaderSources, opt_attribs, opt_locations
   return createProgram(gl, shaders, opt_attribs, opt_locations)
 }
 
-module.exports.bufferToStdout = bufferToStdout
+// Returns a random integer from 0 to range - 1.
+function randomInt (range) {
+  return Math.floor(Math.random() * range)
+}
+
+// Fills the buffer with the values that define a rectangle.
+function setRectangle (gl, x, y, width, height) {
+  var x1 = x
+  var x2 = x + width
+  var y1 = y
+  var y2 = y + height
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    x1, y1,
+    x2, y1,
+    x1, y2,
+    x1, y2,
+    x2, y1,
+    x2, y2]), gl.STATIC_DRAW)
+}
+
+function replaceExt (filename, ext) {
+  return filename.substr(0, filename.lastIndexOf('.')) + ext
+}
+
 module.exports.bufferToFile = bufferToFile
 module.exports.drawTriangle = drawTriangle
 module.exports.loadShader = loadShader
 module.exports.createProgram = createProgram
 module.exports.createProgramFromSources = createProgramFromSources
+module.exports.randomInt = randomInt
+module.exports.setRectangle = setRectangle
+module.exports.replaceExt = replaceExt

@@ -12,27 +12,27 @@ function main () {
   var gl = createContext(width, height)
 
   var vertex_src = `
-        attribute vec2 a_position
+        attribute vec2 a_position;
 
-        uniform vec2 u_resolution
+        uniform vec2 u_resolution;
 
         void main() {
             // convert the rectangle from pixels to 0.0 to 1.0
-            vec2 zeroToOne = a_position / u_resolution
+            vec2 zeroToOne = a_position / u_resolution;
 
             // convert from 0->1 to 0->2
-            vec2 zeroToTwo = zeroToOne * 2.0
+            vec2 zeroToTwo = zeroToOne * 2.0;
 
             // convert from 0->2 to -1->+1 (clipspace)
-            vec2 clipSpace = zeroToTwo - 1.0
+            vec2 clipSpace = zeroToTwo - 1.0;
 
-            gl_Position = vec4(clipSpace, 0, 1)
+            gl_Position = vec4(clipSpace, 0, 1);
         }
     `
 
   var fragment_src = `
         void main() {
-            gl_FragColor = vec4(0, 1, 0, 1)  // green
+            gl_FragColor = vec4(0, 1, 0, 1);  // green
         }
     `
 
@@ -65,10 +65,16 @@ function main () {
   // draw
   gl.drawArrays(gl.TRIANGLES, 0, 6)
 
-  var filename = __filename + '.ppm' // eslint-disable-line
-  log.info(__line, 'rendering ' + filename)
-  utils.bufferToFile(gl, width, height, filename)
-  log.info(__line, 'finished rendering ' + filename)
+  var files = [
+    utils.replaceExt(__filename, '.jpg')
+  ]
+
+  for (var i = 0; i < files.length; i++) {
+    var filename = files[i]
+    log.info(__line, 'rendering ' + filename)
+    utils.bufferToFile(gl, width, height, filename)
+    log.info(__line, 'finished rendering ' + filename)
+  }
 
   gl.destroy()
 }
