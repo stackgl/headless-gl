@@ -37,7 +37,6 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static bool       HAS_DISPLAY;
   static EGLDisplay DISPLAY;
 
-
   EGLContext context;
   EGLConfig  config;
   EGLSurface surface;
@@ -107,6 +106,10 @@ struct WebGLRenderingContext : public node::ObjectWrap {
     GLint width,
     GLint height,
     unsigned char* pixels);
+
+  // Debug helper
+  bool debug_mode;
+  static NAN_METHOD(SetDebugMode);
 
   //Error handling
   GLenum lastError;

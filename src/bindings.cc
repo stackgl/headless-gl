@@ -33,6 +33,9 @@ NAN_MODULE_INIT(Init) {
   webgl_template->SetClassName(
     Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked());
 
+  /* Helper methods */
+  JS_GL_METHOD("setDebugMode", SetDebugMode);
+
   /* WebGL methods */
   JS_GL_METHOD("drawArraysInstanced", DrawArraysInstanced);
   JS_GL_METHOD("drawElementsInstanced", DrawElementsInstanced);
