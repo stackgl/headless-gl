@@ -7,8 +7,7 @@ module.exports = function wrapContext (gl) {
   props.forEach(function (prop) {
     if (prop[0] === '_' ||
         prop[0] === '0' ||
-        prop[0] === '1' ||
-        prop === 'isContextLost') {
+        prop[0] === '1') {
       return
     }
     var value = gl[prop]
@@ -34,26 +33,13 @@ module.exports = function wrapContext (gl) {
 function WebGLRenderingContext () {}
 module.exports.WebGLRenderingContext = WebGLRenderingContext
 
-function WebGLProgram () {}
-module.exports.WebGLProgram = WebGLProgram
-
-function WebGLShader () {}
-module.exports.WebGLShader = WebGLShader
-
-function WebGLBuffer () {}
-module.exports.WebGLBuffer = WebGLBuffer
-
-function WebGLFramebuffer () {}
-module.exports.WebGLFramebuffer = WebGLFramebuffer
-
-function WebGLRenderbuffer () {}
-module.exports.WebGLRenderbuffer = WebGLRenderbuffer
-
-function WebGLTexture () {}
-module.exports.WebGLTexture = WebGLTexture
-
-function WebGLUniformLocation () {}
-module.exports.WebGLUniformLocation = WebGLUniformLocation
-
+// FIXME: Wrap all these objects to prevent headless-gl stuff from leaking
+module.exports.WebGLProgram = webgl.WebGLProgram
+module.exports.WebGLShader = webgl.WebGLShader
+module.exports.WebGLBuffer = webgl.WebGLBuffer
+module.exports.WebGLFramebuffer = webgl.WebGLFramebuffer
+module.exports.WebGLRenderbuffer = webgl.WebGLRenderbuffer
+module.exports.WebGLTexture = webgl.WebGLTexture
+module.exports.WebGLUniformLocation = webgl.WebGLUniformLocation
 module.exports.WebGLActiveInfo = webgl.WebGLActiveInfo
 module.exports.WebGLShaderPrecisionFormat = webgl.WebGLShaderPrecisionFormat

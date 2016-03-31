@@ -11,7 +11,7 @@
     "node": ">=0.8.0"
   },
   "scripts": {
-    "test": "standard && tape test/*.js",
+    "test": "standard | snazzy && tape test/*.js | faucet",
     "rebuild": "node-gyp rebuild --verbose",
     "build": "node-gyp rebuild --verbose",
     "prebuild": "prebuild --all --strip",
@@ -28,7 +28,9 @@
     "prebuild": "^2.8.0"
   },
   "devDependencies": {
+    "faucet": "0.0.1",
     "gl-conformance": "^2.0.0",
+    "snazzy": "^3.0.0",
     "standard": "^6.0.8",
     "tape": "^4.0.1"
   },

@@ -1,32 +1,31 @@
-/* globals __line */
-var path = require('path')
-var createContext = require('../../index')
-var utils = require('../common/utils.js')
-var utils_log = require('../common/utils_log.js')
-var log = new utils_log.Log(path.basename(__filename), 'DEBUG')
+var createContext = require('../index')
+var utils = require('./utils')
 
 function main () {
   // Create context
-  var width = 512
-  var height = 512
+  var width = 64
+  var height = 64
   var gl = createContext(width, height)
 
-  var vertex_src = `
-        attribute vec2 a_position
+  var vertex_src = [
+    'attribute vec2 a_position;',
+    'void main() {',
+    'gl_Position = vec4(a_position, 0, 1);',
+    '}'
+  ].join('\n')
 
-        void main() {
-          gl_Position = vec4(a_position, 0, 1)
-        }
-    `
-
-  var fragment_src = `
-        void main() {
-          gl_FragColor = vec4(0, 1, 0, 1)  // green
-        }
-    `
+  var fragment_src = [
+    'void main() {',
+    'gl_FragColor = vec4(0, 1, 0, 1);  // green',
+    '}'
+  ].join('\n')
 
   // setup a GLSL program
   var program = utils.createProgramFromSources(gl, [vertex_src, fragment_src])
+
+  if (!program) {
+    return
+  }
   gl.useProgram(program)
 
   // look up where the vertex data needs to go.
@@ -52,10 +51,7 @@ function main () {
   // draw
   gl.drawArrays(gl.TRIANGLES, 0, 6)
 
-  var filename = __filename + '.ppm' // eslint-disable-line
-  log.info(__line, 'rendering ' + filename)
-  utils.bufferToFile(gl, width, height, filename)
-  log.info(__line, 'finished rendering ' + filename)
+  utils.dumpBuffer(gl, width, height)
 
   gl.destroy()
 }

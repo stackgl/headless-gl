@@ -938,20 +938,30 @@ gl.blendEquationSeparate = function blendEquationSeparate (modeRGB, modeAlpha) {
 
 function validBlendFunc (factor) {
   return factor === gl.ZERO ||
-  factor === gl.ONE ||
-  factor === gl.SRC_COLOR ||
-  factor === gl.ONE_MINUS_SRC_COLOR ||
-  factor === gl.DST_COLOR ||
-  factor === gl.ONE_MINUS_DST_COLOR ||
-  factor === gl.SRC_ALPHA ||
-  factor === gl.ONE_MINUS_SRC_ALPHA ||
-  factor === gl.DST_ALPHA ||
-  factor === gl.ONE_MINUS_DST_ALPHA ||
-  factor === gl.SRC_ALPHA_SATURATE ||
-  factor === gl.CONSTANT_COLOR ||
-  factor === gl.ONE_MINUS_CONSTANT_COLOR ||
-  factor === gl.CONSTANT_ALPHA ||
-  factor === gl.ONE_MINUS_CONSTANT_ALPHA
+    factor === gl.ONE ||
+    factor === gl.SRC_COLOR ||
+    factor === gl.ONE_MINUS_SRC_COLOR ||
+    factor === gl.DST_COLOR ||
+    factor === gl.ONE_MINUS_DST_COLOR ||
+    factor === gl.SRC_ALPHA ||
+    factor === gl.ONE_MINUS_SRC_ALPHA ||
+    factor === gl.DST_ALPHA ||
+    factor === gl.ONE_MINUS_DST_ALPHA ||
+    factor === gl.SRC_ALPHA_SATURATE ||
+    factor === gl.CONSTANT_COLOR ||
+    factor === gl.ONE_MINUS_CONSTANT_COLOR ||
+    factor === gl.CONSTANT_ALPHA ||
+    factor === gl.ONE_MINUS_CONSTANT_ALPHA
+}
+
+function isConstantBlendFunc (factor) {
+  return (
+    factor === gl.ZERO ||
+    factor === gl.ONE ||
+    factor === gl.CONSTANT_COLOR ||
+    factor === gl.ONE_MINUS_CONSTANT_COLOR ||
+    factor === gl.CONSTANT_ALPHA ||
+    factor === gl.ONE_MINUS_CONSTANT_ALPHA)
 }
 
 var _blendFunc = gl.blendFunc
@@ -961,6 +971,10 @@ gl.blendFunc = function blendFunc (sfactor, dfactor) {
   if (!validBlendFunc(sfactor) ||
     !validBlendFunc(dfactor)) {
     setError(this, gl.INVALID_ENUM)
+    return
+  }
+  if (isConstantBlendFunc(sfactor) && isConstantBlendFunc(dfactor)) {
+    setError(this, gl.INVALID_OPERATION)
     return
   }
   _blendFunc.call(this, sfactor, dfactor)
@@ -977,19 +991,26 @@ gl.blendFuncSeparate = function blendFuncSeparate (
   srcAlpha |= 0
   dstAlpha |= 0
 
-  if (validBlendFunc(srcRGB) &&
-    validBlendFunc(dstRGB) &&
-    validBlendFunc(srcAlpha) &&
-    validBlendFunc(dstAlpha)) {
-    return _blendFuncSeparate.call(
-      this,
-      srcRGB,
-      dstRGB,
-      srcAlpha,
-      dstAlpha)
+  if (!(validBlendFunc(srcRGB) &&
+        validBlendFunc(dstRGB) &&
+        validBlendFunc(srcAlpha) &&
+        validBlendFunc(dstAlpha))) {
+    setError(this, gl.INVALID_ENUM)
+    return
   }
 
-  setError(this, gl.INVALID_ENUM)
+  if ((isConstantBlendFunc(srcRGB) && isConstantBlendFunc(dstRGB)) ||
+      (isConstantBlendFunc(srcAlpha) && isConstantBlendFunc(dstAlpha))) {
+    setError(this, gl.INVALID_OPERATION)
+    return
+  }
+
+  _blendFuncSeparate.call(
+    this,
+    srcRGB,
+    dstRGB,
+    srcAlpha,
+    dstAlpha)
 }
 
 var _bufferData = gl.bufferData
@@ -2408,7 +2429,7 @@ gl.getProgramInfoLog = function getProgramInfoLog (program) {
   } else if (checkWrapper(this, program, WebGLProgram)) {
     return program._linkInfoLog
   }
-  return ''
+  return null
 }
 
 var _getRenderbufferParameter = gl.getRenderbufferParameter
@@ -2469,7 +2490,7 @@ gl.getShaderInfoLog = function getShaderInfoLog (shader) {
   } else if (checkWrapper(this, shader, WebGLShader)) {
     return shader._compileInfo
   }
-  return ''
+  return null
 }
 
 gl.getShaderSource = function getShaderSource (shader) {
@@ -2478,7 +2499,7 @@ gl.getShaderSource = function getShaderSource (shader) {
   } else if (checkWrapper(this, shader, WebGLShader)) {
     return shader._source
   }
-  return ''
+  return null
 }
 
 var _getTexParameter = gl.getTexParameter
@@ -2989,6 +3010,17 @@ gl.renderbufferStorage = function renderbufferStorage (
   var renderbuffer = this._activeRenderbuffer
   if (!renderbuffer) {
     setError(this, gl.INVALID_OPERATION)
+    return
+  }
+
+  if (internalformat !== gl.RGBA4 &&
+      internalformat !== gl.RGBA565 &&
+      internalformat !== gl.RGB5_A1 &&
+      internalformat !== gl.DEPTH_COMPONENT16 &&
+      internalformat !== gl.STENCIL_INDEX &&
+      internalformat !== gl.STENCIL_INDEX8 &&
+      internalformat !== gl.DEPTH_STENCIL) {
+    setError(this, gl.INVALID_ENUM)
     return
   }
 
@@ -3848,4 +3880,16 @@ function resizeDrawingBuffer (context, width, height) {
   context.bindFramebuffer(gl.FRAMEBUFFER, prevFramebuffer)
   context.bindTexture(gl.TEXTURE_2D, prevTexture)
   context.bindRenderbuffer(gl.RENDERBUFFER, prevRenderbuffer)
+}
+
+gl.isContextLost = function () {
+  return false
+}
+
+gl.compressedTexImage2D = function () {
+  // TODO not yet implemented
+}
+
+gl.compressedTexSubImage2D = function () {
+  // TODO not yet implemented
 }
