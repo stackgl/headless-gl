@@ -302,7 +302,7 @@ function precheckFramebufferStatus (framebuffer) {
   }
 
   if (colorAttachment instanceof WebGLTexture) {
-    if (colorAttachment._format !== gl.RGBA &&
+    if (colorAttachment._format !== gl.RGBA ||
         colorAttachment._type !== gl.UNSIGNED_BYTE) {
       return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
     }
@@ -3231,6 +3231,7 @@ function checkFormat (format) {
   return (
     format === gl.ALPHA ||
     format === gl.LUMINANCE_ALPHA ||
+    format === gl.LUMINANCE ||
     format === gl.RGB ||
     format === gl.RGBA)
 }

@@ -27,43 +27,13 @@ for(var i=0; i<pixels.length; i+=4) {
 ```
 
 ## Install
-Because `gl` uses native code, it is a bit more involved to set up than a typical JavaScript npm module.  Before you can use it, you will need to ensure that your system has the correct dependencies installed.
-
-### System dependencies
-For general information on building native modules, see the [`node-gyp`](https://github.com/nodejs/node-gyp) documentation. System specific build instructions are as follows:
-
-#### Mac OS X
-
-* Python 2.7
-* XCode
-
-#### Ubuntu/Debian
-
-* Python 2.7
-* A GNU C++ environment (available via the `build-essential` package on `apt`)
-* libxi-dev
-* Working and up to date OpenGL drivers
-* GLEW
+Installing headless-gl on a supported platform is a snap using one of the prebuilt binaries.  Just type,
 
 ```
-$ sudo apt-get install -y build-essential libxi-dev libglu1-mesa-dev libglew-dev
+npm install gl
 ```
 
-#### Windows
-
-* Python 2.7
-* Microsoft Visual Studio
-* d3dcompiler_47.dll should be in c:\windows\system32 (you can find it on deps folder)
-* modern nodejs supporting es6 to run some examples https://iojs.org/en/es6.html
-
-### npm
-Once your system is set up, installing the `headless-gl` module is pretty easy to do with [npm](http://docs.npmjs.org).  Just run the following command:
-
-```
-npm i gl
-```
-
-And you are good to go!
+And you are good to go!  If your system is not supported, then please see the [development](#System dependencies) section on how to configure your build environment.
 
 ## API
 
@@ -95,6 +65,50 @@ Destroys the WebGL context immediately, reclaiming all resources
 
 **Note** For long running jobs, garbage collection of contexts is often not fast enough.  To prevent the system from becoming overloaded with unused contexts, you can force the system to reclaim a WebGL context immediately by calling `.destroy()`.
 
+## Development
+Because `gl` uses native code, it is a bit more involved to set up than a typical JavaScript npm module.  Before you can use it, you will need to ensure that your system has the correct dependencies installed.  To get started, first make sure you have your system dependencies set up (see below), then do the following:
+
+1. Clone this repo: `git clone git@github.com:stackgl/headless-gl.git`
+1. Switch to the headless gl directory: `cd headless-gl`
+1. Initialize the angle submodule: `git submodule init`
+1. Update the angle submodule: `git submodule update`
+1. Install npm dependencies: `npm install`
+1. Run node-gyp to generate build scripts: `npm run build`
+
+Once this is done, you should be good to go!  A few more things
+
+* To run the test cases, use the command `npm test`, or execute specific by just running it using node.
+* On a Unix-like platform, you can do incremental rebuilds by going into the `build/` directory and running `make`.  This is **way faster** running `npm build` each time you make a change.
+
+Windows support is still pretty flaky.
+
+### System dependencies
+For general information on building native modules, see the [`node-gyp`](https://github.com/nodejs/node-gyp) documentation. System specific build instructions are as follows:
+
+#### Mac OS X
+
+* [Python 2.7](https://www.python.org/)
+* [XCode](https://developer.apple.com/xcode/)
+
+#### Ubuntu/Debian
+
+* [Python 2.7](https://www.python.org/)
+* A GNU C++ environment (available via the `build-essential` package on `apt`)
+* [libxi-dev](http://www.x.org/wiki/)
+* Working and up to date OpenGL drivers
+* [GLEW](http://glew.sourceforge.net/)
+
+```
+$ sudo apt-get install -y build-essential libxi-dev libglu1-mesa-dev libglew-dev
+```
+
+#### Windows
+
+* [Python 2.7](https://www.python.org/)
+* [Microsoft Visual Studio](https://www.microsoft.com/en-us/download/details.aspx?id=5555)
+* d3dcompiler_47.dll should be in c:\windows\system32, but if isn't then you can find another copy in the deps/ folder
+* (optional) A modern nodejs supporting es6 to run some examples https://iojs.org/en/es6.html
+
 ## More information
 
 ### Improvements from version 1.0.0
@@ -123,22 +137,6 @@ They aren't for now.  If you want to upload data to a texture, you will need to 
 ### What extensions are supported?
 
 See https://github.com/stackgl/headless-gl/issues/5 for current status.
-
-### How is the development environment set up?
-
-1. Clone this repo: `git clone git@github.com:stackgl/headless-gl.git`
-1. Switch to the headless gl directory: `cd headless-gl`
-1. Initialize the angle submodule: `git submodule init`
-1. Update the angle submodule: `git submodule update`
-1. Install npm dependencies: `npm install`
-1. Run node-gyp to generate build scripts: `npm run build`
-
-Once this is done, you should be good to go!  A few more things
-
-* To run the test cases, use the command `npm test`, or execute specific by just running it using node.
-* On a Unix-like platform, you can do incremental rebuilds by going into the `build/` directory and running `make`
-
-This should work on most environments, but hasn't been tested thoroughly with windows.
 
 ### How can `headless-gl` be used on a headless Linux machine?
 

@@ -20,19 +20,15 @@
   "dependencies": {
     "bindings": "^1.2.1",
     "bit-twiddle": "^1.0.2",
-    "faucet": "0.0.1",
-    "get-pixels": "^3.3.0",
     "glsl-tokenizer": "^2.0.2",
     "log4js": "^0.6.33",
     "nan": "^2.1.0",
     "node-gyp": "^3.0.2",
-    "prebuild": "^2.8.0",
-    "save-pixels": "^2.3.0",
-    "snazzy": "^3.0.0"
+    "prebuild": "^2.8.0"
   },
   "devDependencies": {
     "faucet": "0.0.1",
-    "gl-conformance": "2.0.3",
+    "gl-conformance": "^2.0.4",
     "snazzy": "^3.0.0",
     "standard": "^6.0.8",
     "tape": "^4.0.1"
