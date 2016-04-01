@@ -22,11 +22,8 @@ function bufferToFile (gl, width, height, filename, options) {
     var file = fs.createWriteStream(filename)
 
     file.write(['P3\n# gl.ppm\n', width, ' ', height, '\n255\n'].join(''))
-    for (var x = 0; x < width; x++) {
-      for (var y = 0; y < height; y++) {
-        var offset = y * width * 4 + x * 4
-        file.write(pixels[offset] + ' ' + pixels[offset + 1] + ' ' + pixels[offset + 2] + ' ')
-      }
+    for (var i = 0; i < pixels.length; i += 4) {
+        file.write(pixels[i] + ' ' + pixels[i + 1] + ' ' + pixels[i + 2] + ' ')
     }
   } else {
     var ext = extension.substring(1, extension.length)
