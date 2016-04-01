@@ -3,6 +3,9 @@
 
 It aspires to fully conform to the [WebGL 1.0.3 specification](https://www.khronos.org/registry/webgl/specs/1.0.3/).
 
+[![NPM](https://nodei.co/npm/gl.png?compact=true)](https://nodei.co/npm/gl/)
+[![Build Status](https://travis-ci.org/stackgl/headless-gl.svg?branch=master)](https://travis-ci.org/stackgl/headless-gl)
+
 ## Example
 
 ```javascript
@@ -33,7 +36,7 @@ Installing headless-gl on a supported platform is a snap using one of the prebui
 npm install gl
 ```
 
-And you are good to go!  If your system is not supported, then please see the [development](#System dependencies) section on how to configure your build environment.
+And you are good to go!  If your system is not supported, then please see the [development](#system-dependencies) section on how to configure your build environment.
 
 ## API
 

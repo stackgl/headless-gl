@@ -1,0 +1,48 @@
+# Prevent Travis from exporting CXX after matrix env
+language: c
+
+sudo: false
+
+matrix:
+  include:
+# Linux
+  - os: linux
+    compiler: g++
+    env: CXX=g++-4.9 NODE_VERSION=0.12
+  - os: linux
+    compiler: g++
+    env: CXX=g++-4.9 NODE_VERSION=0.10
+# OS X
+  - os: osx
+    osx_image: xcode7
+    compiler: clang
+    env: NODE_VERSION=0.12
+  - os: osx
+    osx_image: xcode7
+    compiler: clang
+    env: NODE_VERSION=0.10
+
+addons:
+  apt:
+    sources: [ 'ubuntu-toolchain-r-test' ]
+    packages: [ 'gdb', 'g++-4.9', 'gcc-4.9', 'libllvm3.4', 'xutils-dev',
+                'libxxf86vm-dev', 'x11proto-xf86vidmode-dev', 'mesa-utils' ]
+
+before_install:
+- ./scripts/install_node.sh
+
+install:
+- ./scripts/install.sh
+
+before_script:
+- ulimit -c unlimited -S
+- ulimit -a
+
+script:
+- ./scripts/test.sh
+
+after_success:
+- ./scripts/after_success.sh
+
+git:
+  submodules: true
