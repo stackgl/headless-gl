@@ -254,53 +254,61 @@ function validCubeTarget (target) {
 
 function precheckFramebufferStatus (framebuffer) {
   var attachments = framebuffer._attachments
-  var width = -1
-  var height = -1
+  var width = []
+  var height = []
 
+  var colorAttachment = attachments[gl.COLOR_ATTACHMENT0]
+  var depthAttachment = attachments[gl.DEPTH_ATTACHMENT]
   var depthStencilAttachment = attachments[gl.DEPTH_STENCIL_ATTACHMENT]
+  var stencilAttachment = attachments[gl.STENCIL_ATTACHMENT]
+
+  if (depthStencilAttachment && (stencilAttachment || depthAttachment) ||
+      (stencilAttachment && depthAttachment)) {
+    return gl.FRAMEBUFFER_UNSUPPORTED
+  }
+
+  if (!colorAttachment) {
+    return gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
+  }
+
   if (depthStencilAttachment instanceof WebGLTexture) {
     return gl.FRAMEBUFFER_UNSUPPORTED
   } else if (depthStencilAttachment instanceof WebGLRenderbuffer) {
     if (depthStencilAttachment._format !== gl.DEPTH_STENCIL) {
       return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
     }
-    width = depthStencilAttachment._width
-    height = depthStencilAttachment._height
+    width.push(depthStencilAttachment._width)
+    height.push(depthStencilAttachment._height)
   }
 
-  var depthAttachment = attachments[gl.DEPTH_ATTACHMENT]
-  if (depthAttachment && depthStencilAttachment) {
-    return gl.FRAMEBUFFER_UNSUPPORTED
-  } else if (depthAttachment instanceof WebGLTexture) {
+  if (depthAttachment instanceof WebGLTexture) {
     return gl.FRAMEBUFFER_UNSUPPORTED
   } else if (depthAttachment instanceof WebGLRenderbuffer) {
     if (depthAttachment._format !== gl.DEPTH_COMPONENT16) {
       return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
     }
-    width = depthAttachment._width
-    height = depthAttachment._height
+    width.push(depthAttachment._width)
+    height.push(depthAttachment._height)
   }
 
-  var stencilAttachment = attachments[gl.STENCIL_ATTACHMENT]
-  if (stencilAttachment) {
-    return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+  if (stencilAttachment instanceof WebGLTexture) {
+    return gl.FRAMEBUFFER_UNSUPPORTED
+  } else if (stencilAttachment instanceof WebGLRenderbuffer) {
+    if (stencilAttachment._format !== gl.STENCIL_INDEX8) {
+      return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+    }
+    width.push(stencilAttachment._width)
+    height.push(stencilAttachment._height)
   }
 
-  if (depthAttachment && depthStencilAttachment) {
-    return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
-  }
-
-  var colorAttachment = attachments[gl.COLOR_ATTACHMENT0]
-  var colorWidth = -1
-  var colorHeight = -1
   if (colorAttachment instanceof WebGLTexture) {
     if (colorAttachment._format !== gl.RGBA &&
-      colorAttachment._type !== gl.UNSIGNED_BYTE) {
+        colorAttachment._type !== gl.UNSIGNED_BYTE) {
       return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
     }
     var level = framebuffer._attachmentLevel[gl.COLOR_ATTACHMENT0]
-    colorWidth = colorAttachment._levelWidth[level]
-    colorHeight = colorAttachment._levelHeight[level]
+    width.push(colorAttachment._levelWidth[level])
+    height.push(colorAttachment._levelHeight[level])
   } else if (colorAttachment instanceof WebGLRenderbuffer) {
     var format = colorAttachment._format
     if (format !== gl.RGBA4 &&
@@ -308,29 +316,34 @@ function precheckFramebufferStatus (framebuffer) {
       format !== gl.RGB5_A1) {
       return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
     }
-    colorWidth = colorAttachment._width
-    colorHeight = colorAttachment._height
+    width.push(colorAttachment._width)
+    height.push(colorAttachment._height)
   }
 
-  if (!colorAttachment && !depthAttachment && !depthStencilAttachment) {
+  if (!colorAttachment &&
+      !stencilAttachment &&
+      !depthAttachment &&
+      !depthStencilAttachment) {
     return gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
   }
 
-  if (!colorAttachment) {
-    return gl.FRAMEBUFFER_UNSUPPORTED
-  }
-
-  if (colorWidth <= 0 || colorHeight <= 0) {
+  if (width.length <= 0 || height.length <= 0) {
     return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
   }
 
-  if ((width >= 0 && height >= 0) &&
-    (colorWidth !== width || colorHeight !== height)) {
-    return gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS
+  for (var i = 1; i < width.length; ++i) {
+    if (width[i - 1] !== width[i] ||
+        height[i - 1] !== height[i]) {
+      return gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS
+    }
   }
 
-  framebuffer._width = colorWidth
-  framebuffer._height = colorHeight
+  if (width[0] === 0 || height[0] === 0) {
+    return gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+  }
+
+  framebuffer._width = width[0]
+  framebuffer._height = height[0]
 
   return gl.FRAMEBUFFER_COMPLETE
 }
@@ -481,7 +494,6 @@ function checkDelete (obj) {
     }
     obj._performDelete()
     obj._ = 0
-    obj._ctx = null
   }
 }
 
@@ -3285,12 +3297,6 @@ gl.texImage2D = function texImage2D (
     return
   }
 
-  if (border !== 0 ||
-    (validCubeTarget(target) && width !== height)) {
-    setError(this, gl.INVALID_VALUE)
-    return
-  }
-
   var data = convertPixels(pixels)
   var rowStride = computeRowStride(this, width, pixelSize)
   var imageSize = rowStride * height
@@ -3300,6 +3306,11 @@ gl.texImage2D = function texImage2D (
     return
   }
 
+  if (border !== 0 ||
+    (validCubeTarget(target) && width !== height)) {
+    setError(this, gl.INVALID_VALUE)
+    return
+  }
   // Need to check for out of memory error
   saveError(this)
   _texImage2D.call(
@@ -3406,7 +3417,7 @@ gl.texSubImage2D = function texSubImage2D (
   var imageSize = rowStride * height
 
   if (!data || data.length < imageSize) {
-    setError(this, gl.INVALID_VALUE)
+    setError(this, gl.INVALID_OPERATION)
     return
   }
 
