@@ -24,7 +24,8 @@ WebGLRenderingContext* WebGLRenderingContext::CONTEXT_LIST_HEAD = NULL;
     node::ObjectWrap::Unwrap<WebGLRenderingContext>(info.This()); \
   if (!(inst && inst->setActive())) { \
     return Nan::ThrowError("Invalid GL context"); \
-  }
+  } \
+  BP
 
 WebGLRenderingContext::WebGLRenderingContext(
     int width
@@ -213,14 +214,14 @@ WebGLRenderingContext::~WebGLRenderingContext() {
 }
 
 GL_METHOD(SetDebugMode) {
-	GL_BOILERPLATE;
-	BP
+    GL_BOILERPLATE;
+    BP
     inst->debug_mode = info[0]->BooleanValue();
 }
 
 GL_METHOD(SetError) {
   GL_BOILERPLATE;
-  BP
+  inst->setError((GLenum)info[0]->Int32Value());
 }
 
 GL_METHOD(DisposeAll) {
@@ -263,14 +264,12 @@ GL_METHOD(New) {
 
 GL_METHOD(Destroy) {
   GL_BOILERPLATE
-  BP
 
   inst->dispose();
 }
 
 GL_METHOD(Uniform1f) {
   GL_BOILERPLATE;
-  BP
 
   int location = info[0]->Int32Value();
   float x = (float) info[1]->NumberValue();
@@ -280,7 +279,6 @@ GL_METHOD(Uniform1f) {
 
 GL_METHOD(Uniform2f) {
   GL_BOILERPLATE;
-  BP
 
   GLint location = info[0]->Int32Value();
   GLfloat x = static_cast<GLfloat>(info[1]->NumberValue());
@@ -291,7 +289,6 @@ GL_METHOD(Uniform2f) {
 
 GL_METHOD(Uniform3f) {
   GL_BOILERPLATE;
-  BP
 
   GLint location = info[0]->Int32Value();
   GLfloat x = static_cast<GLfloat>(info[1]->NumberValue());
@@ -303,7 +300,6 @@ GL_METHOD(Uniform3f) {
 
 GL_METHOD(Uniform4f) {
   GL_BOILERPLATE;
-  BP
 
   GLint location = info[0]->Int32Value();
   GLfloat x = static_cast<GLfloat>(info[1]->NumberValue());
@@ -316,7 +312,6 @@ GL_METHOD(Uniform4f) {
 
 GL_METHOD(Uniform1i) {
   GL_BOILERPLATE;
-  BP
 
   GLint location = info[0]->Int32Value();
   GLint x = info[1]->Int32Value();
@@ -326,7 +321,6 @@ GL_METHOD(Uniform1i) {
 
 GL_METHOD(Uniform2i) {
   GL_BOILERPLATE;
-  BP
 
   GLint location = info[0]->Int32Value();
   GLint x = info[1]->Int32Value();
@@ -337,7 +331,6 @@ GL_METHOD(Uniform2i) {
 
 GL_METHOD(Uniform3i) {
   GL_BOILERPLATE;
-  BP
 
   GLint location = info[0]->Int32Value();
   GLint x = info[1]->Int32Value();
@@ -349,7 +342,6 @@ GL_METHOD(Uniform3i) {
 
 GL_METHOD(Uniform4i) {
   GL_BOILERPLATE;
-  BP
 
   GLint location = info[0]->Int32Value();
   GLint x = info[1]->Int32Value();
@@ -363,7 +355,6 @@ GL_METHOD(Uniform4i) {
 
 GL_METHOD(PixelStorei) {
   GL_BOILERPLATE;
-  BP
 
   GLenum pname = info[0]->Int32Value();
   GLenum param = info[1]->Int32Value();
@@ -395,7 +386,6 @@ GL_METHOD(PixelStorei) {
 
 GL_METHOD(BindAttribLocation) {
   GL_BOILERPLATE;
-  BP
 
   GLint program = info[0]->Int32Value();
   GLint index   = info[1]->Int32Value();
@@ -415,13 +405,11 @@ GLenum WebGLRenderingContext::getError() {
 
 GL_METHOD(GetError) {
   GL_BOILERPLATE;
-  BP
   info.GetReturnValue().Set(Nan::New<v8::Integer>(inst->getError()));
 }
 
 GL_METHOD(VertexAttribDivisor) {
   GL_BOILERPLATE;
-  BP
 
   GLuint index   = info[0]->Uint32Value();
   GLuint divisor = info[1]->Uint32Value();
@@ -431,7 +419,6 @@ GL_METHOD(VertexAttribDivisor) {
 
 GL_METHOD(DrawArraysInstanced) {
   GL_BOILERPLATE;
-  BP
 
   GLenum  mode   = info[0]->Int32Value();
   GLint   first  = info[1]->Int32Value();
@@ -443,7 +430,6 @@ GL_METHOD(DrawArraysInstanced) {
 
 GL_METHOD(DrawElementsInstanced) {
   GL_BOILERPLATE;
-  BP
 
   GLenum mode   = info[0]->Int32Value();
   GLint  count  = info[1]->Int32Value();
@@ -461,7 +447,6 @@ GL_METHOD(DrawElementsInstanced) {
 
 GL_METHOD(DrawArrays) {
   GL_BOILERPLATE;
-  BP
 
   GLenum mode  = info[0]->Int32Value();
   GLint  first = info[1]->Int32Value();
@@ -472,7 +457,6 @@ GL_METHOD(DrawArrays) {
 
 GL_METHOD(UniformMatrix2fv) {
   GL_BOILERPLATE;
-  BP
 
   GLint location      = info[0]->Int32Value();
   GLboolean transpose = info[1]->BooleanValue();
@@ -483,7 +467,6 @@ GL_METHOD(UniformMatrix2fv) {
 
 GL_METHOD(UniformMatrix3fv) {
   GL_BOILERPLATE;
-  BP
 
   GLint     location  = info[0]->Int32Value();
   GLboolean transpose = info[1]->BooleanValue();
@@ -494,7 +477,6 @@ GL_METHOD(UniformMatrix3fv) {
 
 GL_METHOD(UniformMatrix4fv) {
   GL_BOILERPLATE;
-  BP
 
   GLint     location  = info[0]->Int32Value();
   GLboolean transpose = info[1]->BooleanValue();
@@ -505,7 +487,6 @@ GL_METHOD(UniformMatrix4fv) {
 
 GL_METHOD(GenerateMipmap) {
   GL_BOILERPLATE;
-  BP
 
   GLint target = info[0]->Int32Value();
   (inst->glGenerateMipmap)(target);
@@ -513,7 +494,6 @@ GL_METHOD(GenerateMipmap) {
 
 GL_METHOD(GetAttribLocation) {
   GL_BOILERPLATE;
-  BP
 
   GLint program = info[0]->Int32Value();
   Nan::Utf8String name(info[1]);
@@ -526,7 +506,6 @@ GL_METHOD(GetAttribLocation) {
 
 GL_METHOD(DepthFunc) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glDepthFunc)(info[0]->Int32Value());
 }
@@ -534,7 +513,6 @@ GL_METHOD(DepthFunc) {
 
 GL_METHOD(Viewport) {
   GL_BOILERPLATE;
-  BP
 
   GLint   x       = info[0]->Int32Value();
   GLint   y       = info[1]->Int32Value();
@@ -546,7 +524,6 @@ GL_METHOD(Viewport) {
 
 GL_METHOD(CreateShader) {
   GL_BOILERPLATE;
-  BP
 
   GLuint shader=(inst->glCreateShader)(info[0]->Int32Value());
   inst->registerGLObj(GLOBJECT_TYPE_SHADER, shader);
@@ -557,7 +534,6 @@ GL_METHOD(CreateShader) {
 
 GL_METHOD(ShaderSource) {
   GL_BOILERPLATE;
-  BP
 
   GLint id = info[0]->Int32Value();
   Nan::Utf8String code(info[1]);
@@ -571,14 +547,12 @@ GL_METHOD(ShaderSource) {
 
 GL_METHOD(CompileShader) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glCompileShader)(info[0]->Int32Value());
 }
 
 GL_METHOD(FrontFace) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glFrontFace)(info[0]->Int32Value());
 }
@@ -586,7 +560,6 @@ GL_METHOD(FrontFace) {
 
 GL_METHOD(GetShaderParameter) {
   GL_BOILERPLATE;
-  BP
 
   GLint shader = info[0]->Int32Value();
   GLenum pname = info[1]->Int32Value();
@@ -599,7 +572,6 @@ GL_METHOD(GetShaderParameter) {
 
 GL_METHOD(GetShaderInfoLog) {
   GL_BOILERPLATE;
-  BP
 
   GLint id = info[0]->Int32Value();
 
@@ -618,7 +590,6 @@ GL_METHOD(GetShaderInfoLog) {
 
 GL_METHOD(CreateProgram) {
   GL_BOILERPLATE;
-  BP
 
   GLuint program=(inst->glCreateProgram)();
   inst->registerGLObj(GLOBJECT_TYPE_PROGRAM, program);
@@ -629,7 +600,6 @@ GL_METHOD(CreateProgram) {
 
 GL_METHOD(AttachShader) {
   GL_BOILERPLATE;
-  BP
 
   GLint program = info[0]->Int32Value();
   GLint shader  = info[1]->Int32Value();
@@ -639,14 +609,12 @@ GL_METHOD(AttachShader) {
 
 GL_METHOD(ValidateProgram) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glValidateProgram)(info[0]->Int32Value());
 }
 
 GL_METHOD(LinkProgram) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glLinkProgram)(info[0]->Int32Value());
 }
@@ -654,7 +622,6 @@ GL_METHOD(LinkProgram) {
 
 GL_METHOD(GetProgramParameter) {
   GL_BOILERPLATE;
-  BP
 
   GLint program = info[0]->Int32Value();
   GLenum pname  = (GLenum)(info[1]->Int32Value());
@@ -668,7 +635,6 @@ GL_METHOD(GetProgramParameter) {
 
 GL_METHOD(GetUniformLocation) {
   GL_BOILERPLATE;
-  BP
 
   GLint program = info[0]->Int32Value();
   Nan::Utf8String name(info[1]);
@@ -680,7 +646,6 @@ GL_METHOD(GetUniformLocation) {
 
 GL_METHOD(ClearColor) {
   GL_BOILERPLATE;
-  BP
 
   GLfloat red   = static_cast<GLfloat>(info[0]->NumberValue());
   GLfloat green = static_cast<GLfloat>(info[1]->NumberValue());
@@ -693,7 +658,6 @@ GL_METHOD(ClearColor) {
 
 GL_METHOD(ClearDepth) {
   GL_BOILERPLATE;
-  BP
 
   GLfloat depth = static_cast<GLfloat>(info[0]->NumberValue());
 
@@ -702,14 +666,12 @@ GL_METHOD(ClearDepth) {
 
 GL_METHOD(Disable) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glDisable)(info[0]->Int32Value());
 }
 
 GL_METHOD(Enable) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glEnable)(info[0]->Int32Value());
 }
@@ -717,7 +679,6 @@ GL_METHOD(Enable) {
 
 GL_METHOD(CreateTexture) {
   GL_BOILERPLATE;
-  BP
 
   GLuint texture;
   (inst->glGenTextures)(1, &texture);
@@ -729,7 +690,6 @@ GL_METHOD(CreateTexture) {
 
 GL_METHOD(BindTexture) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
   GLint texture = info[1]->Int32Value();
@@ -836,7 +796,6 @@ unsigned char* WebGLRenderingContext::unpackPixels(
 
 GL_METHOD(TexImage2D) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target         = info[0]->Int32Value();
   GLint level           = info[1]->Int32Value();
@@ -899,7 +858,6 @@ GL_METHOD(TexImage2D) {
 
 GL_METHOD(TexSubImage2D) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target   = info[0]->Int32Value();
   GLint level     = info[1]->Int32Value();
@@ -948,7 +906,6 @@ GL_METHOD(TexSubImage2D) {
 
 GL_METHOD(TexParameteri) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
   GLenum pname  = info[1]->Int32Value();
@@ -959,7 +916,6 @@ GL_METHOD(TexParameteri) {
 
 GL_METHOD(TexParameterf) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
   GLenum pname  = info[1]->Int32Value();
@@ -971,7 +927,6 @@ GL_METHOD(TexParameterf) {
 
 GL_METHOD(Clear) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glClear)(info[0]->Int32Value());
 }
@@ -979,14 +934,12 @@ GL_METHOD(Clear) {
 
 GL_METHOD(UseProgram) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glUseProgram)(info[0]->Int32Value());
 }
 
 GL_METHOD(CreateBuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLuint buffer;
   (inst->glGenBuffers)(1, &buffer);
@@ -997,7 +950,6 @@ GL_METHOD(CreateBuffer) {
 
 GL_METHOD(BindBuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = (GLenum)info[0]->Int32Value();
   GLuint buffer = (GLuint)info[1]->Uint32Value();
@@ -1008,7 +960,6 @@ GL_METHOD(BindBuffer) {
 
 GL_METHOD(CreateFramebuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLuint buffer;
   (inst->glGenFramebuffers)(1, &buffer);
@@ -1020,7 +971,6 @@ GL_METHOD(CreateFramebuffer) {
 
 GL_METHOD(BindFramebuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLint target = (GLint)info[0]->Int32Value();
   GLint buffer = (GLint)info[1]->Int32Value();
@@ -1031,7 +981,6 @@ GL_METHOD(BindFramebuffer) {
 
 GL_METHOD(FramebufferTexture2D) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target     = info[0]->Int32Value();
   GLenum attachment = info[1]->Int32Value();
@@ -1045,7 +994,6 @@ GL_METHOD(FramebufferTexture2D) {
 
 GL_METHOD(BufferData) {
   GL_BOILERPLATE;
-  BP
 
   GLint target = info[0]->Int32Value();
   GLenum usage = info[2]->Int32Value();
@@ -1061,7 +1009,6 @@ GL_METHOD(BufferData) {
 
 GL_METHOD(BufferSubData) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
   GLint offset  = info[1]->Int32Value();
@@ -1073,7 +1020,6 @@ GL_METHOD(BufferSubData) {
 
 GL_METHOD(BlendEquation) {
   GL_BOILERPLATE;
-  BP
 
   GLenum mode = info[0]->Int32Value();;
 
@@ -1083,7 +1029,6 @@ GL_METHOD(BlendEquation) {
 
 GL_METHOD(BlendFunc) {
   GL_BOILERPLATE;
-  BP
 
   GLenum sfactor = info[0]->Int32Value();
   GLenum dfactor = info[1]->Int32Value();
@@ -1094,14 +1039,12 @@ GL_METHOD(BlendFunc) {
 
 GL_METHOD(EnableVertexAttribArray) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glEnableVertexAttribArray)(info[0]->Int32Value());
 }
 
 GL_METHOD(VertexAttribPointer) {
   GL_BOILERPLATE;
-  BP
 
   GLint index          = info[0]->Int32Value();
   GLint size           = info[1]->Int32Value();
@@ -1122,7 +1065,6 @@ GL_METHOD(VertexAttribPointer) {
 
 GL_METHOD(ActiveTexture) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glActiveTexture)(info[0]->Int32Value());
 }
@@ -1130,7 +1072,6 @@ GL_METHOD(ActiveTexture) {
 
 GL_METHOD(DrawElements) {
   GL_BOILERPLATE;
-  BP
 
   GLenum mode   = info[0]->Int32Value();
   GLint count   = info[1]->Int32Value();
@@ -1143,21 +1084,18 @@ GL_METHOD(DrawElements) {
 
 GL_METHOD(Flush) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glFlush)();
 }
 
 GL_METHOD(Finish) {
   GL_BOILERPLATE;
-  BP
 
   (inst->glFinish)();
 }
 
 GL_METHOD(VertexAttrib1f) {
   GL_BOILERPLATE;
-  BP
 
   GLuint index = info[0]->Int32Value();
   GLfloat x = static_cast<GLfloat>(info[1]->NumberValue());
@@ -1167,7 +1105,6 @@ GL_METHOD(VertexAttrib1f) {
 
 GL_METHOD(VertexAttrib2f) {
   GL_BOILERPLATE;
-  BP
 
   GLuint index = info[0]->Int32Value();
   GLfloat x = static_cast<GLfloat>(info[1]->NumberValue());
@@ -1178,7 +1115,6 @@ GL_METHOD(VertexAttrib2f) {
 
 GL_METHOD(VertexAttrib3f) {
   GL_BOILERPLATE;
-  BP
 
   GLuint index = info[0]->Int32Value();
   GLfloat x = static_cast<GLfloat>(info[1]->NumberValue());
@@ -1190,7 +1126,6 @@ GL_METHOD(VertexAttrib3f) {
 
 GL_METHOD(VertexAttrib4f) {
   GL_BOILERPLATE;
-  BP
 
   GLuint index = info[0]->Int32Value();
   GLfloat x = static_cast<GLfloat>(info[1]->NumberValue());
@@ -1203,7 +1138,6 @@ GL_METHOD(VertexAttrib4f) {
 
 GL_METHOD(BlendColor) {
   GL_BOILERPLATE;
-  BP
 
   GLclampf r = static_cast<GLclampf>(info[0]->NumberValue());
   GLclampf g = static_cast<GLclampf>(info[1]->NumberValue());
@@ -1215,7 +1149,6 @@ GL_METHOD(BlendColor) {
 
 GL_METHOD(BlendEquationSeparate) {
   GL_BOILERPLATE;
-  BP
 
   GLenum mode_rgb   = info[0]->Int32Value();
   GLenum mode_alpha = info[1]->Int32Value();
@@ -1225,7 +1158,6 @@ GL_METHOD(BlendEquationSeparate) {
 
 GL_METHOD(BlendFuncSeparate) {
   GL_BOILERPLATE;
-  BP
 
   GLenum src_rgb   = info[0]->Int32Value();
   GLenum dst_rgb   = info[1]->Int32Value();
@@ -1237,7 +1169,6 @@ GL_METHOD(BlendFuncSeparate) {
 
 GL_METHOD(ClearStencil) {
   GL_BOILERPLATE;
-  BP
 
   GLint s = info[0]->Int32Value();
 
@@ -1246,7 +1177,6 @@ GL_METHOD(ClearStencil) {
 
 GL_METHOD(ColorMask) {
   GL_BOILERPLATE;
-  BP
 
   GLboolean r = info[0]->BooleanValue();
   GLboolean g = info[1]->BooleanValue();
@@ -1258,7 +1188,6 @@ GL_METHOD(ColorMask) {
 
 GL_METHOD(CopyTexImage2D) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target         = info[0]->Int32Value();
   GLint level           = info[1]->Int32Value();
@@ -1274,7 +1203,6 @@ GL_METHOD(CopyTexImage2D) {
 
 GL_METHOD(CopyTexSubImage2D) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target  = info[0]->Int32Value();
   GLint level    = info[1]->Int32Value();
@@ -1290,7 +1218,6 @@ GL_METHOD(CopyTexSubImage2D) {
 
 GL_METHOD(CullFace) {
   GL_BOILERPLATE;
-  BP
 
   GLenum mode = info[0]->Int32Value();
 
@@ -1299,7 +1226,6 @@ GL_METHOD(CullFace) {
 
 GL_METHOD(DepthMask) {
   GL_BOILERPLATE;
-  BP
 
   GLboolean flag = info[0]->BooleanValue();
 
@@ -1308,7 +1234,6 @@ GL_METHOD(DepthMask) {
 
 GL_METHOD(DepthRange) {
   GL_BOILERPLATE;
-  BP
 
   GLclampf zNear  = static_cast<GLclampf>(info[0]->NumberValue());
   GLclampf zFar   = static_cast<GLclampf>(info[1]->NumberValue());
@@ -1318,7 +1243,6 @@ GL_METHOD(DepthRange) {
 
 GL_METHOD(DisableVertexAttribArray) {
   GL_BOILERPLATE;
-  BP
 
   GLuint index = info[0]->Int32Value();
 
@@ -1327,7 +1251,6 @@ GL_METHOD(DisableVertexAttribArray) {
 
 GL_METHOD(Hint) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
   GLenum mode   = info[1]->Int32Value();
@@ -1337,7 +1260,6 @@ GL_METHOD(Hint) {
 
 GL_METHOD(IsEnabled) {
   GL_BOILERPLATE;
-  BP
 
   GLenum cap = info[0]->Int32Value();
   bool ret = (inst->glIsEnabled)(cap) != 0;
@@ -1347,7 +1269,6 @@ GL_METHOD(IsEnabled) {
 
 GL_METHOD(LineWidth) {
   GL_BOILERPLATE;
-  BP
 
   GLfloat width = (GLfloat)info[0]->NumberValue();
 
@@ -1356,7 +1277,6 @@ GL_METHOD(LineWidth) {
 
 GL_METHOD(PolygonOffset) {
   GL_BOILERPLATE;
-  BP
 
   GLfloat factor  = static_cast<GLfloat>(info[0]->NumberValue());
   GLfloat units   = static_cast<GLfloat>(info[1]->NumberValue());
@@ -1366,7 +1286,6 @@ GL_METHOD(PolygonOffset) {
 
 GL_METHOD(SampleCoverage) {
   GL_BOILERPLATE;
-  BP
 
   GLclampf value   = static_cast<GLclampf>(info[0]->NumberValue());
   GLboolean invert = info[1]->BooleanValue();
@@ -1376,7 +1295,6 @@ GL_METHOD(SampleCoverage) {
 
 GL_METHOD(Scissor) {
   GL_BOILERPLATE;
-  BP
 
   GLint x        = info[0]->Int32Value();
   GLint y        = info[1]->Int32Value();
@@ -1388,7 +1306,6 @@ GL_METHOD(Scissor) {
 
 GL_METHOD(StencilFunc) {
   GL_BOILERPLATE;
-  BP
 
   GLenum func = info[0]->Int32Value();
   GLint ref   = info[1]->Int32Value();
@@ -1399,7 +1316,6 @@ GL_METHOD(StencilFunc) {
 
 GL_METHOD(StencilFuncSeparate) {
   GL_BOILERPLATE;
-  BP
 
   GLenum face = info[0]->Int32Value();
   GLenum func = info[1]->Int32Value();
@@ -1411,7 +1327,6 @@ GL_METHOD(StencilFuncSeparate) {
 
 GL_METHOD(StencilMask) {
   GL_BOILERPLATE;
-  BP
 
   GLuint mask = info[0]->Uint32Value();
 
@@ -1420,7 +1335,6 @@ GL_METHOD(StencilMask) {
 
 GL_METHOD(StencilMaskSeparate) {
   GL_BOILERPLATE;
-  BP
 
   GLenum face = info[0]->Int32Value();
   GLuint mask = info[1]->Uint32Value();
@@ -1430,7 +1344,6 @@ GL_METHOD(StencilMaskSeparate) {
 
 GL_METHOD(StencilOp) {
   GL_BOILERPLATE;
-  BP
 
   GLenum fail   = info[0]->Int32Value();
   GLenum zfail  = info[1]->Int32Value();
@@ -1441,7 +1354,6 @@ GL_METHOD(StencilOp) {
 
 GL_METHOD(StencilOpSeparate) {
   GL_BOILERPLATE;
-  BP
 
   GLenum face   = info[0]->Int32Value();
   GLenum fail   = info[1]->Int32Value();
@@ -1453,7 +1365,6 @@ GL_METHOD(StencilOpSeparate) {
 
 GL_METHOD(BindRenderbuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
   GLuint buffer = info[1]->Uint32Value();
@@ -1463,7 +1374,6 @@ GL_METHOD(BindRenderbuffer) {
 
 GL_METHOD(CreateRenderbuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLuint renderbuffers;
   (inst->glGenRenderbuffers)(1, &renderbuffers);
@@ -1475,7 +1385,6 @@ GL_METHOD(CreateRenderbuffer) {
 
 GL_METHOD(DeleteBuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLuint buffer = (GLuint)info[0]->Uint32Value();
 
@@ -1486,7 +1395,6 @@ GL_METHOD(DeleteBuffer) {
 
 GL_METHOD(DeleteFramebuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLuint buffer = info[0]->Uint32Value();
 
@@ -1497,7 +1405,6 @@ GL_METHOD(DeleteFramebuffer) {
 
 GL_METHOD(DeleteProgram) {
   GL_BOILERPLATE;
-  BP
 
   GLuint program = info[0]->Uint32Value();
 
@@ -1508,7 +1415,6 @@ GL_METHOD(DeleteProgram) {
 
 GL_METHOD(DeleteRenderbuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLuint renderbuffer = info[0]->Uint32Value();
 
@@ -1519,7 +1425,6 @@ GL_METHOD(DeleteRenderbuffer) {
 
 GL_METHOD(DeleteShader) {
   GL_BOILERPLATE;
-  BP
 
   GLuint shader = info[0]->Uint32Value();
 
@@ -1530,7 +1435,6 @@ GL_METHOD(DeleteShader) {
 
 GL_METHOD(DeleteTexture) {
   GL_BOILERPLATE;
-  BP
 
   GLuint texture = info[0]->Uint32Value();
 
@@ -1541,7 +1445,6 @@ GL_METHOD(DeleteTexture) {
 
 GL_METHOD(DetachShader) {
   GL_BOILERPLATE;
-  BP
 
   GLuint program  = info[0]->Uint32Value();
   GLuint shader   = info[1]->Uint32Value();
@@ -1551,7 +1454,6 @@ GL_METHOD(DetachShader) {
 
 GL_METHOD(FramebufferRenderbuffer) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target             = info[0]->Int32Value();
   GLenum attachment         = info[1]->Int32Value();
@@ -1567,7 +1469,6 @@ GL_METHOD(FramebufferRenderbuffer) {
 
 GL_METHOD(GetVertexAttribOffset) {
   GL_BOILERPLATE;
-  BP
 
   GLuint index = info[0]->Uint32Value();
   GLenum pname = info[1]->Int32Value();
@@ -1581,7 +1482,6 @@ GL_METHOD(GetVertexAttribOffset) {
 
 GL_METHOD(IsBuffer) {
   GL_BOILERPLATE;
-  BP
 
   info.GetReturnValue().Set(
     Nan::New<v8::Boolean>(
@@ -1590,7 +1490,6 @@ GL_METHOD(IsBuffer) {
 
 GL_METHOD(IsFramebuffer) {
   GL_BOILERPLATE;
-  BP
 
   info.GetReturnValue().Set(
     Nan::New<v8::Boolean>(
@@ -1599,7 +1498,6 @@ GL_METHOD(IsFramebuffer) {
 
 GL_METHOD(IsProgram) {
   GL_BOILERPLATE;
-  BP
 
   info.GetReturnValue().Set(
     Nan::New<v8::Boolean>(
@@ -1608,7 +1506,6 @@ GL_METHOD(IsProgram) {
 
 GL_METHOD(IsRenderbuffer) {
   GL_BOILERPLATE;
-  BP
 
   info.GetReturnValue().Set(
     Nan::New<v8::Boolean>(
@@ -1617,7 +1514,6 @@ GL_METHOD(IsRenderbuffer) {
 
 GL_METHOD(IsShader) {
   GL_BOILERPLATE;
-  BP
 
   info.GetReturnValue().Set(
     Nan::New<v8::Boolean>(
@@ -1626,7 +1522,6 @@ GL_METHOD(IsShader) {
 
 GL_METHOD(IsTexture) {
   GL_BOILERPLATE;
-  BP
 
   info.GetReturnValue().Set(
     Nan::New<v8::Boolean>(
@@ -1635,7 +1530,6 @@ GL_METHOD(IsTexture) {
 
 GL_METHOD(RenderbufferStorage) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target         = info[0]->Int32Value();
   GLenum internalformat = info[1]->Int32Value();
@@ -1652,7 +1546,6 @@ GL_METHOD(RenderbufferStorage) {
 
 GL_METHOD(GetShaderSource) {
   GL_BOILERPLATE;
-  BP
 
   GLint shader = info[0]->Int32Value();
 
@@ -1669,7 +1562,6 @@ GL_METHOD(GetShaderSource) {
 
 GL_METHOD(ReadPixels) {
   GL_BOILERPLATE;
-  BP
 
   GLint x        = info[0]->Int32Value();
   GLint y        = info[1]->Int32Value();
@@ -1684,7 +1576,6 @@ GL_METHOD(ReadPixels) {
 
 GL_METHOD(GetTexParameter) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target     = info[0]->Int32Value();
   GLenum pname      = info[1]->Int32Value();
@@ -1697,7 +1588,6 @@ GL_METHOD(GetTexParameter) {
 
 GL_METHOD(GetActiveAttrib) {
   GL_BOILERPLATE;
-  BP
 
   GLuint program = info[0]->Int32Value();
   GLuint index   = info[1]->Int32Value();
@@ -1732,7 +1622,6 @@ GL_METHOD(GetActiveAttrib) {
 
 GL_METHOD(GetActiveUniform) {
   GL_BOILERPLATE;
-  BP
 
   GLuint program = info[0]->Int32Value();
   GLuint index   = info[1]->Int32Value();
@@ -1768,7 +1657,6 @@ GL_METHOD(GetActiveUniform) {
 
 GL_METHOD(GetAttachedShaders) {
   GL_BOILERPLATE;
-  BP
 
   GLuint program = info[0]->Int32Value();
 
@@ -1791,7 +1679,6 @@ GL_METHOD(GetAttachedShaders) {
 
 GL_METHOD(GetParameter) {
   GL_BOILERPLATE;
-  BP
   GLenum name = info[0]->Int32Value();
 
   switch(name) {
@@ -1943,7 +1830,6 @@ GL_METHOD(GetParameter) {
 
 GL_METHOD(GetBufferParameter) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
   GLenum pname  = info[1]->Int32Value();
@@ -1956,7 +1842,6 @@ GL_METHOD(GetBufferParameter) {
 
 GL_METHOD(GetFramebufferAttachmentParameter) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target     = info[0]->Int32Value();
   GLenum attachment = info[1]->Int32Value();
@@ -1970,7 +1855,6 @@ GL_METHOD(GetFramebufferAttachmentParameter) {
 
 GL_METHOD(GetProgramInfoLog) {
   GL_BOILERPLATE;
-  BP
 
   GLuint program = info[0]->Int32Value();
 
@@ -1988,7 +1872,6 @@ GL_METHOD(GetProgramInfoLog) {
 
 GL_METHOD(GetShaderPrecisionFormat) {
   GL_BOILERPLATE;
-  BP
 
   GLenum shaderType    = info[0]->Int32Value();
   GLenum precisionType = info[1]->Int32Value();
@@ -2014,7 +1897,6 @@ GL_METHOD(GetShaderPrecisionFormat) {
 
 GL_METHOD(GetRenderbufferParameter) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
   GLenum pname  = info[1]->Int32Value();
@@ -2027,7 +1909,6 @@ GL_METHOD(GetRenderbufferParameter) {
 
 GL_METHOD(GetUniform) {
   GL_BOILERPLATE;
-  BP
 
   GLint program  = info[0]->Int32Value();
   GLint location = info[1]->Int32Value();
@@ -2045,7 +1926,6 @@ GL_METHOD(GetUniform) {
 
 GL_METHOD(GetVertexAttrib) {
   GL_BOILERPLATE;
-  BP
 
   GLint index  = info[0]->Int32Value();
   GLenum pname = info[1]->Int32Value();
@@ -2106,7 +1986,6 @@ GL_METHOD(GetVertexAttrib) {
 
 GL_METHOD(GetSupportedExtensions) {
   GL_BOILERPLATE;
-  BP
 
   const char *extensions = reinterpret_cast<const char*>(
     (inst->glGetString)(GL_EXTENSIONS));
@@ -2117,14 +1996,12 @@ GL_METHOD(GetSupportedExtensions) {
 
 GL_METHOD(GetExtension) {
   GL_BOILERPLATE;
-  BP
 
   //TODO
 }
 
 GL_METHOD(CheckFramebufferStatus) {
   GL_BOILERPLATE;
-  BP
 
   GLenum target = info[0]->Int32Value();
 
