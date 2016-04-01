@@ -23,11 +23,13 @@ function bufferToFile (gl, width, height, filename, options) {
 
     file.write(['P3\n# gl.ppm\n', width, ' ', height, '\n255\n'].join(''))
     for (var i = 0; i < pixels.length; i += 4) {
-        file.write(pixels[i] + ' ' + pixels[i + 1] + ' ' + pixels[i + 2] + ' ')
+      file.write(pixels[i] + ' ' + pixels[i + 1] + ' ' + pixels[i + 2] + ' ')
     }
   } else {
     var ext = extension.substring(1, extension.length)
-    writePixels(ndarray(pixels, [width, height, 4], [4, 4 * width, 1], 0), filename, ext, options, function () {})
+    writePixels(
+      ndarray(pixels, [width, height, 4], [4, 4 * width, 1], 0),
+      filename, ext, options || {'quality': 100}, function () {})
   }
 }
 
