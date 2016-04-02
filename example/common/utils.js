@@ -36,7 +36,7 @@ function bufferToFile (gl, width, height, filename, options) {
     var ext = extension.substring(1, extension.length)
     var buffer = ndarray(pixels, [width, height, 4], [4, 4 * width, 1], 0)
 
-    writePixels(buffer.step(1,-1),filename, ext, options || {'quality': 100}, function () {})
+    writePixels(buffer.step(1, -1), filename, ext, options || {'quality': 100}, function () {})
   }
 }
 

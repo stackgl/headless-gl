@@ -14,7 +14,7 @@ function main () {
   var height = 512
   var gl = createContext(width, height)
 
-  gl.setDebugMode(true)
+  gl.setDebugMode(false)
 
   var vertex_src = `
         attribute vec2 a_position;

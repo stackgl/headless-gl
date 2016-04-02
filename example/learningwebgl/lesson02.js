@@ -6,7 +6,7 @@ var utils = require('../common/utils.js')
 var utils_log = require('../common/utils_log.js')
 var log = new utils_log.Log(path.basename(__filename), 'DEBUG')
 
-function Scene(width, height) {
+function Scene (width, height) {
   var gl = this.gl = createContext(width, height)
   gl.viewportWidth = width
   gl.viewportHeight = height
@@ -16,7 +16,7 @@ function Scene(width, height) {
 }
 
 Scene.prototype = {
-  begin: function() {
+  begin: function () {
     var gl = this.gl
     this.initShaders()
     this.initBuffers()
@@ -24,7 +24,7 @@ Scene.prototype = {
     gl.clearColor(0.0, 0.0, 0.0, 1.0)
     gl.enable(gl.DEPTH_TEST)
   },
-  initShaders: function() {
+  initShaders: function () {
     var gl = this.gl
 
     var vertex_src = `
@@ -55,16 +55,16 @@ Scene.prototype = {
     var shaderProgram = this.shaderProgram = utils.createProgramFromSources(gl, [vertex_src, fragment_src])
     gl.useProgram(shaderProgram)
 
-    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition")
+    shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, 'aVertexPosition')
     gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute)
 
-    shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor")
+    shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, 'aVertexColor')
     gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute)
 
-    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix")
-    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, "uMVMatrix")
+    shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, 'uPMatrix')
+    shaderProgram.mvMatrixUniform = gl.getUniformLocation(shaderProgram, 'uMVMatrix')
   },
-  setMatrixUniforms: function() {
+  setMatrixUniforms: function () {
     var gl = this.gl
     var shaderProgram = this.shaderProgram
     var mvMatrix = this.mvMatrix
@@ -73,14 +73,14 @@ Scene.prototype = {
     gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix)
     gl.uniformMatrix4fv(shaderProgram.mvMatrixUniform, false, mvMatrix)
   },
-  initBuffers: function() {
+  initBuffers: function () {
     var gl = this.gl
     var triangleVertexPositionBuffer = this.triangleVertexPositionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer)
     var vertices = [
-         0.0,  1.0,  0.0,
-        -1.0, -1.0,  0.0,
-         1.0, -1.0,  0.0
+      0.0, 1.0, 0.0,
+      -1.0, -1.0, 0.0,
+      1.0, -1.0, 0.0
     ]
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
     triangleVertexPositionBuffer.itemSize = 3
@@ -89,22 +89,21 @@ Scene.prototype = {
     var triangleVertexColorBuffer = this.triangleVertexColorBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexColorBuffer)
     var colors = [
-        1.0, 0.0, 0.0, 1.0,
-        0.0, 1.0, 0.0, 1.0,
-        0.0, 0.0, 1.0, 1.0
+      1.0, 0.0, 0.0, 1.0,
+      0.0, 1.0, 0.0, 1.0,
+      0.0, 0.0, 1.0, 1.0
     ]
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.STATIC_DRAW)
     triangleVertexColorBuffer.itemSize = 4
     triangleVertexColorBuffer.numItems = 3
 
-
     var squareVertexPositionBuffer = this.squareVertexPositionBuffer = gl.createBuffer()
     gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer)
     vertices = [
-         1.0,  1.0,  0.0,
-        -1.0,  1.0,  0.0,
-         1.0, -1.0,  0.0,
-        -1.0, -1.0,  0.0
+      1.0, 1.0, 0.0,
+      -1.0, 1.0, 0.0,
+      1.0, -1.0, 0.0,
+      -1.0, -1.0, 0.0
     ]
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW)
     squareVertexPositionBuffer.itemSize = 3
@@ -120,7 +119,7 @@ Scene.prototype = {
     squareVertexColorBuffer.itemSize = 4
     squareVertexColorBuffer.numItems = 4
   },
-  draw: function() {
+  draw: function () {
     var gl = this.gl
     var pMatrix = this.pMatrix
     var mvMatrix = this.mvMatrix
@@ -157,13 +156,13 @@ Scene.prototype = {
     this.setMatrixUniforms()
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems)
   },
-  render: function() {
+  render: function () {
     var gl = this.gl
 
     this.draw()
 
     var files = [
-      utils.replaceExt(__filename, '.jpg')
+      utils.replaceExt(__filename, '.ppm')
     ]
 
     for (var i = 0; i < files.length; i++) {
@@ -173,14 +172,14 @@ Scene.prototype = {
       log.info(__line, 'finished rendering ' + filename)
     }
   },
-  end: function() {
+  end: function () {
     var gl = this.gl
     gl.destroy()
   }
 }
 
 function main () {
-  var scene = new Scene(512,512)
+  var scene = new Scene(512, 512)
   scene.begin()
   scene.render()
   scene.end()
