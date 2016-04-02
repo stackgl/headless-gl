@@ -27,9 +27,9 @@ function bufferToFile (gl, width, height, filename, options) {
     }
   } else {
     var ext = extension.substring(1, extension.length)
-    writePixels(
-      ndarray(pixels, [width, height, 4], [4, 4 * width, 1], 0),
-      filename, ext, options || {'quality': 100}, function () {})
+    var buffer = ndarray(pixels, [width, height, 4], [4, 4 * width, 1], 0)
+
+    writePixels(buffer.step(1,-1),filename, ext, options || {'quality': 100}, function () {})
   }
 }
 
