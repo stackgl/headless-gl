@@ -8,11 +8,46 @@ matrix:
 # Linux
   - os: linux
     compiler: g++
+    env: CXX=g++-4.9 NODE_VERSION=5
+  - os: linux
+    compiler: g++
+    env: CXX=g++-4.9 NODE_VERSION=4
+  - os: linux
+    compiler: g++
+    env: CXX=g++-4.9 NODE_VERSION=3
+  - os: linux
+    compiler: g++
+    env: CXX=g++-4.9 NODE_VERSION=2
+  - os: linux
+    compiler: g++
+    env: CXX=g++-4.9 NODE_VERSION=1
+  - os: linux
+    compiler: g++
     env: CXX=g++-4.9 NODE_VERSION=0.12
   - os: linux
     compiler: g++
     env: CXX=g++-4.9 NODE_VERSION=0.10
 # OS X
+  - os: osx
+    osx_image: xcode7
+    compiler: clang
+    env: NODE_VERSION=5
+  - os: osx
+    osx_image: xcode7
+    compiler: clang
+    env: NODE_VERSION=4
+  - os: osx
+    osx_image: xcode7
+    compiler: clang
+    env: NODE_VERSION=3
+  - os: osx
+    osx_image: xcode7
+    compiler: clang
+    env: NODE_VERSION=2
+  - os: osx
+    osx_image: xcode7
+    compiler: clang
+    env: NODE_VERSION=1
   - os: osx
     osx_image: xcode7
     compiler: clang
@@ -39,6 +74,9 @@ before_script:
 - ulimit -a
 
 script:
+- ./scripts/test.sh
+
+test:
 - ./scripts/test.sh
 
 after_success:

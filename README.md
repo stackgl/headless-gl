@@ -5,6 +5,7 @@ It aspires to fully conform to the [WebGL 1.0.3 specification](https://www.khron
 
 [![NPM](https://nodei.co/npm/gl.png?compact=true)](https://nodei.co/npm/gl/)
 [![Build Status](https://travis-ci.org/stackgl/headless-gl.svg?branch=master)](https://travis-ci.org/stackgl/headless-gl)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 ## Example
 
