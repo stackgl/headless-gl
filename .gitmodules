@@ -1,6 +1,3 @@
 [submodule "angle"]
 	path = angle
 	url = https://github.com/mikolalysenko/angle.git
-[submodule "mason"]
-	path = mason
-	url = https://github.com/mapbox/mason.git

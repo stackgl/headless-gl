@@ -1,86 +1,45 @@
-# Prevent Travis from exporting CXX after matrix env
 language: c
-
-sudo: false
-
+git:
+  submodules: true
 matrix:
   include:
-# Linux
   - os: linux
+    sudo: required
+    dist: trusty
     compiler: g++
     env: CXX=g++-4.9 NODE_VERSION=5
-  - os: linux
-    compiler: g++
-    env: CXX=g++-4.9 NODE_VERSION=4
-  - os: linux
-    compiler: g++
-    env: CXX=g++-4.9 NODE_VERSION=3
-  - os: linux
-    compiler: g++
-    env: CXX=g++-4.9 NODE_VERSION=2
-  - os: linux
-    compiler: g++
-    env: CXX=g++-4.9 NODE_VERSION=1
-  - os: linux
-    compiler: g++
-    env: CXX=g++-4.9 NODE_VERSION=0.12
-  - os: linux
-    compiler: g++
-    env: CXX=g++-4.9 NODE_VERSION=0.10
-# OS X
+    secure: iKxK/0RIBC/iqPun3Bj3qtMDjIowdIe77MoejhqoczE3g/Fow57cbp3IApDEbbkD5wSm8PMdiPSIgjMt4ggCDCydJfLCTVDLbaYNfI3bc4ZfLPju1iSXF+4bbi39A5W/pv9ilFygP60W/eSupu8CmG6hnA4RYGlKUWxxPwolcMk=
   - os: osx
     osx_image: xcode7
     compiler: clang
     env: NODE_VERSION=5
-  - os: osx
-    osx_image: xcode7
-    compiler: clang
-    env: NODE_VERSION=4
-  - os: osx
-    osx_image: xcode7
-    compiler: clang
-    env: NODE_VERSION=3
-  - os: osx
-    osx_image: xcode7
-    compiler: clang
-    env: NODE_VERSION=2
-  - os: osx
-    osx_image: xcode7
-    compiler: clang
-    env: NODE_VERSION=1
-  - os: osx
-    osx_image: xcode7
-    compiler: clang
-    env: NODE_VERSION=0.12
-  - os: osx
-    osx_image: xcode7
-    compiler: clang
-    env: NODE_VERSION=0.10
-
+    secure: iKxK/0RIBC/iqPun3Bj3qtMDjIowdIe77MoejhqoczE3g/Fow57cbp3IApDEbbkD5wSm8PMdiPSIgjMt4ggCDCydJfLCTVDLbaYNfI3bc4ZfLPju1iSXF+4bbi39A5W/pv9ilFygP60W/eSupu8CmG6hnA4RYGlKUWxxPwolcMk=
 addons:
   apt:
-    sources: [ 'ubuntu-toolchain-r-test' ]
-    packages: [ 'gdb', 'g++-4.9', 'gcc-4.9', 'libllvm3.4', 'xutils-dev',
-                'libxxf86vm-dev', 'x11proto-xf86vidmode-dev', 'mesa-utils' ]
-
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gdb
+    - g++-4.9
+    - gcc-4.9
+    - libllvm3.4
+    - xutils-dev
+    - libxi-dev
+    - libxxf86vm-dev
+    - x11proto-xf86vidmode-dev
+    - mesa-utils
+    - xvfb
+    - libgl1-mesa-dri
+    - libglapi-mesa
+    - libosmesa6
 before_install:
-- ./scripts/install_node.sh
-
+- ./scripts/before_install.sh
 install:
 - ./scripts/install.sh
-
 before_script:
 - ulimit -c unlimited -S
 - ulimit -a
-
 script:
 - ./scripts/test.sh
-
-test:
-- ./scripts/test.sh
-
 after_success:
 - ./scripts/after_success.sh
-
-git:
-  submodules: true

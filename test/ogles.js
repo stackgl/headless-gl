@@ -7,7 +7,8 @@ var BLACKLIST = [
   'ogles_GL_build_build_025_to_032',
   'ogles_GL_gl_FragCoord_gl_FragCoord_001_to_003',
   'ogles_GL_mat3_mat3_001_to_006',
-  'ogles_GL_vec3_vec3_001_to_008'
+  'ogles_GL_vec3_vec3_001_to_008',
+  'ogles_GL_functions_functions_001_to_008'
 ]
 
 require('./util/conformance')(function (str) {

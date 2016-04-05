@@ -3890,12 +3890,13 @@ function resizeDrawingBuffer (context, width, height) {
     storage = gl.DEPTH_STENCIL
     attachment = gl.DEPTH_STENCIL_ATTACHMENT
   } else if (contextAttributes.depth) {
-    storage = 0x81A6 // Use 24 bit depth
+    storage = 0x81A7
     attachment = gl.DEPTH_ATTACHMENT
   } else if (contextAttributes.stencil) {
     storage = gl.STENCIL_INDEX8
     attachment = gl.STENCIL_ATTACHMENT
   }
+
   if (storage) {
     _bindRenderbuffer.call(
       context,

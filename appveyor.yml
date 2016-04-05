@@ -1,0 +1,7 @@
+install:
+  - cmd: git submodule update --init
+  - cinst nodejs
+  - npm install
+
+test_script:
+  - npm test

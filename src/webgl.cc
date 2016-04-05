@@ -9,11 +9,17 @@ EGLDisplay             WebGLRenderingContext::DISPLAY;
 WebGLRenderingContext* WebGLRenderingContext::ACTIVE = NULL;
 WebGLRenderingContext* WebGLRenderingContext::CONTEXT_LIST_HEAD = NULL;
 
-#define BP if(inst->debug_mode==true) { \
-  std::cout << "At " __FILE__ ":" << __FUNCTION__ << ":" << __LINE__ << std::endl; \
-} \
+const char* REQUIRED_EXTENSIONS[] = {
+  "GL_OES_packed_depth_stencil",
+  "GL_ANGLE_instanced_arrays",
+  NULL
+};
 
 #define GL_METHOD(method_name) NAN_METHOD(WebGLRenderingContext:: method_name)
+
+#define BP if(inst->debug_mode==true) { \
+  std::cout << "At " __FILE__ ":" << __FUNCTION__ << ":" << __LINE__ << std::endl; \
+}
 
 #define GL_BOILERPLATE  \
   Nan::HandleScope();\
@@ -90,7 +96,7 @@ WebGLRenderingContext::WebGLRenderingContext(
 
   //Create context
   EGLint contextAttribs[] = {
-    EGL_CONTEXT_CLIENT_VERSION, 3,
+    EGL_CONTEXT_CLIENT_VERSION, 2,
     EGL_NONE
   };
   context = eglCreateContext(DISPLAY, config, EGL_NO_CONTEXT, contextAttribs);
@@ -123,6 +129,26 @@ WebGLRenderingContext::WebGLRenderingContext(
 
   //Initialize function pointers
   initPointers();
+
+  //Check extensions
+  const char *extensionString = (const char*)((glGetString)(GL_EXTENSIONS));
+
+  //Load required extensions
+  for(const char** rext = REQUIRED_EXTENSIONS; *rext; ++rext) {
+    if(!strstr(extensionString, *rext)) {
+      dispose();
+      state = GLCONTEXT_STATE_ERROR;
+      return;
+    }
+  }
+
+  //Select best preferred depth
+  preferredDepth = GL_DEPTH_COMPONENT16;
+  if(strstr(extensionString, "GL_OES_depth32")) {
+    preferredDepth = GL_DEPTH_COMPONENT32_OES;
+  } else if(strstr(extensionString, "GL_OES_depth24")) {
+    preferredDepth = GL_DEPTH_COMPONENT24_OES;
+  }
 }
 
 bool WebGLRenderingContext::setActive() {
@@ -214,9 +240,9 @@ WebGLRenderingContext::~WebGLRenderingContext() {
 }
 
 GL_METHOD(SetDebugMode) {
-    GL_BOILERPLATE;
-    BP
-    inst->debug_mode = info[0]->BooleanValue();
+	GL_BOILERPLATE;
+	BP
+		inst->debug_mode = info[0]->BooleanValue();
 }
 
 GL_METHOD(SetError) {
@@ -713,9 +739,7 @@ unsigned char* WebGLRenderingContext::unpackPixels(
     switch(format) {
       case GL_ALPHA:
       case GL_LUMINANCE:
-      case GL_RED:
       break;
-      case GL_RG:
       case GL_LUMINANCE_ALPHA:
         pixelSize *= 2;
       break;
@@ -988,7 +1012,28 @@ GL_METHOD(FramebufferTexture2D) {
   GLint texture     = info[3]->Int32Value();
   GLint level       = info[4]->Int32Value();
 
-  (inst->glFramebufferTexture2D)(target, attachment, textarget, texture, level);
+  // Handle depth stencil case separately
+  if(attachment == 0x821A) {
+    (inst->glFramebufferTexture2D)(
+        target
+      , GL_DEPTH_ATTACHMENT
+      , textarget
+      , texture
+      , level);
+    (inst->glFramebufferTexture2D)(
+        target
+      , GL_STENCIL_ATTACHMENT
+      , textarget
+      , texture
+      , level);
+  } else {
+    (inst->glFramebufferTexture2D)(
+        target
+      , attachment
+      , textarget
+      , texture
+      , level);
+  }
 }
 
 
@@ -1460,11 +1505,25 @@ GL_METHOD(FramebufferRenderbuffer) {
   GLenum renderbuffertarget = info[2]->Int32Value();
   GLuint renderbuffer       = info[3]->Uint32Value();
 
-  (inst->glFramebufferRenderbuffer)(
-      target
-    , attachment
-    , renderbuffertarget
-    , renderbuffer);
+  // Handle depth stencil case separately
+  if(attachment == 0x821A) {
+    (inst->glFramebufferRenderbuffer)(
+        target
+      , GL_DEPTH_ATTACHMENT
+      , renderbuffertarget
+      , renderbuffer);
+    (inst->glFramebufferRenderbuffer)(
+        target
+      , GL_STENCIL_ATTACHMENT
+      , renderbuffertarget
+      , renderbuffer);
+  } else {
+    (inst->glFramebufferRenderbuffer)(
+        target
+      , attachment
+      , renderbuffertarget
+      , renderbuffer);
+  }
 }
 
 GL_METHOD(GetVertexAttribOffset) {
@@ -1537,8 +1596,10 @@ GL_METHOD(RenderbufferStorage) {
   GLsizei height        = info[3]->Int32Value();
 
   //In WebGL, we map GL_DEPTH_STENCIL to GL_DEPTH24_STENCIL8
-  if (internalformat == GL_DEPTH_STENCIL) {
-    internalformat = GL_DEPTH24_STENCIL8;
+  if (internalformat == GL_DEPTH_STENCIL_OES) {
+    internalformat = GL_DEPTH24_STENCIL8_OES;
+  } else if (internalformat == GL_DEPTH_COMPONENT32_OES) {
+    internalformat = inst->preferredDepth;
   }
 
   (inst->glRenderbufferStorage)(target, internalformat, width, height);

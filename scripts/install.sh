@@ -1,9 +1,18 @@
 #!/usr/bin/env bash
 
-set -e
 set -o pipefail
 
-source ~/.nvm/nvm.sh
-nvm use ${NODE_VERSION}
+if [[ ${TRAVIS_OS_NAME} == "osx" ]]; then
+  source ~/.bashrc
+else
+  source ~/.nvm/nvm.sh
+fi
+
+nvm install ${NODE_VERSION}
+nvm alias default ${NODE_VERSION}
+nvm use --delete-prefix ${NODE_VERSION}
+
+node --version
+npm --version
 
 npm install --compile

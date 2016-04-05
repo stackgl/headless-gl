@@ -1,8 +1,9 @@
 #include "webgl.h"
 void WebGLRenderingContext::initPointers(){
-	glDrawArraysInstanced=reinterpret_cast<PFNGLDRAWARRAYSINSTANCEDPROC>(eglGetProcAddress("glDrawArraysInstanced"));
-	glDrawElementsInstanced=reinterpret_cast<PFNGLDRAWELEMENTSINSTANCEDPROC>(eglGetProcAddress("glDrawElementsInstanced"));
-	glVertexAttribDivisor=reinterpret_cast<PFNGLVERTEXATTRIBDIVISORPROC>(eglGetProcAddress("glVertexAttribDivisor"));
+	glDrawArraysInstanced=reinterpret_cast<PFNGLDRAWARRAYSINSTANCEDANGLEPROC>(eglGetProcAddress("glDrawArraysInstancedANGLE"));
+	glDrawElementsInstanced=reinterpret_cast<PFNGLDRAWELEMENTSINSTANCEDANGLEPROC>(eglGetProcAddress("glDrawElementsInstancedANGLE"));
+	glVertexAttribDivisor=reinterpret_cast<PFNGLVERTEXATTRIBDIVISORANGLEPROC>(eglGetProcAddress("glVertexAttribDivisorANGLE"));
+
 	glUniform1f=reinterpret_cast<PFNGLUNIFORM1FPROC>(eglGetProcAddress("glUniform1f"));
 	glUniform2f=reinterpret_cast<PFNGLUNIFORM2FPROC>(eglGetProcAddress("glUniform2f"));
 	glUniform3f=reinterpret_cast<PFNGLUNIFORM3FPROC>(eglGetProcAddress("glUniform3f"));

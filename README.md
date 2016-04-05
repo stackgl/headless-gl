@@ -5,6 +5,7 @@ It aspires to fully conform to the [WebGL 1.0.3 specification](https://www.khron
 
 [![NPM](https://nodei.co/npm/gl.png?compact=true)](https://nodei.co/npm/gl/)
 [![Build Status](https://travis-ci.org/stackgl/headless-gl.svg?branch=master)](https://travis-ci.org/stackgl/headless-gl)
+[![Appveyor Status](https://ci.appveyor.com/api/projects/status/github/stackgl/headless-gl)](https://ci.appveyor.com/project/mikolalysenko/headless-gl)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 ## Example
@@ -144,28 +145,12 @@ See https://github.com/stackgl/headless-gl/issues/5 for current status.
 
 ### How can `headless-gl` be used on a headless Linux machine?
 
-A minimal server install of Linux, such as the one one would want to use on
-Amazon AWS or equivalent will likely not provide an X11 nor an OpenGL
-environment. To setup such an environment you can use those two packages:
+A minimal server install of Linux, such as the one one would want to use on Amazon AWS or equivalent will likely not provide an X11 nor an OpenGL environment. To setup such an environment you can use those two packages:
 
-1. [Xvfb](https://en.wikipedia.org/wiki/Xvfb) is a lightweight X11 server which
-   provides a back buffer for displaying X11 application offscreen and reading
-   back the pixels which were drawn offscreen. It is typically used in
-   Continuous Integration systems. It can be installed on CentOS with `yum
-   install -y Xvfb`
-2. [Mesa](http://www.mesa3d.org/intro.html) is the reference open source
-   software implementation of OpenGL. It can be installed on CentOS with `yum
-   install -y mesa-dri-drivers`. Since a cloud Linux instance will typically
-   run on a machine that does not have a GPU, a software implementation of
-   OpenGL will be required.
+1. [Xvfb](https://en.wikipedia.org/wiki/Xvfb) is a lightweight X11 server which provides a back buffer for displaying X11 application offscreen and reading back the pixels which were drawn offscreen. It is typically used in Continuous Integration systems. It can be installed on CentOS with `yum install -y Xvfb`, and comes preinstalled on Ubuntu.
+2. [Mesa](http://www.mesa3d.org/intro.html) is the reference open source software implementation of OpenGL. It can be installed on CentOS with `yum install -y mesa-dri-drivers`, or `apt-get install libgl1-mesa-dev`. Since a cloud Linux instance will typically run on a machine that does not have a GPU, a software implementation of OpenGL will be required.
 
-Interacting with `Xvfb` requires to start it on the background and to execute
-your `node` program with the DISPLAY environment variable set to whatever was
-configured when running Xvfb (the default being :99). If you want to do that
-reliably you'll have to start Xvfb from an init.d script at boot time, which is
-extra configuration burden. Fortunately there is a wrapper script shipped with
-Xvfb known as `xvfb-run` which can start Xvfb on the fly, execute your node
-program and finally shut Xvfb down. Here's how to run it:
+Interacting with `Xvfb` requires to start it on the background and to execute your `node` program with the DISPLAY environment variable set to whatever was configured when running Xvfb (the default being :99). If you want to do that reliably you'll have to start Xvfb from an init.d script at boot time, which is extra configuration burden. Fortunately there is a wrapper script shipped with Xvfb known as `xvfb-run` which can start Xvfb on the fly, execute your node program and finally shut Xvfb down. Here's how to run it:
 
     xvfb-run -s "-ac -screen 0 1280x1024x24” <node program>
 

@@ -11,7 +11,8 @@
 #include <v8.h>
 
 #include <EGL/egl.h>
-#include <GLES3/gl3.h>
+#include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 
 enum GLObjectType {
   GLOBJECT_TYPE_BUFFER,
@@ -117,6 +118,9 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   GLenum getError();
   static NAN_METHOD(SetError);
   static NAN_METHOD(GetError);
+
+  //Preferred depth format
+  GLenum preferredDepth;
 
   //Destructors
   void dispose();
