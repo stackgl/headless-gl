@@ -1,6 +1,6 @@
 {
   "name": "gl",
-  "version": "2.1.5",
+  "version": "3.0.0",
   "description": "Creates a WebGL context without a window",
   "main": "index.js",
   "directories": {
@@ -26,9 +26,8 @@
   },
   "devDependencies": {
     "faucet": "0.0.1",
-    "gl-conformance": "^2.0.4",
-    "gl-matrix": "^2.3.2",
     "snazzy": "^3.0.0",
+    "gl-conformance": "^2.0.8",
     "standard": "^6.0.8",
     "tape": "^4.0.1"
   },

@@ -1,5 +1,6 @@
 var BLACKLIST = [
-  'renderbuffers_feedback-loop'
+  'renderbuffers_feedback-loop',
+  'renderbuffers_renderbuffer-initialization'
 ]
 
 require('./util/conformance')(function (str) {
