@@ -162,7 +162,7 @@ Scene.prototype = {
     this.draw()
 
     var files = [
-      utils.replaceExt(__filename, '.ppm')
+      utils.replaceExt(__filename, '.jpg')
     ]
 
     for (var i = 0; i < files.length; i++) {
