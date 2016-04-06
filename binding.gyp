@@ -25,28 +25,23 @@
       'library_dirs': [
         '<(module_root_dir)/deps/<(platform)'
       ],
+      'dependencies':
+      [
+        'angle/src/angle.gyp:libEGL',
+        'angle/src/angle.gyp:libGLESv2'
+      ],
       'conditions': [
         ['OS=="mac"', {
-            'dependencies':
-            [
-              'angle/src/angle.gyp:libEGL',
-              'angle/src/angle.gyp:libGLESv2'
-            ],
             'libraries': [
                 '-framework QuartzCore',
                 '-framework Quartz'
-            ],
+            ]
         }],
         ['OS=="linux"', {
-            'dependencies':
-            [
-              'angle/src/angle.gyp:libEGL',
-              'angle/src/angle.gyp:libGLESv2'
-            ]
         }],
         ['OS=="win"', {
             'library_dirs': [
-              '<(module_root_dir)/deps/windows/lib/<(target_arch)',
+              '<(module_root_dir)/build/Release_x64/lib',
             ],
             'libraries': [
               'libEGL.lib',
@@ -92,8 +87,8 @@
               {
                 'destination': '$(SolutionDir)$(ConfigurationName)',
                 'files': [
-                  '<(module_root_dir)/deps/windows/dll/<(target_arch)/libEGL.dll',
-                  '<(module_root_dir)/deps/windows/dll/<(target_arch)/libGLESv2.dll'
+                  '<(module_root_dir)/build/Release_x64/libEGL.dll',
+                  '<(module_root_dir)/build/Release_x64/libGLESv2.dll'
                 ]
               }
            ]
