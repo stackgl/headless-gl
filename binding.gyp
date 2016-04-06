@@ -41,7 +41,7 @@
         }],
         ['OS=="win"', {
             'library_dirs': [
-              '<(module_root_dir)/build/Release_x64/lib',
+              '<(module_root_dir)/build/$(Configuration)_$(Platform)/lib',
             ],
             'libraries': [
               'libEGL.lib',
@@ -87,8 +87,8 @@
               {
                 'destination': '$(SolutionDir)$(ConfigurationName)',
                 'files': [
-                  '<(module_root_dir)/build/Release_x64/libEGL.dll',
-                  '<(module_root_dir)/build/Release_x64/libGLESv2.dll'
+                  '<(module_root_dir)/build/$(Configuration)_$(Platform)/libEGL.dll',
+                  '<(module_root_dir)/build/$(Configuration)_$(Platform)/libGLESv2.dll'
                 ]
               }
            ]
