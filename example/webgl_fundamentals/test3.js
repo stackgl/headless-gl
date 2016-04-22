@@ -53,12 +53,7 @@ function main () {
 
         void main() {
             vec2 uv = gl_FragCoord.xy / vec2(512.0,512.0);
-            if(uv.x < 0.5) {
-                gl_FragColor = texture2D(u_image, v_texCoord);
-                // gl_FragColor = vec4(1, 0, 0, 1);
-            } else {
-                gl_FragColor = vec4(0, 1, 0, 1);
-            }
+            gl_FragColor = texture2D(u_image, v_texCoord);
         }
     `
 
@@ -89,11 +84,8 @@ function main () {
     if (err) {
       log.error(__line, err)
     } else {
-      log.info(__line, image.data.length)
-      log.info(__line, image.shape[0])
-      log.info(__line, image.shape[1])
-      log.info(__line, typeof (image.data))
-      console.log(Object.keys(image))
+      image.width = image.shape[0]
+      image.height = image.shape[1]
 
       // Create a texture.
       var texture = gl.createTexture()
