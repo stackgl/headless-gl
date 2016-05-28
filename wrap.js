@@ -1,5 +1,10 @@
 var webgl = require('./webgl')
 
+var privateMethods = [
+  'resize',
+  'destroy'
+]
+
 module.exports = function wrapContext (gl) {
   var props = Object.keys(gl).concat(Object.keys(gl.constructor.prototype))
   var wrapper = new WebGLRenderingContext()
@@ -12,7 +17,9 @@ module.exports = function wrapContext (gl) {
     }
     var value = gl[prop]
     if (typeof value === 'function') {
-      wrapper[prop] = value.bind(gl)
+      if (privateMethods.indexOf(value) < 0) {
+        wrapper[prop] = value.bind(gl)
+      }
     } else {
       wrapper[prop] = value
     }

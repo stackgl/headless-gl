@@ -4,7 +4,10 @@ var BLACKLIST = [
   'rendering_framebuffer-switch',
 
   // Fails on travis, not sure what is happening
-  'rendering_polygon-offset'
+  'rendering_polygon-offset',
+
+  // Fails on direct x
+  'rendering_point-no-attributes'
 ]
 
 require('./util/conformance')(function (str) {

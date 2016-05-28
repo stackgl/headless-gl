@@ -65,13 +65,21 @@ tape('alpha texture', function (t) {
 
   var pixels = new Uint8Array(width * height * 4)
   gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-  var ptr = 0
-  for (i = 0; i < width * height * 4; i += 4) {
-    t.equals(pixels[i], 0, 'red')
-    t.equals(pixels[i + 1], 0, 'green')
-    t.equals(pixels[i + 2], 0, 'blue')
-    t.equals(pixels[i + 3], data[ptr++], 'alpha')
+
+  function checkColor () {
+    var ptr = 0
+    for (i = 0; i < width * height * 4; i += 4) {
+      if (pixels[i] ||
+          pixels[i + 1] ||
+          pixels[i + 2] ||
+          pixels[i + 3] !== data[ptr++]) {
+        return false
+      }
+    }
+    return true
   }
+
+  t.ok(checkColor(), 'pixels consistent')
 
   t.end()
 })

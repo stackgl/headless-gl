@@ -8,9 +8,9 @@ else
   source ~/.nvm/nvm.sh
 fi
 
+npm config delete prefix
 nvm install ${NODE_VERSION}
 nvm alias default ${NODE_VERSION}
-nvm use --delete-prefix ${NODE_VERSION}
 
 node --version
 npm --version

@@ -1,6 +1,6 @@
 {
   "name": "gl",
-  "version": "3.0.0",
+  "version": "4.0.1",
   "description": "Creates a WebGL context without a window",
   "main": "index.js",
   "directories": {
@@ -8,7 +8,7 @@
   },
   "browser": "browser_index.js",
   "engines": {
-    "node": ">=0.8.0"
+    "node": ">=0.10.0"
   },
   "scripts": {
     "test": "standard | snazzy && tape test/*.js | faucet",
@@ -19,17 +19,15 @@
   "dependencies": {
     "bindings": "^1.2.1",
     "bit-twiddle": "^1.0.2",
-    "get-pixels": "^3.3.0",
     "glsl-tokenizer": "^2.0.2",
-    "nan": "^2.2.1",
+    "nan": "^2.3.3",
     "node-gyp": "^3.3.1",
-    "prebuild": "^4.1.1",
-    "save-pixels": "^2.3.0"
+    "prebuild": "^4.1.2"
   },
   "devDependencies": {
     "faucet": "0.0.1",
     "snazzy": "^3.0.0",
-    "gl-conformance": "^2.0.8",
+    "gl-conformance": "^2.0.9",
     "standard": "^6.0.8",
     "tape": "^4.0.1"
   },

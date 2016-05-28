@@ -20,7 +20,10 @@ module.exports = function (filter) {
   return runConformance({
     tape: tape,
     createContext: function (width, height, options) {
-      return createContext(width, height, options)
+      var context = createContext(width, height, options)
+      context.destroy = context.getExtension('STACKGL_destroy_context').destroy
+      context.resize = context.getExtension('STACKGL_resize_drawingbuffer').resize
+      return context
     },
     filter: filter
   })

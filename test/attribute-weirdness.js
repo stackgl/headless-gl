@@ -69,7 +69,7 @@ tape('attribute-weirdness', function (t) {
       aTexturePos = tmp
     }
 
-    console.log('locations:', aPos, aTexturePos)
+    // console.log('locations:', aPos, aTexturePos)
 
     gl.vertexAttribPointer(aPos, 2, gl.SHORT, false, 8, 0)
     gl.vertexAttribPointer(aTexturePos, 2, gl.SHORT, false, 8, 4)
@@ -77,7 +77,7 @@ tape('attribute-weirdness', function (t) {
     gl.bindBuffer(gl.ARRAY_BUFFER, null)
     gl.deleteBuffer(buffer)
 
-    console.log('error:', gl.getError())
+    // console.log('error:', gl.getError())
 
     var pixels = new Uint8Array(width * height * 4)
     gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
@@ -89,7 +89,7 @@ tape('attribute-weirdness', function (t) {
 
   t.test('all alpha values should be 255', function (t) {
     var pixels = render(false, false)
-    print(pixels)
+    // print(pixels)
     var ok = true
     for (var i = 0; i < width * height * 4; i += 4) {
       if (pixels[i + 3] !== 255) ok = false
@@ -101,7 +101,7 @@ tape('attribute-weirdness', function (t) {
   // But if we flip the order the attributes are defined in the shader it works.
   t.test('when attributes are flipped all alpha values should be 255', function (t) {
     var pixels = render(true, false)
-    print(pixels)
+    // print(pixels)
     var ok = true
     for (var i = 0; i < width * height * 4; i += 4) {
       if (pixels[i + 3] !== 255) ok = false
@@ -113,7 +113,7 @@ tape('attribute-weirdness', function (t) {
   // even weirder, if we swap the attribute locations used when setting each pointer it works
   t.test('when attribute locations are swapped all alpha values should NOT be 255', function (t) {
     var pixels = render(false, true)
-    print(pixels)
+    // print(pixels)
     var ok = false
     for (var i = 0; i < width * height * 4; i += 4) {
       if (pixels[i + 3] !== 255) ok = true
@@ -122,11 +122,13 @@ tape('attribute-weirdness', function (t) {
     t.end()
   })
 
+  /*
   function print (pixels) {
     for (var i = 0; i < width * height * 4; i += 4) {
       console.log(pixels[i], pixels[i + 1], pixels[i + 2], pixels[i + 3])
     }
   }
+  */
 
   t.end()
 })

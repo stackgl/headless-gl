@@ -45,12 +45,19 @@ tape('draw-indexed', function (t) {
 
   var pixels = new Uint8Array(width * height * 4)
   gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
-  for (var i = 0; i < width * height * 4; i += 4) {
-    t.equals(pixels[i], 0, 'red')
-    t.equals(pixels[i + 1], 255, 'green')
-    t.equals(pixels[i + 2], 0, 'blue')
-    t.equals(pixels[i + 3], 255, 'alpha')
+
+  function checkPixels () {
+    for (var i = 0; i < width * height * 4; i += 4) {
+      if (pixels[i] !== 0 ||
+          pixels[i + 1] !== 255 ||
+          pixels[i + 2] !== 0 ||
+          pixels[i + 3] !== 255) {
+        return false
+      }
+    }
+    return true
   }
+  t.ok(checkPixels())
 
   t.end()
 })

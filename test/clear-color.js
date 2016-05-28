@@ -16,17 +16,20 @@ tape('clear color', function (t) {
     gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
 
     for (var i = 0; i < width * height * 4; i += 4) {
-      t.equals(pixels[i], r)
-      t.equals(pixels[i + 1], g)
-      t.equals(pixels[i + 2], b)
-      t.equals(pixels[i + 3], a)
+      if (pixels[i] !== r ||
+          pixels[i + 1] !== g ||
+          pixels[i + 2] !== b ||
+          pixels[i + 3] !== a) {
+        return false
+      }
     }
+    return true
   }
 
-  testColor(0, 0, 0, 0)
-  testColor(255, 255, 255, 255)
-  testColor(0, 255, 0, 255)
-  testColor(255, 0, 255, 0)
+  t.ok(testColor(0, 0, 0, 0), 'black')
+  t.ok(testColor(255, 255, 255, 255), 'white')
+  t.ok(testColor(0, 255, 0, 255), 'green')
+  t.ok(testColor(255, 0, 255, 0), 'magenta')
 
   gl.destroy()
 

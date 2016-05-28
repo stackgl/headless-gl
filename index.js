@@ -18,8 +18,8 @@ function createContext (width, height, options) {
 
   width = width | 0
   height = height | 0
-  if (!(width >= 0 && height >= 0)) {
-    throw new Error('Invalid dimensions for context')
+  if (!(width > 0 && height > 0)) {
+    return null
   }
 
   var contextAttributes = new webgl.WebGLContextAttributes(
@@ -36,17 +36,23 @@ function createContext (width, height, options) {
   contextAttributes.premultipliedAlpha =
     contextAttributes.premultipliedAlpha && contextAttributes.alpha
 
-  var gl = new webgl.WebGLRenderingContext(
-    1,
-    1,
-    contextAttributes.alpha,
-    contextAttributes.depth,
-    contextAttributes.stencil,
-    contextAttributes.antialias,
-    contextAttributes.premultipliedAlpha,
-    contextAttributes.preserveDrawingBuffer,
-    contextAttributes.preferLowPowerToHighPerformance,
-    contextAttributes.failIfMajorPerformanceCaveat)
+  var gl
+  try {
+    gl = new webgl.WebGLRenderingContext(
+      1,
+      1,
+      contextAttributes.alpha,
+      contextAttributes.depth,
+      contextAttributes.stencil,
+      contextAttributes.antialias,
+      contextAttributes.premultipliedAlpha,
+      contextAttributes.preserveDrawingBuffer,
+      contextAttributes.preferLowPowerToHighPerformance,
+      contextAttributes.failIfMajorPerformanceCaveat)
+  } catch (e) {}
+  if (!gl) {
+    return null
+  }
 
   gl.drawingBufferWidth = width
   gl.drawingBufferHeight = height
@@ -55,6 +61,7 @@ function createContext (width, height, options) {
 
   gl._contextattributes = contextAttributes
 
+  gl._extensions = {}
   gl._programs = {}
   gl._shaders = {}
   gl._buffers = {}

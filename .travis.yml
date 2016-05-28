@@ -1,28 +1,25 @@
 language: c
 git:
   submodules: true
+env:
+  global:
+    - secure: iKxK/0RIBC/iqPun3Bj3qtMDjIowdIe77MoejhqoczE3g/Fow57cbp3IApDEbbkD5wSm8PMdiPSIgjMt4ggCDCydJfLCTVDLbaYNfI3bc4ZfLPju1iSXF+4bbi39A5W/pv9ilFygP60W/eSupu8CmG6hnA4RYGlKUWxxPwolcMk=
 matrix:
   include:
   - os: linux
     sudo: required
     dist: trusty
     compiler: g++
-    env: CXX=g++-4.9 NODE_VERSION=5
-    secure: iKxK/0RIBC/iqPun3Bj3qtMDjIowdIe77MoejhqoczE3g/Fow57cbp3IApDEbbkD5wSm8PMdiPSIgjMt4ggCDCydJfLCTVDLbaYNfI3bc4ZfLPju1iSXF+4bbi39A5W/pv9ilFygP60W/eSupu8CmG6hnA4RYGlKUWxxPwolcMk=
+    env: NODE_VERSION=4
   - os: osx
     osx_image: xcode7
     compiler: clang
-    env: NODE_VERSION=5
-    secure: iKxK/0RIBC/iqPun3Bj3qtMDjIowdIe77MoejhqoczE3g/Fow57cbp3IApDEbbkD5wSm8PMdiPSIgjMt4ggCDCydJfLCTVDLbaYNfI3bc4ZfLPju1iSXF+4bbi39A5W/pv9ilFygP60W/eSupu8CmG6hnA4RYGlKUWxxPwolcMk=
+    env: NODE_VERSION=4
 addons:
   apt:
     sources:
     - ubuntu-toolchain-r-test
     packages:
-    - gdb
-    - g++-4.9
-    - gcc-4.9
-    - libllvm3.4
     - xutils-dev
     - libxi-dev
     - libxxf86vm-dev

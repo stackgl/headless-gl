@@ -15,7 +15,7 @@ Nan::Persistent<v8::FunctionTemplate> WEBGL_TEMPLATE;
       webgl_template \
     , webgl_name\
     , Nan::New<v8::FunctionTemplate>(\
-        WebGLRenderingContext:: method_name)->GetFunction())
+        WebGLRenderingContext:: method_name))
 
 #define JS_CONSTANT(x, v) \
   Nan::SetPrototypeTemplate( \
@@ -182,7 +182,7 @@ NAN_MODULE_INIT(Init) {
   Nan::SetPrototypeTemplate(
       webgl_template
     , "DEPTH_STENCIL_ATTACHMENT"
-    , Nan::New<v8::Integer>(0x821A));  
+    , Nan::New<v8::Integer>(0x821A));
 
   JS_GL_CONSTANT(MAX_VERTEX_UNIFORM_VECTORS);
   JS_GL_CONSTANT(MAX_VARYING_VECTORS);

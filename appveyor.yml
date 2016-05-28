@@ -1,7 +1,19 @@
+platform:
+  - x64
+
 install:
   - cmd: git submodule update --init
-  - cinst nodejs
-  - npm install
+  - ps: Install-Product node LTS $env:PLATFORM
+  - npm config set msvs_version 2015 --global
+  - npm config set target_arch %PLATFORM% --global
+  - npm install -g node-gyp
+
+build_script:
+  - npm install --ignore-scripts
+  - npm run rebuild
 
 test_script:
   - npm test
+
+deploy_script:
+  - ps: if ($env:APPVEYOR_REPO_TAG) {./node_modules/.bin/prebuild --all --strip -u $env:GITHUB_TOKEN}

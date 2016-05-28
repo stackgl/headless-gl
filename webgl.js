@@ -179,6 +179,7 @@ function WebGLVertexAttribute (ctx, idx) {
   this._pointerStride = 0
   this._pointerType = gl.FLOAT
   this._pointerNormal = false
+  this._divisor = 0
   this._inputSize = 4
   this._inputStride = 0
   this._data = new Float32Array([0, 0, 0, 1])
@@ -203,6 +204,15 @@ function WebGLDrawingBufferWrapper (
   this._depthStencil = depthStencil
 }
 exports.WebGLDrawingBufferWrapper = WebGLDrawingBufferWrapper
+
+function ANGLE_instanced_arrays () {
+}
+
+function STACKGL_resize_drawingbuffer () {
+}
+
+function STACKGL_destroy_context () {
+}
 
 function unpackTypedArray (array) {
   return (new Uint8Array(array.buffer)).subarray(
@@ -589,9 +599,15 @@ function checkVertexAttribState (context, maxIndex) {
         return false
       }
       if (program._attributes.indexOf(i) >= 0) {
-        var maxByte = attrib._pointerStride * maxIndex +
-        attrib._pointerSize +
-        attrib._pointerOffset
+        var maxByte = 0
+        if (attrib._divisor) {
+          maxByte = attrib._pointerSize +
+                    attrib._pointerOffset
+        } else {
+          maxByte = attrib._pointerStride * maxIndex +
+            attrib._pointerSize +
+            attrib._pointerOffset
+        }
         if (maxByte > buffer._size) {
           setError(context, gl.INVALID_OPERATION)
           return false
@@ -648,16 +664,237 @@ gl.getContextAttributes = function () {
   return this._contextattributes
 }
 
-// var _getSupportedExtensions = gl.getSupportedExtensions
 gl.getSupportedExtensions = function getSupportedExtensions () {
-  // TODO
-  return []
+  return [
+    'ANGLE_instanced_arrays',
+    'STACKGL_resize_drawingbuffer',
+    'STACKGL_destroy_context'
+  ]
 }
 
-// var _getExtension = gl.getExtension
+function createANGLEInstancedArrays (context) {
+  function checkInstancedVertexAttribState (maxIndex, primCount) {
+    var program = context._activeProgram
+    if (!program) {
+      setError(context, gl.INVALID_OPERATION)
+      return false
+    }
+
+    var attribs = context._vertexAttribs
+    var hasZero = false
+    for (var i = 0; i < attribs.length; ++i) {
+      var attrib = attribs[i]
+      if (attrib._isPointer) {
+        var buffer = attrib._pointerBuffer
+        if (program._attributes.indexOf(i) >= 0) {
+          if (!buffer) {
+            setError(context, gl.INVALID_OPERATION)
+            return false
+          }
+          var maxByte = 0
+          if (attrib._divisor === 0) {
+            hasZero = true
+            maxByte = attrib._pointerStride * maxIndex +
+              attrib._pointerSize +
+              attrib._pointerOffset
+          } else {
+            maxByte = attrib._pointerStride * (Math.ceil(primCount / attrib._divisor) - 1) +
+              attrib._pointerSize +
+              attrib._pointerOffset
+          }
+          if (maxByte > buffer._size) {
+            setError(context, gl.INVALID_OPERATION)
+            return false
+          }
+        }
+      }
+    }
+
+    if (!hasZero) {
+      setError(context, gl.INVALID_OPERATION)
+      return false
+    }
+
+    return true
+  }
+
+  var result = new ANGLE_instanced_arrays()
+  result.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE = 0x88fe
+  result.drawArraysInstancedANGLE = function (mode, first, count, primCount) {
+    mode |= 0
+    first |= 0
+    count |= 0
+    primCount |= 0
+    if (first < 0 || count < 0 || primCount < 0) {
+      setError(context, gl.INVALID_VALUE)
+      return
+    }
+    if (!checkStencilState(context)) {
+      return
+    }
+    var reducedCount = vertexCount(mode, count)
+    if (reducedCount < 0) {
+      setError(context, gl.INVALID_ENUM)
+      return
+    }
+    if (!framebufferOk(context)) {
+      return
+    }
+    if (count === 0 || primCount === 0) {
+      return
+    }
+    var maxIndex = first
+    if (count > 0) {
+      maxIndex = (count + first - 1) >>> 0
+    }
+    if (checkInstancedVertexAttribState(maxIndex, primCount)) {
+      return _drawArraysInstanced.call(
+        context, mode, first, reducedCount, primCount)
+    }
+  }
+  result.drawElementsInstancedANGLE = function (
+    mode, count, type, ioffset, primCount) {
+    mode |= 0
+    count |= 0
+    type |= 0
+    ioffset |= 0
+    primCount |= 0
+
+    if (count < 0 || ioffset < 0 || primCount < 0) {
+      setError(context, gl.INVALID_VALUE)
+      return
+    }
+
+    if (!checkStencilState(context)) {
+      return
+    }
+
+    var elementBuffer = context._activeElementArrayBuffer
+    if (!elementBuffer) {
+      setError(context, gl.INVALID_OPERATION)
+      return
+    }
+
+    // Unpack element data
+    var elementData = null
+    var offset = ioffset
+    if (type === gl.UNSIGNED_SHORT) {
+      if (offset % 2) {
+        setError(context, gl.INVALID_OPERATION)
+        return
+      }
+      offset >>= 1
+      elementData = new Uint16Array(elementBuffer._elements.buffer)
+    } else if (type === gl.UNSIGNED_BYTE) {
+      elementData = elementBuffer._elements
+    } else {
+      setError(context, gl.INVALID_ENUM)
+      return
+    }
+
+    var reducedCount = count
+    switch (mode) {
+      case gl.TRIANGLES:
+        if (count % 3) {
+          reducedCount -= (count % 3)
+        }
+        break
+      case gl.LINES:
+        if (count % 2) {
+          reducedCount -= (count % 2)
+        }
+        break
+      case gl.POINTS:
+        break
+      case gl.LINE_LOOP:
+      case gl.LINE_STRIP:
+        if (count < 2) {
+          setError(context, gl.INVALID_OPERATION)
+          return
+        }
+        break
+      case gl.TRIANGLE_FAN:
+      case gl.TRIANGLE_STRIP:
+        if (count < 3) {
+          setError(context, gl.INVALID_OPERATION)
+          return
+        }
+        break
+      default:
+        setError(context, gl.INVALID_ENUM)
+        return
+    }
+
+    if (!framebufferOk(context)) {
+      return
+    }
+
+    if (count === 0 || primCount === 0) {
+      checkInstancedVertexAttribState(context, 0, 0)
+      return
+    }
+
+    if ((count + offset) >>> 0 > elementData.length) {
+      setError(context, gl.INVALID_OPERATION)
+      return
+    }
+
+    // Compute max index
+    var maxIndex = -1
+    for (var i = offset; i < offset + count; ++i) {
+      maxIndex = Math.max(maxIndex, elementData[i])
+    }
+
+    if (maxIndex < 0) {
+      checkInstancedVertexAttribState(context, 0, 0)
+      return
+    }
+
+    if (checkInstancedVertexAttribState(context, maxIndex, primCount)) {
+      if (reducedCount > 0) {
+        _drawElementsInstanced.call(context, mode, reducedCount, type, ioffset, primCount)
+      }
+    }
+  }
+
+  result.vertexAttribDivisorANGLE = function (index, divisor) {
+    index |= 0
+    divisor |= 0
+    if (divisor < 0 ||
+        index < 0 || index >= context._vertexAttribs.length) {
+      setError(context, gl.INVALID_VALUE)
+      return
+    }
+    var attrib = context._vertexAttribs[index]
+    attrib._divisor = divisor
+    _vertexAttribDivisor.call(context, index, divisor)
+  }
+  return result
+}
+
 gl.getExtension = function getExtension (name) {
-  // TODO
-  return null
+  var str = name.toLowerCase()
+  if (str in this._extensions) {
+    return this._extensions[str]
+  }
+  var ext = null
+  switch (str) {
+    case 'angle_instanced_arrays':
+      ext = createANGLEInstancedArrays(this)
+      break
+    case 'stackgl_destroy_context':
+      ext = new STACKGL_destroy_context()
+      ext.destroy = this.destroy.bind(this)
+      break
+    case 'stackgl_resize_drawingbuffer':
+      ext = new STACKGL_resize_drawingbuffer()
+      ext.resize = this.resize.bind(this)
+      break
+  }
+  if (ext) {
+    this._extensions[str] = ext
+  }
+  return ext
 }
 
 var _activeTexture = gl.activeTexture
@@ -968,8 +1205,6 @@ function validBlendFunc (factor) {
 
 function isConstantBlendFunc (factor) {
   return (
-    factor === gl.ZERO ||
-    factor === gl.ONE ||
     factor === gl.CONSTANT_COLOR ||
     factor === gl.ONE_MINUS_CONSTANT_COLOR ||
     factor === gl.CONSTANT_ALPHA ||
@@ -1751,7 +1986,7 @@ function endAttrib0Hack (context) {
     attrib._pointerNormal,
     attrib._inputStride,
     attrib._pointerOffset)
-  _vertexAttribDivisor.call(context, 0, 0)
+  _vertexAttribDivisor.call(context, 0, attrib._divisor)
   _disableVertexAttribArray.call(context, 0)
   if (context._activeArrayBuffer) {
     _bindBuffer.call(context, gl.ARRAY_BUFFER, context._activeArrayBuffer._)
@@ -2690,6 +2925,14 @@ gl.getVertexAttrib = function getVertexAttrib (index, pname) {
     return null
   }
   var attrib = this._vertexAttribs[index]
+
+  var extInstancing = this._extensions.angle_instanced_arrays
+  if (extInstancing) {
+    if (pname === extInstancing.VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE) {
+      return attrib._divisor
+    }
+  }
+
   switch (pname) {
     case gl.VERTEX_ATTRIB_ARRAY_BUFFER_BINDING:
       return attrib._pointerBuffer
