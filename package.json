@@ -26,8 +26,11 @@
   },
   "devDependencies": {
     "faucet": "0.0.1",
-    "snazzy": "^3.0.0",
+    "get-pixels": "^3.3.0",
     "gl-conformance": "^2.0.9",
+    "log4js": "^0.6.36",
+    "save-pixels": "^2.3.0",
+    "snazzy": "^3.0.0",
     "standard": "^6.0.8",
     "tape": "^4.0.1"
   },
