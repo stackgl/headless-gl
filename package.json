@@ -46,5 +46,10 @@
   "author": "Mikola Lysenko",
   "license": "BSD",
   "gypfile": true,
-  "readmeFilename": "README.md"
+  "readmeFilename": "README.md",
+  "standard": {
+    "ignore": [
+      "test/vendor/three.js"
+    ]
+  }
 }
