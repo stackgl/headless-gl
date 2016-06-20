@@ -215,6 +215,7 @@ function STACKGL_destroy_context () {
 }
 
 function OES_standard_derivatives () {
+  FRAGMENT_SHADER_DERIVATIVE_HINT_OES: 0x8B8B
 }
 
 function unpackTypedArray (array) {
