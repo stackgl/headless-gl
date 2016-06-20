@@ -4,6 +4,7 @@ const HEADLESS_VERSION = require('../../package.json').version
 const { gl, NativeWebGLRenderingContext, NativeWebGL } = require('./native-gl')
 const { getANGLEInstancedArrays } = require('./extensions/angle-instanced-arrays')
 const { getOESElementIndexUint } = require('./extensions/oes-element-index-unit')
+const { getOESStandardDerivatives } = require('./extensions/oes-standard-derivatives')
 const { getOESTextureFloat } = require('./extensions/oes-texture-float')
 const { getSTACKGLDestroyContext } = require('./extensions/stackgl-destroy-context')
 const { getSTACKGLResizeDrawingBuffer } = require('./extensions/stackgl-resize-drawing-buffer')
@@ -52,6 +53,7 @@ const availableExtensions = {
   angle_instanced_arrays: getANGLEInstancedArrays,
   oes_element_index_uint: getOESElementIndexUint,
   oes_texture_float: getOESTextureFloat,
+  oes_standard_derivatives: getOESStandardDerivatives,
   stackgl_destroy_context: getSTACKGLDestroyContext,
   stackgl_resize_drawingbuffer: getSTACKGLResizeDrawingBuffer,
   webgl_draw_buffers: getWebGLDrawBuffers
@@ -1175,6 +1177,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
     if (supportedExts.indexOf('GL_OES_element_index_uint') >= 0) {
       exts.push('OES_element_index_uint')
+    }
+
+    if (supportedExts.indexOf('GL_OES_standard_derivatives') >= 0) {
+      exts.push('OES_standard_derivatives')
     }
 
     if (supportedExts.indexOf('GL_OES_texture_float') >= 0) {
