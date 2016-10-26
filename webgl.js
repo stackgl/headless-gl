@@ -3482,6 +3482,36 @@ function checkFormat (format) {
     format === gl.RGBA)
 }
 
+var extractImageData = function (pixels) {
+  if (typeof pixels === 'object' && typeof pixels.width !== 'undefined' && typeof pixels.height !== 'undefined') {
+    if (typeof pixels.data !== 'undefined') {
+      return pixels
+    }
+
+    var context = null
+
+    if (typeof pixels.getContext === 'function') {
+      context = pixels.getContext('2d')
+    } else if (typeof pixels.src !== 'undefined' && typeof document === 'object' && typeof document.createElement === 'function') {
+      var canvas = document.createElement('canvas')
+
+      if (typeof canvas === 'object' && typeof canvas.getContext === 'function') {
+        context = canvas.getContext('2d')
+
+        if (context !== null) {
+          context.drawImage(pixels, 0, 0)
+        }
+      }
+    }
+
+    if (context !== null) {
+      return context.getImageData(0, 0, pixels.width, pixels.height)
+    }
+  }
+
+  return null
+}
+
 var _texImage2D = gl.texImage2D
 gl.texImage2D = function texImage2D (
   target,
@@ -3498,9 +3528,12 @@ gl.texImage2D = function texImage2D (
     type = height
     format = width
 
-    if (typeof pixels !== 'object' || typeof pixels.data !== 'object') {
-      throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLenum, GLenum, ImageData)')
+    pixels = extractImageData(pixels)
+
+    if (pixels == null) {
+      throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
     }
+
     width = pixels.width
     height = pixels.height
     pixels = pixels.data
@@ -3613,9 +3646,12 @@ gl.texSubImage2D = function texSubImage2D (
     type = height
     format = width
 
-    if (typeof pixels !== 'object' || typeof pixels.data !== 'object') {
-      throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLenum, GLenum, ImageData)')
+    pixels = extractImageData(pixels)
+
+    if (pixels == null) {
+      throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
     }
+
     width = pixels.width
     height = pixels.height
     pixels = pixels.data
