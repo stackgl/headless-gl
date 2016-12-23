@@ -22,7 +22,7 @@
     "glsl-tokenizer": "^2.0.2",
     "nan": "^2.3.3",
     "node-gyp": "^3.3.1",
-    "prebuild": "^4.1.2"
+    "prebuild": "^5.1.2"
   },
   "devDependencies": {
     "angle-normals": "^1.0.0",
