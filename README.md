@@ -228,7 +228,7 @@ After you have your [system dependencies installed](#system-dependencies), do th
 1. Initialize the angle submodule: `git submodule init`
 1. Update the angle submodule: `git submodule update`
 1. Install npm dependencies: `npm install`
-1. Run node-gyp to generate build scripts: `npm run build`
+1. Run node-gyp to generate build scripts: `npm run rebuild`
 
 Once this is done, you should be good to go!  A few more things
 
