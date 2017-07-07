@@ -8,6 +8,10 @@
 
 It aspires to fully conform to the [WebGL 1.0.3 specification](https://www.khronos.org/registry/webgl/specs/1.0.3/).
 
+## Warning!
+
+This module is not actively developed. It's maintained enough to be working on all recent Node versions, but is unlikely to get new features or substantial bug fixes. If you want to take over the maintenance, please let us know in your pull requests!
+
 ## Example
 
 ```javascript
