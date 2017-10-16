@@ -671,12 +671,19 @@ gl.getContextAttributes = function () {
 
 var _getSupportedExtensions = gl.getSupportedExtensions
 gl.getSupportedExtensions = function getSupportedExtensions () {
-  return [
+  var exts = [
     'ANGLE_instanced_arrays',
     'STACKGL_resize_drawingbuffer',
-    'STACKGL_destroy_context',
-    'OES_element_index_uint'
+    'STACKGL_destroy_context'
   ]
+
+  var supportedExts = _getSupportedExtensions.call(this)
+
+  if (supportedExts.indexOf('GL_OES_element_index_uint') >= 0) {
+    exts.push('OES_element_index_uint')
+  }
+
+  return exts
 }
 
 function createANGLEInstancedArrays (context) {
@@ -888,9 +895,9 @@ function createANGLEInstancedArrays (context) {
 
 function getOESElementIndexUint (context) {
   var result = null
-  var exts = _getSupportedExtensions.call(context)
+  var exts = context.getSupportedExtensions()
 
-  if (exts && exts.indexOf('GL_OES_element_index_uint') !== -1) {
+  if (exts && exts.indexOf('OES_element_index_uint') !== -1) {
     result = new OESElementIndexUint()
   }
 
