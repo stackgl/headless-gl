@@ -897,7 +897,7 @@ function getOESElementIndexUint (context) {
   var result = null
   var exts = context.getSupportedExtensions()
 
-  if (exts && exts.indexOf('OES_element_index_uint') !== -1) {
+  if (exts && exts.indexOf('OES_element_index_uint') >= 0) {
     result = new OESElementIndexUint()
   }
 
