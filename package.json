@@ -47,7 +47,7 @@
     "gpgpu"
   ],
   "author": "Mikola Lysenko",
-  "license": "BSD",
+  "license": "BSD-2-Clause",
   "gypfile": true,
   "readmeFilename": "README.md"
 }
