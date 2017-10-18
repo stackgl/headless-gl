@@ -48,6 +48,5 @@
   ],
   "author": "Mikola Lysenko",
   "license": "BSD-2-Clause",
-  "gypfile": true,
-  "readmeFilename": "README.md"
+  "gypfile": true
 }
