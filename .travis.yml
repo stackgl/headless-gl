@@ -10,11 +10,11 @@ matrix:
     sudo: required
     dist: trusty
     compiler: g++
-    env: NODE_VERSION=4
+    env: NODE_VERSION=10
   - os: osx
     osx_image: xcode7
     compiler: clang
-    env: NODE_VERSION=4
+    env: NODE_VERSION=10
 addons:
   apt:
     sources:
