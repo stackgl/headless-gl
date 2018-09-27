@@ -10,9 +10,8 @@ else
 fi
 
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
-  sudo xvfb-run --auto-servernum --server-num=1 -s "-ac -screen 0 1280x1024x24" `which glxinfo`
-
-  sudo xvfb-run --auto-servernum --server-num=1 -s "-ac -screen 0 1280x1024x24" `which npm` test
-#else
-#  npm test
+  sh -e /etc/init.d/xvfb start
+  glxinfo
 fi
+
+npm test
