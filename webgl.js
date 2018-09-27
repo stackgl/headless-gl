@@ -1562,9 +1562,9 @@ gl.compileShader = function compileShader (shader) {
     _compileShader.call(this, shader._ | 0)
     var error = this.getError()
     shader._compileStatus = !!_getShaderParameter.call(
-        this,
-        shader._ | 0,
-        gl.COMPILE_STATUS)
+      this,
+      shader._ | 0,
+      gl.COMPILE_STATUS)
     shader._compileInfo = _getShaderInfoLog.call(
       this,
       shader._ | 0)
@@ -3639,11 +3639,11 @@ gl.texImage2D = function texImage2D (
   }
 
   if (!checkDimensions(
-      this,
-      target,
-      width,
-      height,
-      level)) {
+    this,
+    target,
+    width,
+    height,
+    level)) {
     return
   }
 
@@ -3757,11 +3757,11 @@ gl.texSubImage2D = function texSubImage2D (
   }
 
   if (!checkDimensions(
-      this,
-      target,
-      width,
-      height,
-      level)) {
+    this,
+    target,
+    width,
+    height,
+    level)) {
     return
   }
 
