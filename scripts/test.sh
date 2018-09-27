@@ -10,8 +10,8 @@ else
 fi
 
 if [[ ${TRAVIS_OS_NAME} == "linux" ]]; then
-  /sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- ${DISPLAY} -ac -screen 0 1280x1024x24
-  glxinfo
+  xvfb-run --auto-servernum --server-num=1 -s "-ac -screen 0 1280x1024x24" `which glxinfo`
+  xvfb-run --auto-servernum --server-num=1 -s "-ac -screen 0 1280x1024x24" `which npm` test
+#else
+#  npm test
 fi
-
-npm test
