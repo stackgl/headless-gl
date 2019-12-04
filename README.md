@@ -202,6 +202,52 @@ They aren't for now.  If you want to upload data to a texture, you will need to 
 * [`get-pixels`](https://www.npmjs.com/package/get-pixels)
 * [`save-pixels`](https://www.npmjs.com/package/save-pixels)
 
+### Loading textures with get-pixels
+
+To load a texture from a data url with `get-pixels`, you can start with this code sample:
+
+    // Utility function to create the webgl texture
+    set_texture(name, data) {
+        let get_pixels = require("get-pixels")
+        let level = 0;
+        let internalFormat = gl.RGBA;
+        let width = 1;
+        let height = 1;
+        let srcFormat = gl.RGBA;
+        let srcType = gl.UNSIGNED_BYTE;
+        let texture =  gl.createTexture();
+
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        gl.texImage2D(
+          gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, data
+        );
+    }
+    
+    // Extract pixel data and create texture
+    get_pixels(url, function(err, pixels) {
+        if(err) {
+          return;
+        }
+
+        set_texture(t, {
+            width: pixels.shape[0],
+            height: pixels.shape[1],
+            data: pixels.data
+        });
+    })
+
+You can then bind and render your WebGL textures as usual.
+
+For the details of rendering the textures see MDN:
+
+[Animating Textures in WebGL](https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Animating_textures_in_WebGL) 
+
 ### What extensions are supported?
 
 Only the following for now:
