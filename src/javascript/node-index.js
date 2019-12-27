@@ -72,6 +72,8 @@ function createContext (width, height, options) {
   ctx._activeArrayBuffer = null
   ctx._activeElementArrayBuffer = null
   ctx._activeRenderbuffer = null
+  ctx._checkStencil = false
+  ctx._stencilState = true
 
   // Initialize texture units
   const numTextures = ctx.getParameter(ctx.MAX_COMBINED_TEXTURE_IMAGE_UNITS)

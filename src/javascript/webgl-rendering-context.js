@@ -194,6 +194,11 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   }
 
   _checkStencilState () {
+    if (!this._checkStencil) {
+      return this._stencilState
+    }
+    this._checkStencil = false
+    this._stencilState = true
     if (this.getParameter(gl.STENCIL_WRITEMASK) !==
       this.getParameter(gl.STENCIL_BACK_WRITEMASK) ||
       this.getParameter(gl.STENCIL_VALUE_MASK) !==
@@ -201,9 +206,9 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       this.getParameter(gl.STENCIL_REF) !==
       this.getParameter(gl.STENCIL_BACK_REF)) {
       this.setError(gl.INVALID_OPERATION)
-      return false
+      this._stencilState = false
     }
-    return true
+    return this._stencilState
   }
 
   _checkTextureTarget (target) {
@@ -1396,6 +1401,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   }
 
   clearStencil (s) {
+    this._checkStencil = false
     return super.clearStencil(s | 0)
   }
 
@@ -3034,26 +3040,32 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   }
 
   stencilFunc (func, ref, mask) {
+    this._checkStencil = true
     return super.stencilFunc(func | 0, ref | 0, mask | 0)
   }
 
   stencilFuncSeparate (face, func, ref, mask) {
+    this._checkStencil = true
     return super.stencilFuncSeparate(face | 0, func | 0, ref | 0, mask | 0)
   }
 
   stencilMask (mask) {
+    this._checkStencil = true
     return super.stencilMask(mask | 0)
   }
 
   stencilMaskSeparate (face, mask) {
+    this._checkStencil = true
     return super.stencilMaskSeparate(face | 0, mask | 0)
   }
 
   stencilOp (fail, zfail, zpass) {
+    this._checkStencil = true
     return super.stencilOp(fail | 0, zfail | 0, zpass | 0)
   }
 
   stencilOpSeparate (face, fail, zfail, zpass) {
+    this._checkStencil = true
     return super.stencilOpSeparate(face | 0, fail | 0, zfail | 0, zpass | 0)
   }
 
