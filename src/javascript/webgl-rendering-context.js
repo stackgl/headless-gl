@@ -186,6 +186,17 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
               break
           }
           break
+        case 'builtin':
+          switch (tok.data) {
+            case 'dFdx':
+            case 'dFdy':
+            case 'fwidth':
+              if (!this._extensions.oes_standard_derivatives) {
+                errorStatus = true
+                errorLog.push(tok.line + ':' + tok.column + ' ' + tok.data + ' not supported')
+              }
+              break
+          }
       }
     }
 
