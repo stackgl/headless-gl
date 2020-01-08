@@ -2287,6 +2287,8 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
             case ext.MAX_COLOR_ATTACHMENTS_WEBGL:
               return super.getParameter(pname)
           }
+        } else if (this._extensions.oes_standard_derivatives) {
+          return super.getParameter(pname)
         }
         this.setError(gl.INVALID_ENUM)
         return null
