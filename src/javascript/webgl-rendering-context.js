@@ -2711,7 +2711,12 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     target |= 0
     mode |= 0
 
-    if (target !== gl.GENERATE_MIPMAP_HINT) {
+    if (!(
+      target === gl.GENERATE_MIPMAP_HINT ||
+      (
+        this._extensions.oes_standard_derivatives && target === this._extensions.oes_standard_derivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES
+      )
+    )) {
       this.setError(gl.INVALID_ENUM)
       return
     }
