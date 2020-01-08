@@ -830,6 +830,13 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   }
 
   _wrapShader (type, source) { // eslint-disable-line
+    // the gl implementation seems to define `GL_OES_standard_derivatives` even when the extension is disabled
+    // this behaviour causes one conformance test ('GL_OES_standard_derivatives defined in shaders when extension is disabled') to fail
+    // by `undef`ing `GL_OES_standard_derivatives`, this appears to solve the issue
+    if (!this._extensions.oes_standard_derivatives && /#ifdef\s+GL_OES_standard_derivatives/.test(source)) {
+      source = '#undef GL_OES_standard_derivatives\n' + source
+    }
+
     return this._extensions.webgl_draw_buffers ? source : '#define gl_MaxDrawBuffers 1\n' + source // eslint-disable-line
   }
 
