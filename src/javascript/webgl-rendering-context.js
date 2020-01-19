@@ -2305,7 +2305,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
             case ext.MAX_COLOR_ATTACHMENTS_WEBGL:
               return super.getParameter(pname)
           }
-        } else if (this._extensions.oes_standard_derivatives) {
+        } else if (this._extensions.oes_standard_derivatives && this._extensions.oes_standard_derivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES === pname) {
           return super.getParameter(pname)
         }
         this.setError(gl.INVALID_ENUM)
