@@ -6,6 +6,7 @@ environment:
     secure: 8dsj2oODP6p82OsCyVjldh0v/KktBJYWWPFWmrg+bh7y0CNpQPwtww+IjX14LMrx
   matrix:
   - nodejs_version: "12"
+  - nodejs_version: "14"
 
 install:
   - cmd: git submodule update --init
@@ -22,4 +23,4 @@ test_script:
   - npm test
 
 deploy_script:
-  - ps: if ($env:APPVEYOR_REPO_TAG -eq "true") {./node_modules/.bin/prebuild -t 8.0.0 -t 9.0.0 -t 10.0.0 -t 11.0.0 -t 12.0.0 --strip -u $env:GITHUB_TOKEN}
+  - ps: if ($env:APPVEYOR_REPO_TAG -eq "true") {./node_modules/.bin/prebuild -t 8.0.0 -t 9.0.0 -t 10.0.0 -t 11.0.0 -t 12.0.0 -t 14.0.0 --strip -u $env:GITHUB_TOKEN}
