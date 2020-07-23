@@ -104,7 +104,8 @@
                 'destination': '$(SolutionDir)$(ConfigurationName)',
                 'files': [
                   '<(module_root_dir)/deps/windows/dll/<(target_arch)/libEGL.dll',
-                  '<(module_root_dir)/deps/windows/dll/<(target_arch)/libGLESv2.dll'
+                  '<(module_root_dir)/deps/windows/dll/<(target_arch)/libGLESv2.dll',
+                  '<(module_root_dir)/deps/windows/dll/<(target_arch)/d3dcompiler_47.dll'
                 ]
               }
            ]
