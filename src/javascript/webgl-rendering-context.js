@@ -9,6 +9,7 @@ const { getOESTextureFloat } = require('./extensions/oes-texture-float')
 const { getSTACKGLDestroyContext } = require('./extensions/stackgl-destroy-context')
 const { getSTACKGLResizeDrawingBuffer } = require('./extensions/stackgl-resize-drawing-buffer')
 const { getWebGLDrawBuffers } = require('./extensions/webgl-draw-buffers')
+const { getEXTBlendMinMax } = require('./extensions/ext-blend-minmax')
 const {
   bindPublics,
   checkObject,
@@ -57,7 +58,8 @@ const availableExtensions = {
   oes_standard_derivatives: getOESStandardDerivatives,
   stackgl_destroy_context: getSTACKGLDestroyContext,
   stackgl_resize_drawingbuffer: getSTACKGLResizeDrawingBuffer,
-  webgl_draw_buffers: getWebGLDrawBuffers
+  webgl_draw_buffers: getWebGLDrawBuffers,
+  ext_blend_minmax: getEXTBlendMinMax
 }
 
 const privateMethods = [
@@ -769,7 +771,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   _validBlendMode (mode) {
     return mode === gl.FUNC_ADD ||
       mode === gl.FUNC_SUBTRACT ||
-      mode === gl.FUNC_REVERSE_SUBTRACT
+      mode === gl.FUNC_REVERSE_SUBTRACT ||
+      (this._extensions.ext_blend_minmax && (
+        mode === this._extensions.ext_blend_minmax.MIN_EXT ||
+        mode === this._extensions.ext_blend_minmax.MAX_EXT))
   }
 
   _validCubeTarget (target) {
@@ -1209,6 +1214,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
     if (supportedExts.indexOf('EXT_draw_buffers') >= 0) {
       exts.push('WEBGL_draw_buffers')
+    }
+
+    if (supportedExts.indexOf('EXT_blend_minmax') >= 0) {
+      exts.push('EXT_blend_minmax')
     }
 
     return exts
