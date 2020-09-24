@@ -6,6 +6,7 @@ const { getANGLEInstancedArrays } = require('./extensions/angle-instanced-arrays
 const { getOESElementIndexUint } = require('./extensions/oes-element-index-unit')
 const { getOESStandardDerivatives } = require('./extensions/oes-standard-derivatives')
 const { getOESTextureFloat } = require('./extensions/oes-texture-float')
+const { getOESTextureFloatLinear } = require('./extensions/oes-texture-float-linear')
 const { getSTACKGLDestroyContext } = require('./extensions/stackgl-destroy-context')
 const { getSTACKGLResizeDrawingBuffer } = require('./extensions/stackgl-resize-drawing-buffer')
 const { getWebGLDrawBuffers } = require('./extensions/webgl-draw-buffers')
@@ -55,6 +56,7 @@ const availableExtensions = {
   angle_instanced_arrays: getANGLEInstancedArrays,
   oes_element_index_uint: getOESElementIndexUint,
   oes_texture_float: getOESTextureFloat,
+  oes_texture_float_linear: getOESTextureFloatLinear,
   oes_standard_derivatives: getOESStandardDerivatives,
   stackgl_destroy_context: getSTACKGLDestroyContext,
   stackgl_resize_drawingbuffer: getSTACKGLResizeDrawingBuffer,
@@ -823,8 +825,8 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       texture = unit._bindCube
     }
 
-    // oes_texture_float
-    if (this._extensions.oes_texture_float && texture && texture._type === gl.FLOAT && (pname === gl.TEXTURE_MAG_FILTER || pname === gl.TEXTURE_MIN_FILTER) && (param === gl.LINEAR || param === gl.LINEAR_MIPMAP_NEAREST || param === gl.NEAREST_MIPMAP_LINEAR || param === gl.LINEAR_MIPMAP_LINEAR)) {
+    // oes_texture_float but not oes_texture_float_linear
+    if (this._extensions.oes_texture_float && !this._extensions.oes_texture_float_linear && texture && texture._type === gl.FLOAT && (pname === gl.TEXTURE_MAG_FILTER || pname === gl.TEXTURE_MIN_FILTER) && (param === gl.LINEAR || param === gl.LINEAR_MIPMAP_NEAREST || param === gl.NEAREST_MIPMAP_LINEAR || param === gl.LINEAR_MIPMAP_LINEAR)) {
       texture._complete = false
       this.bindTexture(target, texture)
       return
@@ -1210,6 +1212,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
     if (supportedExts.indexOf('GL_OES_texture_float') >= 0) {
       exts.push('OES_texture_float')
+    }
+
+    if (supportedExts.indexOf('GL_OES_texture_float_linear') >= 0) {
+      exts.push('OES_texture_float_linear')
     }
 
     if (supportedExts.indexOf('EXT_draw_buffers') >= 0) {
