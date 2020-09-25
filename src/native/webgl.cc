@@ -1636,11 +1636,16 @@ GL_METHOD(GetTexParameter) {
 
   GLenum target     = Nan::To<int32_t>(info[0]).ToChecked();
   GLenum pname      = Nan::To<int32_t>(info[1]).ToChecked();
-  GLint param_value = 0;
-
-  (inst->glGetTexParameteriv)(target, pname, &param_value);
-
-  info.GetReturnValue().Set(Nan::New<v8::Integer>(param_value));
+  
+  if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT) {
+    GLfloat param_value = 0;
+    (inst->glGetTexParameterfv)(target, pname, &param_value);
+    info.GetReturnValue().Set(Nan::New<v8::Number>(param_value));
+  } else {
+    GLint param_value = 0;
+    (inst->glGetTexParameteriv)(target, pname, &param_value);
+    info.GetReturnValue().Set(Nan::New<v8::Integer>(param_value));
+  }
 }
 
 GL_METHOD(GetActiveAttrib) {
@@ -1777,6 +1782,7 @@ GL_METHOD(GetParameter) {
     case GL_POLYGON_OFFSET_FACTOR:
     case GL_POLYGON_OFFSET_UNITS:
     case GL_SAMPLE_COVERAGE_VALUE:
+    case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT:
     {
       GLfloat params;
       (inst->glGetFloatv)(name, &params);

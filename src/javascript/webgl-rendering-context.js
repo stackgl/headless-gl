@@ -11,6 +11,7 @@ const { getSTACKGLDestroyContext } = require('./extensions/stackgl-destroy-conte
 const { getSTACKGLResizeDrawingBuffer } = require('./extensions/stackgl-resize-drawing-buffer')
 const { getWebGLDrawBuffers } = require('./extensions/webgl-draw-buffers')
 const { getEXTBlendMinMax } = require('./extensions/ext-blend-minmax')
+const { getEXTTextureFilterAnisotropic } = require('./extensions/ext-texture-filter-anisotropic')
 const {
   bindPublics,
   checkObject,
@@ -61,7 +62,8 @@ const availableExtensions = {
   stackgl_destroy_context: getSTACKGLDestroyContext,
   stackgl_resize_drawingbuffer: getSTACKGLResizeDrawingBuffer,
   webgl_draw_buffers: getWebGLDrawBuffers,
-  ext_blend_minmax: getEXTBlendMinMax
+  ext_blend_minmax: getEXTBlendMinMax,
+  ext_texture_filter_anisotropic: getEXTTextureFilterAnisotropic
 }
 
 const privateMethods = [
@@ -1226,6 +1228,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       exts.push('EXT_blend_minmax')
     }
 
+    if (supportedExts.indexOf('EXT_texture_filter_anisotropic') >= 0) {
+      exts.push('EXT_texture_filter_anisotropic')
+    }
+
     return exts
   }
 
@@ -2328,6 +2334,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
           return super.getParameter(pname)
         }
 
+        if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) {
+          return super.getParameter(pname)
+        }
+
         this.setError(gl.INVALID_ENUM)
         return null
     }
@@ -2556,6 +2566,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       case gl.TEXTURE_WRAP_S:
       case gl.TEXTURE_WRAP_T:
         return super.getTexParameter(target, pname)
+      default:
+        if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
+          return super.getTexParameter(target, pname)
+        }
     }
 
     this.setError(gl.INVALID_ENUM)
@@ -3341,6 +3355,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
         case gl.TEXTURE_WRAP_S:
         case gl.TEXTURE_WRAP_T:
           return super.texParameterf(target, pname, param)
+        default:
+          if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
+            return super.texParameterf(target, pname, param)
+          }
       }
 
       this.setError(gl.INVALID_ENUM)
@@ -3360,6 +3378,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
         case gl.TEXTURE_WRAP_S:
         case gl.TEXTURE_WRAP_T:
           return super.texParameteri(target, pname, param)
+        default:
+          if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
+            return super.texParameteri(target, pname, param)
+          }
       }
 
       this.setError(gl.INVALID_ENUM)
