@@ -2566,10 +2566,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       case gl.TEXTURE_WRAP_S:
       case gl.TEXTURE_WRAP_T:
         return super.getTexParameter(target, pname)
-      default:
-        if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
-          return super.getTexParameter(target, pname)
-        }
+    }
+
+    if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
+      return super.getTexParameter(target, pname)
     }
 
     this.setError(gl.INVALID_ENUM)
@@ -3347,6 +3347,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     target |= 0
     pname |= 0
     param = +param
+
     if (this._checkTextureTarget(target)) {
       this._verifyTextureCompleteness(target, pname, param)
       switch (pname) {
@@ -3355,10 +3356,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
         case gl.TEXTURE_WRAP_S:
         case gl.TEXTURE_WRAP_T:
           return super.texParameterf(target, pname, param)
-        default:
-          if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
-            return super.texParameterf(target, pname, param)
-          }
+      }
+
+      if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
+        return super.texParameterf(target, pname, param)
       }
 
       this.setError(gl.INVALID_ENUM)
@@ -3378,10 +3379,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
         case gl.TEXTURE_WRAP_S:
         case gl.TEXTURE_WRAP_T:
           return super.texParameteri(target, pname, param)
-        default:
-          if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
-            return super.texParameteri(target, pname, param)
-          }
+      }
+
+      if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
+        return super.texParameteri(target, pname, param)
       }
 
       this.setError(gl.INVALID_ENUM)
