@@ -2167,4 +2167,3 @@ GL_METHOD(IsVertexArrayOES) {
   info.GetReturnValue().Set(Nan::New<v8::Boolean>(
     (inst->glIsVertexArrayOES)(Nan::To<uint32_t>(info[0]).ToChecked()) != 0));
 }
-
