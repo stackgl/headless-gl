@@ -5,6 +5,10 @@ class WebGLVertexArrayObjectAttribute {
   constructor (ctx, idx) {
     this._ctx = ctx
     this._idx = idx
+    this._clear()
+  }
+
+  _clear () {
     this._isPointer = false
     this._pointerBuffer = null
     this._pointerOffset = 0
@@ -65,18 +69,21 @@ class WebGLVertexArrayObjectState {
       if (attrib._pointerBuffer) {
         attrib._pointerBuffer._refCount -= 1
         attrib._pointerBuffer._checkDelete()
-        attrib._pointerBuffer = null
       }
+      attrib._clear()
     }
   }
 
   releaseArrayBuffer (buffer) {
+    if (!buffer) {
+      return
+    }
     for (let i = 0; i < this._attribs.length; ++i) {
       const attrib = this._attribs[i]
       if (attrib._pointerBuffer === buffer) {
         attrib._pointerBuffer._refCount -= 1
         attrib._pointerBuffer._checkDelete()
-        attrib._pointerBuffer = null
+        attrib._clear()
       }
     }
   }
