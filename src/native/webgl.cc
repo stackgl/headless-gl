@@ -214,6 +214,9 @@ void WebGLRenderingContext::dispose() {
       case GLOBJECT_TYPE_TEXTURE:
         (inst->glDeleteTextures)(1,&obj);
         break;
+      case GLOBJECT_TYPE_VERTEX_ARRAY:
+        (inst->glDeleteVertexArraysOES)(1,&obj);
+        break;
       default:
         break;
     }
@@ -2130,3 +2133,38 @@ GL_METHOD(EXTWEBGL_draw_buffers) {
 
   info.GetReturnValue().Set(result);
 }
+
+GL_METHOD(BindVertexArrayOES) {
+  GL_BOILERPLATE;
+
+  GLuint array = Nan::To<uint32_t>(info[0]).ToChecked();
+
+  (inst->glBindVertexArrayOES)(array);
+}
+
+GL_METHOD(CreateVertexArrayOES) {
+  GL_BOILERPLATE;
+
+  GLuint array = 0;
+  (inst->glGenVertexArraysOES)(1, &array);
+  inst->registerGLObj(GLOBJECT_TYPE_VERTEX_ARRAY, array);
+
+  info.GetReturnValue().Set(Nan::New<v8::Integer>(array));
+}
+
+GL_METHOD(DeleteVertexArrayOES) {
+  GL_BOILERPLATE;
+
+  GLuint array = Nan::To<uint32_t>(info[0]).ToChecked();
+  inst->unregisterGLObj(GLOBJECT_TYPE_VERTEX_ARRAY, array);
+
+  (inst->glDeleteVertexArraysOES)(1, &array);
+}
+
+GL_METHOD(IsVertexArrayOES) {
+  GL_BOILERPLATE;
+
+  info.GetReturnValue().Set(Nan::New<v8::Boolean>(
+    (inst->glIsVertexArrayOES)(Nan::To<uint32_t>(info[0]).ToChecked()) != 0));
+}
+

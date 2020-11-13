@@ -218,6 +218,7 @@ Only the following for now:
 * [`OES_element_index_uint`](https://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/)
 * [`OES_texture_float`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float/)
 * [`OES_texture_float_linear`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/)
+* [`OES_vertex_array_object`](https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/)
 * [`WEBGL_draw_buffers`](https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/)
 * [`EXT_blend_minmax`](https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/)
 * [`EXT_texture_filter_anisotropic`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/)

@@ -61,7 +61,7 @@ class ANGLEInstancedArrays {
       return
     }
 
-    const elementBuffer = ctx._activeElementArrayBuffer
+    const elementBuffer = ctx._vertexObjectState._elementArrayBufferBinding
     if (!elementBuffer) {
       ctx.setError(gl.INVALID_OPERATION)
       return
@@ -161,11 +161,11 @@ class ANGLEInstancedArrays {
     index |= 0
     divisor |= 0
     if (divisor < 0 ||
-      index < 0 || index >= ctx._vertexAttribs.length) {
+      index < 0 || index >= ctx._vertexObjectState._attribs.length) {
       ctx.setError(gl.INVALID_VALUE)
       return
     }
-    const attrib = ctx._vertexAttribs[index]
+    const attrib = ctx._vertexObjectState._attribs[index]
     attrib._divisor = divisor
     this._vertexAttribDivisor(index, divisor)
   }
@@ -178,7 +178,7 @@ class ANGLEInstancedArrays {
       return false
     }
 
-    const attribs = ctx._vertexAttribs
+    const attribs = ctx._vertexObjectState._attribs
     let hasZero = false
     for (let i = 0; i < attribs.length; ++i) {
       const attrib = attribs[i]

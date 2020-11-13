@@ -129,4 +129,8 @@ void WebGLRenderingContext::initPointers(){
 	glGetString=reinterpret_cast<PFNGLGETSTRINGPROC>(eglGetProcAddress("glGetString"));
 	glGetError=reinterpret_cast<PFNGLGETERRORPROC>(eglGetProcAddress("glGetError"));
 	glDrawBuffersEXT=reinterpret_cast<PFNGLDRAWBUFFERSEXTPROC>(eglGetProcAddress("glDrawBuffersEXT"));
+        glGenVertexArraysOES=reinterpret_cast<PFNGLGENVERTEXARRAYSOESPROC>(eglGetProcAddress("glGenVertexArraysOES"));
+        glDeleteVertexArraysOES=reinterpret_cast<PFNGLDELETEVERTEXARRAYSOESPROC>(eglGetProcAddress("glDeleteVertexArraysOES"));
+        glIsVertexArrayOES=reinterpret_cast<PFNGLISVERTEXARRAYOESPROC>(eglGetProcAddress("glIsVertexArrayOES"));
+        glBindVertexArrayOES=reinterpret_cast<PFNGLBINDVERTEXARRAYOESPROC>(eglGetProcAddress("glBindVertexArrayOES"));
 }

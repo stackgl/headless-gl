@@ -161,6 +161,10 @@ NAN_MODULE_INIT(Init) {
   JS_GL_METHOD("destroy", Destroy);
   JS_GL_METHOD("drawBuffersWEBGL", DrawBuffersWEBGL);
   JS_GL_METHOD("extWEBGL_draw_buffers", EXTWEBGL_draw_buffers);
+  JS_GL_METHOD("createVertexArrayOES", CreateVertexArrayOES);
+  JS_GL_METHOD("deleteVertexArrayOES", DeleteVertexArrayOES);
+  JS_GL_METHOD("isVertexArrayOES", IsVertexArrayOES);
+  JS_GL_METHOD("bindVertexArrayOES", BindVertexArrayOES);
 
   // Windows defines a macro called NO_ERROR which messes this up
   Nan::SetPrototypeTemplate(

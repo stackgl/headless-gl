@@ -21,6 +21,7 @@ enum GLObjectType {
   GLOBJECT_TYPE_RENDERBUFFER,
   GLOBJECT_TYPE_SHADER,
   GLOBJECT_TYPE_TEXTURE,
+  GLOBJECT_TYPE_VERTEX_ARRAY,
 };
 
 enum GLContextState {
@@ -266,6 +267,11 @@ struct WebGLRenderingContext : public node::ObjectWrap {
 
   static NAN_METHOD(DrawBuffersWEBGL);
   static NAN_METHOD(EXTWEBGL_draw_buffers);
+
+  static NAN_METHOD(BindVertexArrayOES);
+  static NAN_METHOD(CreateVertexArrayOES);
+  static NAN_METHOD(DeleteVertexArrayOES);
+  static NAN_METHOD(IsVertexArrayOES);
 
   void initPointers();
 

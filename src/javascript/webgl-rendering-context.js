@@ -12,6 +12,7 @@ const { getSTACKGLResizeDrawingBuffer } = require('./extensions/stackgl-resize-d
 const { getWebGLDrawBuffers } = require('./extensions/webgl-draw-buffers')
 const { getEXTBlendMinMax } = require('./extensions/ext-blend-minmax')
 const { getEXTTextureFilterAnisotropic } = require('./extensions/ext-texture-filter-anisotropic')
+const { getOESVertexArrayObject } = require('./extensions/oes-vertex-array-object')
 const {
   bindPublics,
   checkObject,
@@ -59,6 +60,7 @@ const availableExtensions = {
   oes_texture_float: getOESTextureFloat,
   oes_texture_float_linear: getOESTextureFloatLinear,
   oes_standard_derivatives: getOESStandardDerivatives,
+  oes_vertex_array_object: getOESVertexArrayObject,
   stackgl_destroy_context: getSTACKGLDestroyContext,
   stackgl_resize_drawingbuffer: getSTACKGLResizeDrawingBuffer,
   webgl_draw_buffers: getWebGLDrawBuffers,
@@ -271,7 +273,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       this.setError(gl.INVALID_OPERATION)
       return false
     }
-    const attribs = this._vertexAttribs
+    const attribs = this._vertexObjectState._attribs
     for (let i = 0; i < attribs.length; ++i) {
       const attrib = attribs[i]
       if (attrib._isPointer) {
@@ -301,7 +303,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   }
 
   _checkVertexIndex (index) {
-    if (index < 0 || index >= this._vertexAttribs.length) {
+    if (index < 0 || index >= this._vertexObjectState._attribs.length) {
       this.setError(gl.INVALID_VALUE)
       return false
     }
@@ -407,9 +409,9 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
   _getActiveBuffer (target) {
     if (target === gl.ARRAY_BUFFER) {
-      return this._activeArrayBuffer
+      return this._vertexGlobalState._arrayBufferBinding
     } else if (target === gl.ELEMENT_ARRAY_BUFFER) {
-      return this._activeElementArrayBuffer
+      return this._vertexObjectState._elementArrayBufferBinding
     }
     return null
   }
@@ -668,18 +670,6 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     this._errorStack.push(this.getError())
   }
 
-  _switchActiveBuffer (active, buffer) {
-    if (active !== buffer) {
-      if (active) {
-        active._refCount -= 1
-        active._checkDelete()
-      }
-      if (buffer) {
-        buffer._refCount += 1
-      }
-    }
-  }
-
   _switchActiveProgram (active) {
     if (active) {
       active._refCount -= 1
@@ -855,7 +845,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     super.bindBuffer(gl.ARRAY_BUFFER, this._attrib0Buffer._)
     super.bufferData(
       gl.ARRAY_BUFFER,
-      this._vertexAttribs[0]._data,
+      this._vertexGlobalState._attribs[0]._data,
       gl.STREAM_DRAW)
     super.enableVertexAttribArray(0)
     super.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0)
@@ -863,7 +853,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   }
 
   _endAttrib0Hack () {
-    const attrib = this._vertexAttribs[0]
+    const attrib = this._vertexObjectState._attribs[0]
     if (attrib._pointerBuffer) {
       super.bindBuffer(gl.ARRAY_BUFFER, attrib._pointerBuffer._)
     } else {
@@ -878,8 +868,8 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       attrib._pointerOffset)
     super._vertexAttribDivisor(0, attrib._divisor)
     super.disableVertexAttribArray(0)
-    if (this._activeArrayBuffer) {
-      super.bindBuffer(gl.ARRAY_BUFFER, this._activeArrayBuffer._)
+    if (this._vertexGlobalState._arrayBufferBinding) {
+      super.bindBuffer(gl.ARRAY_BUFFER, this._vertexGlobalState._arrayBufferBinding._)
     } else {
       super.bindBuffer(gl.ARRAY_BUFFER, 0)
     }
@@ -991,6 +981,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     }
 
     if (!buffer) {
+      buffer = null
       super.bindBuffer(target, 0)
     } else if (buffer._pendingDelete) {
       return
@@ -1007,11 +998,11 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     }
 
     if (target === gl.ARRAY_BUFFER) {
-      this._switchActiveBuffer(this._activeArrayBuffer, buffer)
-      this._activeArrayBuffer = buffer
+      // Buffers of type ARRAY_BUFFER are bound to the global vertex state.
+      this._vertexGlobalState.setArrayBuffer(buffer)
     } else {
-      this._switchActiveBuffer(this._activeElementArrayBuffer, buffer)
-      this._activeElementArrayBuffer = buffer
+      // Buffers of type ELEMENT_ARRAY_BUFFER are bound to vertex array object state.
+      this._vertexObjectState.setElementArrayBuffer(buffer)
     }
   }
 
@@ -1230,6 +1221,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
     if (supportedExts.indexOf('EXT_texture_filter_anisotropic') >= 0) {
       exts.push('EXT_texture_filter_anisotropic')
+    }
+
+    if (supportedExts.indexOf('GL_OES_vertex_array_object') >= 0) {
+      exts.push('OES_vertex_array_object')
     }
 
     return exts
@@ -1621,22 +1616,17 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       return
     }
 
-    if (this._activeArrayBuffer === buffer) {
+    if (this._vertexGlobalState._arrayBufferBinding === buffer) {
       this.bindBuffer(gl.ARRAY_BUFFER, null)
     }
-    if (this._activeElementArrayBuffer === buffer) {
+    if (this._vertexObjectState._elementArrayBufferBinding === buffer) {
       this.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null)
     }
 
-    for (let i = 0; i < this._vertexAttribs.length; ++i) {
-      const attrib = this._vertexAttribs[i]
-      if (attrib._pointerBuffer === buffer) {
-        attrib._pointerBuffer = null
-        attrib._pointerStride = 0
-        attrib._pointerOffset = 0
-        attrib._pointerSize = 4
-        buffer._refCount -= 1
-      }
+    if (this._vertexObjectState === this._defaultVertexObjectState) {
+      // If no vertex array object is bound, release attrib bindings for the
+      // array buffer.
+      this._vertexObjectState.releaseArrayBuffer(buffer)
     }
 
     buffer._pendingDelete = true
@@ -1816,12 +1806,12 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
   disableVertexAttribArray (index) {
     index |= 0
-    if (index < 0 || index >= this._vertexAttribs.length) {
+    if (index < 0 || index >= this._vertexObjectState._attribs.length) {
       this.setError(gl.INVALID_VALUE)
       return
     }
     super.disableVertexAttribArray(index)
-    this._vertexAttribs[index]._isPointer = false
+    this._vertexObjectState._attribs[index]._isPointer = false
   }
 
   drawArrays (mode, first, count) {
@@ -1858,7 +1848,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     }
     if (this._checkVertexAttribState(maxIndex)) {
       if (
-        this._vertexAttribs[0]._isPointer || (
+        this._vertexObjectState._attribs[0]._isPointer || (
           this._extensions.webgl_draw_buffers &&
           this._extensions.webgl_draw_buffers._buffersState &&
           this._extensions.webgl_draw_buffers._buffersState.length > 0
@@ -1888,7 +1878,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       return
     }
 
-    const elementBuffer = this._activeElementArrayBuffer
+    const elementBuffer = this._vertexObjectState._elementArrayBufferBinding
     if (!elementBuffer) {
       this.setError(gl.INVALID_OPERATION)
       return
@@ -1978,7 +1968,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
     if (this._checkVertexAttribState(maxIndex)) {
       if (reducedCount > 0) {
-        if (this._vertexAttribs[0]._isPointer) {
+        if (this._vertexObjectState._attribs[0]._isPointer) {
           return super.drawElements(mode, reducedCount, type, ioffset)
         } else {
           this._beginAttrib0Hack()
@@ -1996,14 +1986,14 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
   enableVertexAttribArray (index) {
     index |= 0
-    if (index < 0 || index >= this._vertexAttribs.length) {
+    if (index < 0 || index >= this._vertexObjectState._attribs.length) {
       this.setError(gl.INVALID_VALUE)
       return
     }
 
     super.enableVertexAttribArray(index)
 
-    this._vertexAttribs[index]._isPointer = true
+    this._vertexObjectState._attribs[index]._isPointer = true
   }
 
   finish () {
@@ -2184,9 +2174,9 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     pname |= 0
     switch (pname) {
       case gl.ARRAY_BUFFER_BINDING:
-        return this._activeArrayBuffer
+        return this._vertexGlobalState._arrayBufferBinding
       case gl.ELEMENT_ARRAY_BUFFER_BINDING:
-        return this._activeElementArrayBuffer
+        return this._vertexObjectState._elementArrayBufferBinding
       case gl.CURRENT_PROGRAM:
         return this._activeProgram
       case gl.FRAMEBUFFER_BINDING:
@@ -2336,6 +2326,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
         if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) {
           return super.getParameter(pname)
+        }
+
+        if (this._extensions.oes_vertex_array_object && pname === this._extensions.oes_vertex_array_object.VERTEX_ARRAY_BINDING_OES) {
+          return this._extensions.oes_vertex_array_object._activeVertexArrayObject
         }
 
         this.setError(gl.INVALID_ENUM)
@@ -2711,11 +2705,12 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   getVertexAttrib (index, pname) {
     index |= 0
     pname |= 0
-    if (index < 0 || index >= this._vertexAttribs.length) {
+    if (index < 0 || index >= this._vertexObjectState._attribs.length) {
       this.setError(gl.INVALID_VALUE)
       return null
     }
-    const attrib = this._vertexAttribs[index]
+    const attrib = this._vertexObjectState._attribs[index]
+    const vertexAttribValue = this._vertexGlobalState._attribs[index]._data
 
     const extInstancing = this._extensions.angle_instanced_arrays
     if (extInstancing) {
@@ -2738,7 +2733,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       case gl.VERTEX_ATTRIB_ARRAY_NORMALIZED:
         return attrib._pointerNormal
       case gl.CURRENT_VERTEX_ATTRIB:
-        return new Float32Array(attrib._data)
+        return new Float32Array(vertexAttribValue)
       default:
         this.setError(gl.INVALID_ENUM)
         return null
@@ -2748,12 +2743,12 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   getVertexAttribOffset (index, pname) {
     index |= 0
     pname |= 0
-    if (index < 0 || index >= this._vertexAttribs.length) {
+    if (index < 0 || index >= this._vertexObjectState._attribs.length) {
       this.setError(gl.INVALID_VALUE)
       return null
     }
     if (pname === gl.VERTEX_ATTRIB_ARRAY_POINTER) {
-      return this._vertexAttribs[index]._pointerOffset
+      return this._vertexObjectState._attribs[index]._pointerOffset
     } else {
       this.setError(gl.INVALID_ENUM)
       return null
@@ -3439,13 +3434,13 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
     if (stride < 0 ||
       offset < 0 ||
-      index < 0 || index >= this._vertexAttribs.length ||
+      index < 0 || index >= this._vertexObjectState._attribs.length ||
       !(size === 1 || size === 2 || size === 3 || size === 4)) {
       this.setError(gl.INVALID_VALUE)
       return
     }
 
-    if (this._activeArrayBuffer === null) {
+    if (this._vertexGlobalState._arrayBufferBinding === null) {
       this.setError(gl.INVALID_OPERATION)
       return
     }
@@ -3474,24 +3469,18 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     // Call vertex attrib pointer
     super.vertexAttribPointer(index, size, type, normalized, stride, offset)
 
-    // Save attribute pointer state
-    const attrib = this._vertexAttribs[index]
-
-    if (attrib._pointerBuffer &&
-      attrib._pointerBuffer !== this._activeArrayBuffer) {
-      attrib._pointerBuffer._refCount -= 1
-      attrib._pointerBuffer._checkDelete()
-    }
-
-    this._activeArrayBuffer._refCount += 1
-    attrib._pointerBuffer = this._activeArrayBuffer
-    attrib._pointerSize = size * byteSize
-    attrib._pointerOffset = offset
-    attrib._pointerStride = stride || (size * byteSize)
-    attrib._pointerType = type
-    attrib._pointerNormal = normalized
-    attrib._inputStride = stride
-    attrib._inputSize = size
+    // Update the vertex state object and references.
+    this._vertexObjectState.setVertexAttribPointer(
+      /* buffer */ this._vertexGlobalState._arrayBufferBinding,
+      /* index */ index,
+      /* pointerSize */ size * byteSize,
+      /* pointerOffset */ offset,
+      /* pointerStride */ stride || (size * byteSize),
+      /* pointerType */ type,
+      /* pointerNormal */ normalized,
+      /* inputStride */ stride,
+      /* inputSize */ size
+    )
   }
 
   viewport (x, y, width, height) {
@@ -3778,7 +3767,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   vertexAttrib1f (index, v0) {
     index |= 0
     if (!this._checkVertexIndex(index)) return
-    const data = this._vertexAttribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data
     data[3] = 1
     data[1] = data[2] = 0
     data[0] = v0
@@ -3788,7 +3777,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   vertexAttrib2f (index, v0, v1) {
     index |= 0
     if (!this._checkVertexIndex(index)) return
-    const data = this._vertexAttribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data
     data[3] = 1
     data[2] = 0
     data[1] = v1
@@ -3799,7 +3788,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   vertexAttrib3f (index, v0, v1, v2) {
     index |= 0
     if (!this._checkVertexIndex(index)) return
-    const data = this._vertexAttribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data
     data[3] = 1
     data[2] = v2
     data[1] = v1
@@ -3810,7 +3799,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   vertexAttrib4f (index, v0, v1, v2, v3) {
     index |= 0
     if (!this._checkVertexIndex(index)) return
-    const data = this._vertexAttribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data
     data[3] = v3
     data[2] = v2
     data[1] = v1
@@ -3823,7 +3812,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       this.setError(gl.INVALID_OPERATION)
       return
     }
-    const data = this._vertexAttribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data
     data[3] = 1
     data[2] = 0
     data[1] = 0
@@ -3836,7 +3825,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       this.setError(gl.INVALID_OPERATION)
       return
     }
-    const data = this._vertexAttribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data
     data[3] = 1
     data[2] = 0
     data[1] = value[1]
@@ -3849,7 +3838,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       this.setError(gl.INVALID_OPERATION)
       return
     }
-    const data = this._vertexAttribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data
     data[3] = 1
     data[2] = value[2]
     data[1] = value[1]
@@ -3862,7 +3851,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       this.setError(gl.INVALID_OPERATION)
       return
     }
-    const data = this._vertexAttribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data
     data[3] = value[3]
     data[2] = value[2]
     data[1] = value[1]
