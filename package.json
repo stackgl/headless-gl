@@ -23,7 +23,7 @@
     "nan": "^2.15.0",
     "node-abi": "^2.30.1",
     "node-gyp": "^7.1.2",
-    "prebuild-install": "^5.3.6"
+    "prebuild-install": "^7.0.0"
   },
   "devDependencies": {
     "angle-normals": "^1.0.0",
