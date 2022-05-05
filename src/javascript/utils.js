@@ -141,6 +141,8 @@ function extractImageData (pixels) {
       const canvas = document.createElement('canvas')
 
       if (typeof canvas === 'object' && typeof canvas.getContext === 'function') {
+        canvas.width = pixels.width
+        canvas.height = pixels.height
         context = canvas.getContext('2d')
 
         if (context !== null) {
