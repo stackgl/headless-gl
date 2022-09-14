@@ -3,3 +3,4 @@ if (typeof WebGLRenderingContext !== 'undefined') {
 } else {
   module.exports = require('./src/javascript/node-index')
 }
+module.exports.WebGLRenderingContext = require('./src/javascript/webgl-rendering-context').WebGLRenderingContext

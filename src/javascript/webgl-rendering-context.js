@@ -3861,4 +3861,12 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   }
 }
 
+// Make the gl consts available as static properties
+for (const [key, value] of Object.entries(gl)) {
+  if (typeof value !== 'number') {
+    continue
+  }
+  Object.assign(WebGLRenderingContext, { [key]: value })
+}
+
 module.exports = { WebGLRenderingContext, wrapContext }
