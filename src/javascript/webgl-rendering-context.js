@@ -1968,7 +1968,13 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
     if (this._checkVertexAttribState(maxIndex)) {
       if (reducedCount > 0) {
-        if (this._vertexObjectState._attribs[0]._isPointer) {
+        if (
+          this._vertexObjectState._attribs[0]._isPointer || (
+            this._extensions.webgl_draw_buffers &&
+            this._extensions.webgl_draw_buffers._buffersState &&
+            this._extensions.webgl_draw_buffers._buffersState.length > 0
+          )
+        ) {
           return super.drawElements(mode, reducedCount, type, ioffset)
         } else {
           this._beginAttrib0Hack()
