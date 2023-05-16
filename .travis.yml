@@ -5,25 +5,19 @@ env:
   global:
     - secure: "UsKsg8CBQcMt8DGqY5iZsoiYqaTZ8MUQkFfk7tW1xlAegbzFpva+c4dmb/ej7tNG/Epy1MAtRqVgFjC4WP8oNBMa7WiTV0TBe/xgBI31aoadahkuq2K7AOlQF0NUP2AKH3LzR9A5gOR6T0wYrk/I7cTX9D9tp4v/yidLpZZ6ums="
 matrix:
-  include:
-  - os: linux
-    sudo: required
-    dist: focal
-    compiler: g++
-    env:
-      - NODE_VERSION=14
-  - os: linux
-    sudo: required
-    dist: focal
-    compiler: g++
-    env:
-      - NODE_VERSION=16
+  include:=
   - os: linux
     sudo: required
     dist: focal
     compiler: g++
     env:
       - NODE_VERSION=18
+  - os: linux
+    sudo: required
+    dist: focal
+    compiler: g++
+    env:
+      - NODE_VERSION=20
   # - os: osx
   #   osx_image: xcode13.4
   #   compiler: clang
