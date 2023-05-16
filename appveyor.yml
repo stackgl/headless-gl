@@ -3,7 +3,7 @@ platform:
 
 environment:
   matrix:
-  - nodejs_version: "18"
+  - nodejs_version: "20"
 
 install:
   - cmd: git submodule update --init
