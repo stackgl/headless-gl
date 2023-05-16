@@ -41,13 +41,13 @@ npm install gl
 
 And you are good to go!
 
-Prebuilt binaries are generally available for LTS node versions (e.g. 14, 16, 18). If your system is not supported, then please see the [development](#system-dependencies) section on how to configure your build environment.  Patches to improve support are always welcome!
+Prebuilt binaries are generally available for LTS node versions (e.g. 16, 18, 20). If your system is not supported, then please see the [development](#system-dependencies) section on how to configure your build environment.  Patches to improve support are always welcome!
 
 ## Supported platforms and Node.js versions
 
 gl runs on Linux, macOS, and Windows.
 
-Node.js versions 14 and up are supported.
+Node.js versions 16 and up are supported.
 
 ## API
 
