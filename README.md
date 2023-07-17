@@ -1,4 +1,10 @@
-# gl
+# gl-with-warp (Built on stack-gl/headless-gl)
+
+Changes on top off headless-gl:
+
+1. Use FORCE_USE_WARP in env variables to enable rendering via WARP.
+2. To Confirm WARP is being used, use THROW_IF_NOT_WARP to confirm.
+3. WebGLRenderingContext exported from node-index.
 
 [![Travis CI](https://travis-ci.com/stackgl/headless-gl.svg?branch=master)](https://travis-ci.com/stackgl/headless-gl)
 [![Appveyor](https://ci.appveyor.com/api/projects/status/g5ypwyffmtg1iu83/branch/master?svg=true)](https://ci.appveyor.com/project/dhritzkiv/headless-gl)
