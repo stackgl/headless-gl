@@ -16,14 +16,15 @@ jobs:
         exclude:  # TODO: Remove the excludes and get the tests to pass
           - os: ubuntu-latest
           - os: macos-latest
-            node-version: 16.x
-          - os: macos-latest
+          - os: windows-latest
             node-version: 18.x
+          - os: windows-latest
+            node-version: 20.x
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: true
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - if: startsWith(matrix.os, 'ubuntu')
