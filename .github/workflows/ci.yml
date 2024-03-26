@@ -21,7 +21,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - if: startsWith(matrix.os, 'ubuntu')
-        run: sudo apt-get install -y build-essential libglew-dev libglu1-mesa-dev libxi-dev pkg-config
+        run: sudo apt-get install -y build-essential libgl1-mesa-dri libglapi-mesa
+                                     libglew-dev libglu1-mesa-dev libosmesa6
+                                     libxi-dev mesa-utils pkg-config xvfb
       - run: npm ci
       - run: npm run build --if-present
       - run: npm test
