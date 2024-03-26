@@ -26,4 +26,7 @@ jobs:
                                      libxi-dev mesa-utils pkg-config
       - run: npm ci
       - run: npm run build --if-present
-      - run: xvfb-run npm test
+      - if: startsWith(matrix.os, 'ubuntu')
+        run: xvfb-run npm test
+      - if: "!startsWith(matrix.os, 'ubuntu')"
+        run: npm test
