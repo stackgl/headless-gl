@@ -3,9 +3,10 @@ platform:
 
 environment:
   matrix:
-  - nodejs_version: "18"
+  - nodejs_version: "20"
 
 install:
+  - ps: Install-Module VSSetup -Scope CurrentUser
   - cmd: git submodule update --init
   - ps: Update-NodeJsInstallation (Get-NodeJsLatestBuild $env:nodejs_version) $env:PLATFORM
   - npm install -g node-gyp
@@ -18,4 +19,7 @@ test_script:
   - npm test
 
 deploy_script:
-  - ps: if ($env:APPVEYOR_REPO_TAG -eq "true") {./node_modules/.bin/prebuild -t 16.0.0 -t 18.0.0 -t 20.0.0 --strip -u $env:GITHUB_TOKEN --include-regex "\.(node|dll)$"}
+  - ps: if ($env:APPVEYOR_REPO_TAG -eq "true" -or $env:FORCE_PREBUILD -ne $null) {./node_modules/.bin/prebuild -t 18.0.0 -t 20.0.0 --strip -u $env:GITHUB_TOKEN --include-regex "\.(node|dll)$"}
+
+cache:
+  - '%APPDATA%\npm-cache'               # npm cache

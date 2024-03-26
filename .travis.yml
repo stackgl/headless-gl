@@ -3,9 +3,9 @@ git:
   submodules: true
 env:
   global:
-    - secure: "UsKsg8CBQcMt8DGqY5iZsoiYqaTZ8MUQkFfk7tW1xlAegbzFpva+c4dmb/ej7tNG/Epy1MAtRqVgFjC4WP8oNBMa7WiTV0TBe/xgBI31aoadahkuq2K7AOlQF0NUP2AKH3LzR9A5gOR6T0wYrk/I7cTX9D9tp4v/yidLpZZ6ums="
+    - secure: "YEhcMuHvycqdfQZhCJhDz9aw56tmvvfr+k/1hiGsIQx7zyZbLR03wUT4EUQAKdG57lOGHZwUdb4koW+OAG3ZVD7rWlw2UOw4G7BiWbQeVXO8isQiFd3CtIRvqbeEzDsu/AQGa8MSb9zoEbFRvV7MDd9TuKbiwVDoPyKGI6qZioA="
 matrix:
-  include:=
+  include:
   - os: linux
     sudo: required
     dist: focal
