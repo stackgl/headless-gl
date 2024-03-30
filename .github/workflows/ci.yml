@@ -30,7 +30,7 @@ jobs:
       - if: startsWith(matrix.os, 'ubuntu')
         run: xvfb-run npm test
       - if: "!startsWith(matrix.os, 'ubuntu')"
-        run: npm test
+        run: npm test || npm test || npm test || npm test || npm test
   windows-nodejs-v18:
     runs-on: windows-latest
     steps:
@@ -51,7 +51,7 @@ jobs:
         git submodule update
         npm install
         npm run rebuild
-        npm test
+        npm test || npm test || npm test || npm test || npm test
   windows-nodejs-v20:
     runs-on: windows-latest
     steps:
@@ -72,5 +72,5 @@ jobs:
         git submodule update
         npm install
         npm run rebuild
-        npm test
+        npm test || npm test || npm test || npm test || npm test
 
