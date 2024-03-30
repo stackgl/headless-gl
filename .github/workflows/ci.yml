@@ -31,3 +31,57 @@ jobs:
         run: xvfb-run npm test
       - if: "!startsWith(matrix.os, 'ubuntu')"
         run: npm test
+
+  windows-nodejs-v20:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: uninstall nodejs
+      run: choco uninstall -y nodejs nodejs.install
+    - name: install nodejs
+      run: choco install -y nodejs.install --version=20.11.1
+    - name: update npm
+      run: npm install --location=global npm@latest
+    - name: echo node version
+      run: node --version
+    - name: install python
+      run: choco install -y python3
+    - name: install microsoft-build-tools
+      run: choco install -y microsoft-build-tools
+    - name: submodule init
+      run: git submodule init
+    - name: submodule update
+      run: git submodule update
+    - name: install dependencies
+      run: npm install
+    - name: rebuild
+      run: npm run rebuild
+    - name: run test
+      run: npm test
+
+  windows-nodejs-v18:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: uninstall nodejs
+      run: choco uninstall -y nodejs nodejs.install
+    - name: install nodejs
+      run: choco install -y nodejs.install --version=18.18.2
+    - name: update npm
+      run: npm install --location=global npm@latest
+    - name: echo node version
+      run: node --version
+    - name: install python
+      run: choco install -y python3
+    - name: install microsoft-build-tools
+      run: choco install -y microsoft-build-tools
+    - name: submodule init
+      run: git submodule init
+    - name: submodule update
+      run: git submodule update
+    - name: install dependencies
+      run: npm install
+    - name: rebuild
+      run: npm run rebuild
+    - name: run test
+      run: npm test
