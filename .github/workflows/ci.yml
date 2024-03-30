@@ -12,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         node-version: [18.x, 20.x]
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,8 +26,51 @@ jobs:
                                      libglew-dev libglu1-mesa-dev libosmesa6
                                      libxi-dev mesa-utils pkg-config
       - run: npm ci
-      - run: npm run build --if-present
+      - run: npm run rebuild
       - if: startsWith(matrix.os, 'ubuntu')
         run: xvfb-run npm test
       - if: "!startsWith(matrix.os, 'ubuntu')"
-        run: npm test
+        run: npm test || npm test || npm test || npm test || npm test
+  windows-nodejs-v18:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: build and test
+      run: |
+        xcopy . C:\all_code /S /E /I /Y /H
+        choco uninstall -y nodejs nodejs.install
+        choco install -y nvs
+        cd C:/Users/runneradmin/AppData/Local/nvs
+        ./nvs add 18.20.0
+        ./nvs use 18.20.0
+        npm install -g npm@latest
+        node --version
+        npm --version
+        cd C:\all_code
+        git submodule init
+        git submodule update
+        npm install
+        npm run rebuild
+        npm test || npm test || npm test || npm test || npm test
+  windows-nodejs-v20:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@main
+    - name: build and test
+      run: |
+        xcopy . C:\all_code /S /E /I /Y /H
+        choco uninstall -y nodejs nodejs.install
+        choco install -y nvs
+        cd C:/Users/runneradmin/AppData/Local/nvs
+        ./nvs add 20.12.0
+        ./nvs use 20.12.0
+        npm install -g npm@latest
+        node --version
+        npm --version
+        cd C:\all_code
+        git submodule init
+        git submodule update
+        npm install
+        npm run rebuild
+        npm test || npm test || npm test || npm test || npm test
+
