@@ -1175,7 +1175,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
   }
 
   getExtension (name) {
-    const str = name.toLowerCase()
+    const str = name?.toLowerCase()
     if (str in this._extensions) {
       return this._extensions[str]
     }
