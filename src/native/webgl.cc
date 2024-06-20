@@ -706,7 +706,7 @@ GL_METHOD(CreateTexture) {
   (inst->glGenTextures)(1, &texture);
   inst->registerGLObj(GLOBJECT_TYPE_TEXTURE, texture);
 
-  info.GetReturnValue().Set(Nan::New<v8::Integer>(texture));
+  info.GetReturnValue().Set(Nan::New<v8::NumberObject>(texture));
 }
 
 
