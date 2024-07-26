@@ -3099,7 +3099,8 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     if (!isValidString(source)) {
       this.setError(gl.INVALID_VALUE)
     } else if (this._checkWrapper(shader, WebGLShader)) {
-      super.shaderSource(shader._ | 0, this._wrapShader(shader._type, source)) // eslint-disable-line
+      source = this._wrapShader(shader._type, source)
+      super.shaderSource(shader._ | 0, source) // eslint-disable-line
       shader._source = source
     }
   }
