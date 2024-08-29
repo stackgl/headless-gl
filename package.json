@@ -22,7 +22,7 @@
     "glsl-tokenizer": "^2.1.5",
     "nan": "^2.18.0",
     "node-abi": "^3.56.0",
-    "node-gyp": "^10.0.1",
+    "node-gyp": "^10.2.0",
     "prebuild-install": "^7.1.1"
   },
   "devDependencies": {
