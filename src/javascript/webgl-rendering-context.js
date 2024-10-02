@@ -12,6 +12,7 @@ const { getSTACKGLResizeDrawingBuffer } = require('./extensions/stackgl-resize-d
 const { getWebGLDrawBuffers } = require('./extensions/webgl-draw-buffers')
 const { getEXTBlendMinMax } = require('./extensions/ext-blend-minmax')
 const { getEXTTextureFilterAnisotropic } = require('./extensions/ext-texture-filter-anisotropic')
+const { getEXTShaderTextureLod } = require('./extensions/ext-shader-texture-lod')
 const { getOESVertexArrayObject } = require('./extensions/oes-vertex-array-object')
 const {
   bindPublics,
@@ -65,7 +66,8 @@ const availableExtensions = {
   stackgl_resize_drawingbuffer: getSTACKGLResizeDrawingBuffer,
   webgl_draw_buffers: getWebGLDrawBuffers,
   ext_blend_minmax: getEXTBlendMinMax,
-  ext_texture_filter_anisotropic: getEXTTextureFilterAnisotropic
+  ext_texture_filter_anisotropic: getEXTTextureFilterAnisotropic,
+  ext_shader_texture_lod: getEXTShaderTextureLod
 }
 
 const privateMethods = [
@@ -1225,6 +1227,10 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
 
     if (supportedExts.indexOf('GL_OES_vertex_array_object') >= 0) {
       exts.push('OES_vertex_array_object')
+    }
+
+    if (supportedExts.indexOf('GL_EXT_shader_texture_lod') >= 0) {
+      exts.push('EXT_shader_texture_lod')
     }
 
     return exts
