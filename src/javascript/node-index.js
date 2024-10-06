@@ -127,3 +127,6 @@ function createContext (width, height, options) {
 }
 
 module.exports = createContext
+const { WebGLTexture } = require("./webgl-texture")
+module.exports.WebGLRenderingContext = WebGLRenderingContext
+module.exports.WebGLTexture = WebGLTexture
