@@ -851,7 +851,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       gl.STREAM_DRAW)
     super.enableVertexAttribArray(0)
     super.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0)
-    super._vertexAttribDivisor(0, 1)
+    super._vertexAttribDivisorANGLE(0, 1)
   }
 
   _endAttrib0Hack () {
@@ -868,7 +868,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       attrib._pointerNormal,
       attrib._inputStride,
       attrib._pointerOffset)
-    super._vertexAttribDivisor(0, attrib._divisor)
+    super._vertexAttribDivisorANGLE(0, attrib._divisor)
     super.disableVertexAttribArray(0)
     if (this._vertexGlobalState._arrayBufferBinding) {
       super.bindBuffer(gl.ARRAY_BUFFER, this._vertexGlobalState._arrayBufferBinding._)
@@ -1181,10 +1181,14 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
     if (str in this._extensions) {
       return this._extensions[str]
     }
-    const ext = availableExtensions[str] ? availableExtensions[str](this) : null
-    if (ext) {
-      this._extensions[str] = ext
+
+    if (!(str in availableExtensions)) {
+      return null
     }
+
+    super.getExtension(str)
+    const ext = availableExtensions[str](this)
+    this._extensions[str] = ext
     return ext
   }
 
@@ -1213,15 +1217,15 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       exts.push('OES_texture_float_linear')
     }
 
-    if (supportedExts.indexOf('EXT_draw_buffers') >= 0) {
+    if (supportedExts.indexOf('GL_EXT_draw_buffers') >= 0) {
       exts.push('WEBGL_draw_buffers')
     }
 
-    if (supportedExts.indexOf('EXT_blend_minmax') >= 0) {
+    if (supportedExts.indexOf('GL_EXT_blend_minmax') >= 0) {
       exts.push('EXT_blend_minmax')
     }
 
-    if (supportedExts.indexOf('EXT_texture_filter_anisotropic') >= 0) {
+    if (supportedExts.indexOf('GL_EXT_texture_filter_anisotropic') >= 0) {
       exts.push('EXT_texture_filter_anisotropic')
     }
 
@@ -1607,7 +1611,9 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
       object._checkDelete()
       return
     }
-    this.setError(gl.INVALID_OPERATION)
+    if (object !== null) {
+      this.setError(gl.INVALID_OPERATION)
+    }
   }
 
   deleteBuffer (buffer) {
@@ -1863,7 +1869,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
         return super.drawArrays(mode, first, reducedCount)
       } else {
         this._beginAttrib0Hack()
-        super._drawArraysInstanced(mode, first, reducedCount, 1)
+        super._drawArraysInstancedANGLE(mode, first, reducedCount, 1)
         this._endAttrib0Hack()
       }
     }
@@ -1984,7 +1990,7 @@ class WebGLRenderingContext extends NativeWebGLRenderingContext {
           return super.drawElements(mode, reducedCount, type, ioffset)
         } else {
           this._beginAttrib0Hack()
-          super._drawElementsInstanced(mode, reducedCount, type, ioffset, 1)
+          super._drawElementsInstancedANGLE(mode, reducedCount, type, ioffset, 1)
           this._endAttrib0Hack()
         }
       }

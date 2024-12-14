@@ -4,15 +4,19 @@
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <set>
 #include <utility>
 
 #include <node.h>
 #include "nan.h"
 #include <v8.h>
 
-#include <EGL/egl.h>
-#include <GLES2/gl2.h>
-#include <GLES2/gl2ext.h>
+#define EGL_EGL_PROTOTYPES 0
+#define GL_GLES_PROTOTYPES 0
+
+#include "angle-loader/egl_loader.h"
+#include "angle-loader/gles_loader.h"
+#include "SharedLibrary.h"
 
 enum GLObjectType {
   GLOBJECT_TYPE_BUFFER,
@@ -39,7 +43,7 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static bool       HAS_DISPLAY;
   static EGLDisplay DISPLAY;
 
-
+  SharedLibrary eglLibrary;
   EGLContext context;
   EGLConfig  config;
   EGLSurface surface;
@@ -50,6 +54,10 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   bool  unpack_premultiply_alpha;
   GLint unpack_colorspace_conversion;
   GLint unpack_alignment;
+
+  std::set<std::string> requestableExtensions;
+  std::set<std::string> enabledExtensions;
+  std::map<std::string, std::vector<std::string>> webGLToANGLEExtensions;
 
   //A list of object references, need do destroy them at program exit
   std::map< std::pair<GLuint, GLObjectType>, bool > objects;
@@ -128,9 +136,9 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static NAN_METHOD(New);
   static NAN_METHOD(Destroy);
 
-  static NAN_METHOD(VertexAttribDivisor);
-  static NAN_METHOD(DrawArraysInstanced);
-  static NAN_METHOD(DrawElementsInstanced);
+  static NAN_METHOD(VertexAttribDivisorANGLE);
+  static NAN_METHOD(DrawArraysInstancedANGLE);
+  static NAN_METHOD(DrawElementsInstancedANGLE);
 
   static NAN_METHOD(Uniform1f);
   static NAN_METHOD(Uniform2f);
@@ -272,10 +280,6 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static NAN_METHOD(CreateVertexArrayOES);
   static NAN_METHOD(DeleteVertexArrayOES);
   static NAN_METHOD(IsVertexArrayOES);
-
-  void initPointers();
-
-  #include "procs.h"
 };
 
 #endif

@@ -1,7 +1,5 @@
 const BLACKLIST = [
   // FIXME: These extensions aren't working yet
-  'extensions_ext-frag-depth',
-  'extensions_ext-shader-texture-lod',
   'extensions_webgl-draw-buffers'
 ]
 

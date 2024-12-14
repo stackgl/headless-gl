@@ -34,9 +34,9 @@ NAN_MODULE_INIT(Init) {
     Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked());
 
   /* WebGL methods */
-  JS_GL_METHOD("_drawArraysInstanced", DrawArraysInstanced);
-  JS_GL_METHOD("_drawElementsInstanced", DrawElementsInstanced);
-  JS_GL_METHOD("_vertexAttribDivisor", VertexAttribDivisor);
+  JS_GL_METHOD("_drawArraysInstancedANGLE", DrawArraysInstancedANGLE);
+  JS_GL_METHOD("_drawElementsInstancedANGLE", DrawElementsInstancedANGLE);
+  JS_GL_METHOD("_vertexAttribDivisorANGLE", VertexAttribDivisorANGLE);
 
   JS_GL_METHOD("getUniform", GetUniform);
   JS_GL_METHOD("uniform1f", Uniform1f);
