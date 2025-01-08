@@ -35,7 +35,11 @@ enum GLContextState {
   GLCONTEXT_STATE_ERROR
 };
 
-typedef std::pair<GLuint, GLObjectType> GLObjectReference;
+bool CaseInsensitiveCompare(const std::string &a, const std::string &b);
+
+using GLObjectReference = std::pair<GLuint, GLObjectType>;
+using WebGLToANGLEExtensionsMap =
+    std::map<std::string, std::vector<std::string>, decltype(&CaseInsensitiveCompare)>;
 
 struct WebGLRenderingContext : public node::ObjectWrap {
 
@@ -58,7 +62,8 @@ struct WebGLRenderingContext : public node::ObjectWrap {
 
   std::set<std::string> requestableExtensions;
   std::set<std::string> enabledExtensions;
-  std::map<std::string, std::vector<std::string>> webGLToANGLEExtensions;
+  std::set<std::string> supportedWebGLExtensions;
+  WebGLToANGLEExtensionsMap webGLToANGLEExtensions;
 
   // A list of object references, need do destroy them at program exit
   std::map<std::pair<GLuint, GLObjectType>, bool> objects;
@@ -92,7 +97,8 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   // Constructor
   WebGLRenderingContext(int width, int height, bool alpha, bool depth, bool stencil, bool antialias,
                         bool premultipliedAlpha, bool preserveDrawingBuffer,
-                        bool preferLowPowerToHighPerformance, bool failIfMajorPerformanceCaveat);
+                        bool preferLowPowerToHighPerformance, bool failIfMajorPerformanceCaveat,
+                        bool createWebGL2Context);
   virtual ~WebGLRenderingContext();
 
   // Context validation
@@ -265,6 +271,98 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static NAN_METHOD(CreateVertexArrayOES);
   static NAN_METHOD(DeleteVertexArrayOES);
   static NAN_METHOD(IsVertexArrayOES);
+
+  // WebGL 2 methods
+  static NAN_METHOD(CopyBufferSubData);
+  static NAN_METHOD(GetBufferSubData);
+  static NAN_METHOD(BlitFramebuffer);
+  static NAN_METHOD(FramebufferTextureLayer);
+  static NAN_METHOD(InvalidateFramebuffer);
+  static NAN_METHOD(InvalidateSubFramebuffer);
+  static NAN_METHOD(ReadBuffer);
+  static NAN_METHOD(GetInternalformatParameter);
+  static NAN_METHOD(RenderbufferStorageMultisample);
+  static NAN_METHOD(TexStorage2D);
+  static NAN_METHOD(TexStorage3D);
+  static NAN_METHOD(TexImage3D);
+  static NAN_METHOD(TexSubImage3D);
+  static NAN_METHOD(CopyTexSubImage3D);
+  static NAN_METHOD(CompressedTexImage3D);
+  static NAN_METHOD(CompressedTexSubImage3D);
+  static NAN_METHOD(GetFragDataLocation);
+  static NAN_METHOD(Uniform1ui);
+  static NAN_METHOD(Uniform2ui);
+  static NAN_METHOD(Uniform3ui);
+  static NAN_METHOD(Uniform4ui);
+  static NAN_METHOD(Uniform1uiv);
+  static NAN_METHOD(Uniform2uiv);
+  static NAN_METHOD(Uniform3uiv);
+  static NAN_METHOD(Uniform4uiv);
+  static NAN_METHOD(UniformMatrix3x2fv);
+  static NAN_METHOD(UniformMatrix4x2fv);
+  static NAN_METHOD(UniformMatrix2x3fv);
+  static NAN_METHOD(UniformMatrix4x3fv);
+  static NAN_METHOD(UniformMatrix2x4fv);
+  static NAN_METHOD(UniformMatrix3x4fv);
+  static NAN_METHOD(VertexAttribI4i);
+  static NAN_METHOD(VertexAttribI4iv);
+  static NAN_METHOD(VertexAttribI4ui);
+  static NAN_METHOD(VertexAttribI4uiv);
+  static NAN_METHOD(VertexAttribIPointer);
+  static NAN_METHOD(VertexAttribDivisor);
+  static NAN_METHOD(DrawArraysInstanced);
+  static NAN_METHOD(DrawElementsInstanced);
+  static NAN_METHOD(DrawRangeElements);
+  static NAN_METHOD(DrawBuffers);
+  static NAN_METHOD(ClearBufferfv);
+  static NAN_METHOD(ClearBufferiv);
+  static NAN_METHOD(ClearBufferuiv);
+  static NAN_METHOD(ClearBufferfi);
+  static NAN_METHOD(CreateQuery);
+  static NAN_METHOD(DeleteQuery);
+  static NAN_METHOD(IsQuery);
+  static NAN_METHOD(BeginQuery);
+  static NAN_METHOD(EndQuery);
+  static NAN_METHOD(GetQuery);
+  static NAN_METHOD(GetQueryParameter);
+  static NAN_METHOD(CreateSampler);
+  static NAN_METHOD(DeleteSampler);
+  static NAN_METHOD(IsSampler);
+  static NAN_METHOD(BindSampler);
+  static NAN_METHOD(SamplerParameteri);
+  static NAN_METHOD(SamplerParameterf);
+  static NAN_METHOD(GetSamplerParameter);
+  static NAN_METHOD(FenceSync);
+  static NAN_METHOD(IsSync);
+  static NAN_METHOD(DeleteSync);
+  static NAN_METHOD(ClientWaitSync);
+  static NAN_METHOD(WaitSync);
+  static NAN_METHOD(GetSyncParameter);
+  static NAN_METHOD(CreateTransformFeedback);
+  static NAN_METHOD(DeleteTransformFeedback);
+  static NAN_METHOD(IsTransformFeedback);
+  static NAN_METHOD(BindTransformFeedback);
+  static NAN_METHOD(BeginTransformFeedback);
+  static NAN_METHOD(EndTransformFeedback);
+  static NAN_METHOD(TransformFeedbackVaryings);
+  static NAN_METHOD(GetTransformFeedbackVarying);
+  static NAN_METHOD(PauseTransformFeedback);
+  static NAN_METHOD(ResumeTransformFeedback);
+  static NAN_METHOD(BindBufferBase);
+  static NAN_METHOD(BindBufferRange);
+  static NAN_METHOD(GetIndexedParameter);
+  static NAN_METHOD(GetUniformIndices);
+  static NAN_METHOD(GetActiveUniforms);
+  static NAN_METHOD(GetUniformBlockIndex);
+  static NAN_METHOD(GetActiveUniformBlockParameter);
+  static NAN_METHOD(GetActiveUniformBlockName);
+  static NAN_METHOD(UniformBlockBinding);
+  static NAN_METHOD(CreateVertexArray);
+  static NAN_METHOD(DeleteVertexArray);
+  static NAN_METHOD(IsVertexArray);
+  static NAN_METHOD(BindVertexArray);
 };
+
+void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info);
 
 #endif
