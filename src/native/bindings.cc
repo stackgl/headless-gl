@@ -5,33 +5,25 @@
  *      Author: ngk437
  */
 
-#include <cstdlib>
 #include "webgl.h"
+#include <cstdlib>
 
 Nan::Persistent<v8::FunctionTemplate> WEBGL_TEMPLATE;
 
-#define JS_GL_METHOD(webgl_name, method_name) \
-  Nan::SetPrototypeTemplate(\
-      webgl_template \
-    , webgl_name\
-    , Nan::New<v8::FunctionTemplate>(\
-        WebGLRenderingContext:: method_name))
+#define JS_GL_METHOD(webgl_name, method_name)                                                      \
+  Nan::SetPrototypeTemplate(webgl_template, webgl_name,                                            \
+                            Nan::New<v8::FunctionTemplate>(WebGLRenderingContext::method_name))
 
-#define JS_CONSTANT(x, v) \
-  Nan::SetPrototypeTemplate( \
-      webgl_template \
-    , #x \
-    , Nan::New<v8::Integer>(v))
+#define JS_CONSTANT(x, v) Nan::SetPrototypeTemplate(webgl_template, #x, Nan::New<v8::Integer>(v))
 
-#define JS_GL_CONSTANT(name) JS_CONSTANT(name, GL_ ## name)
+#define JS_GL_CONSTANT(name) JS_CONSTANT(name, GL_##name)
 
 NAN_MODULE_INIT(Init) {
   v8::Local<v8::FunctionTemplate> webgl_template =
-    Nan::New<v8::FunctionTemplate>(WebGLRenderingContext::New);
+      Nan::New<v8::FunctionTemplate>(WebGLRenderingContext::New);
 
   webgl_template->InstanceTemplate()->SetInternalFieldCount(1);
-  webgl_template->SetClassName(
-    Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked());
+  webgl_template->SetClassName(Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked());
 
   /* WebGL methods */
   JS_GL_METHOD("_drawArraysInstancedANGLE", DrawArraysInstancedANGLE);
@@ -167,25 +159,18 @@ NAN_MODULE_INIT(Init) {
   JS_GL_METHOD("bindVertexArrayOES", BindVertexArrayOES);
 
   // Windows defines a macro called NO_ERROR which messes this up
-  Nan::SetPrototypeTemplate(
-    webgl_template,
-    "NO_ERROR",
-    Nan::New<v8::Integer>(GL_NO_ERROR));
+  Nan::SetPrototypeTemplate(webgl_template, "NO_ERROR", Nan::New<v8::Integer>(GL_NO_ERROR));
   JS_GL_CONSTANT(INVALID_ENUM);
   JS_GL_CONSTANT(INVALID_VALUE);
   JS_GL_CONSTANT(INVALID_OPERATION);
   JS_GL_CONSTANT(OUT_OF_MEMORY);
 
   // OpenGL ES 2.1 constants
-  Nan::SetPrototypeTemplate(
-      webgl_template
-    , "DEPTH_STENCIL"
-    , Nan::New<v8::Integer>(GL_DEPTH_STENCIL_OES));
+  Nan::SetPrototypeTemplate(webgl_template, "DEPTH_STENCIL",
+                            Nan::New<v8::Integer>(GL_DEPTH_STENCIL_OES));
 
-  Nan::SetPrototypeTemplate(
-      webgl_template
-    , "DEPTH_STENCIL_ATTACHMENT"
-    , Nan::New<v8::Integer>(0x821A));
+  Nan::SetPrototypeTemplate(webgl_template, "DEPTH_STENCIL_ATTACHMENT",
+                            Nan::New<v8::Integer>(0x821A));
 
   JS_GL_CONSTANT(MAX_VERTEX_UNIFORM_VECTORS);
   JS_GL_CONSTANT(MAX_VARYING_VECTORS);
@@ -480,14 +465,12 @@ NAN_MODULE_INIT(Init) {
   JS_CONSTANT(IMPLEMENTATION_COLOR_READ_TYPE, 0x8B9A);
   JS_CONSTANT(IMPLEMENTATION_COLOR_READ_FORMAT, 0x8B9B);
 
-  //Export template
+  // Export template
   WEBGL_TEMPLATE.Reset(webgl_template);
-  Nan::Set(
-      target
-    , Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked()
-    , Nan::GetFunction(webgl_template).ToLocalChecked());
+  Nan::Set(target, Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked(),
+           Nan::GetFunction(webgl_template).ToLocalChecked());
 
-  //Export helper methods for clean up and error handling
+  // Export helper methods for clean up and error handling
   Nan::Export(target, "cleanup", WebGLRenderingContext::DisposeAll);
   Nan::Export(target, "setError", WebGLRenderingContext::SetError);
 }

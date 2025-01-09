@@ -2,21 +2,21 @@
 #define WEBGL_H_
 
 #include <algorithm>
-#include <vector>
 #include <map>
 #include <set>
 #include <utility>
+#include <vector>
 
-#include <node.h>
 #include "nan.h"
+#include <node.h>
 #include <v8.h>
 
 #define EGL_EGL_PROTOTYPES 0
 #define GL_GLES_PROTOTYPES 0
 
+#include "SharedLibrary.h"
 #include "angle-loader/egl_loader.h"
 #include "angle-loader/gles_loader.h"
-#include "SharedLibrary.h"
 
 enum GLObjectType {
   GLOBJECT_TYPE_BUFFER,
@@ -39,19 +39,19 @@ typedef std::pair<GLuint, GLObjectType> GLObjectReference;
 
 struct WebGLRenderingContext : public node::ObjectWrap {
 
-  //The underlying OpenGL context
-  static bool       HAS_DISPLAY;
+  // The underlying OpenGL context
+  static bool HAS_DISPLAY;
   static EGLDisplay DISPLAY;
 
   SharedLibrary eglLibrary;
   EGLContext context;
-  EGLConfig  config;
+  EGLConfig config;
   EGLSurface surface;
-  GLContextState  state;
+  GLContextState state;
 
-  //Pixel storage flags
-  bool  unpack_flip_y;
-  bool  unpack_premultiply_alpha;
+  // Pixel storage flags
+  bool unpack_flip_y;
+  bool unpack_premultiply_alpha;
   GLint unpack_colorspace_conversion;
   GLint unpack_alignment;
 
@@ -59,20 +59,16 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   std::set<std::string> enabledExtensions;
   std::map<std::string, std::vector<std::string>> webGLToANGLEExtensions;
 
-  //A list of object references, need do destroy them at program exit
-  std::map< std::pair<GLuint, GLObjectType>, bool > objects;
-  void registerGLObj(GLObjectType type, GLuint obj) {
-    objects[std::make_pair(obj, type)] = true;
-  }
-  void unregisterGLObj(GLObjectType type, GLuint obj) {
-    objects.erase(std::make_pair(obj, type));
-  }
+  // A list of object references, need do destroy them at program exit
+  std::map<std::pair<GLuint, GLObjectType>, bool> objects;
+  void registerGLObj(GLObjectType type, GLuint obj) { objects[std::make_pair(obj, type)] = true; }
+  void unregisterGLObj(GLObjectType type, GLuint obj) { objects.erase(std::make_pair(obj, type)); }
 
-  //Context list
+  // Context list
   WebGLRenderingContext *next, *prev;
-  static WebGLRenderingContext* CONTEXT_LIST_HEAD;
+  static WebGLRenderingContext *CONTEXT_LIST_HEAD;
   void registerContext() {
-    if(CONTEXT_LIST_HEAD) {
+    if (CONTEXT_LIST_HEAD) {
       CONTEXT_LIST_HEAD->prev = this;
     }
     next = CONTEXT_LIST_HEAD;
@@ -80,55 +76,43 @@ struct WebGLRenderingContext : public node::ObjectWrap {
     CONTEXT_LIST_HEAD = this;
   }
   void unregisterContext() {
-    if(next) {
+    if (next) {
       next->prev = this->prev;
     }
-    if(prev) {
+    if (prev) {
       prev->next = this->next;
     }
-    if(CONTEXT_LIST_HEAD == this) {
+    if (CONTEXT_LIST_HEAD == this) {
       CONTEXT_LIST_HEAD = this->next;
     }
     next = prev = NULL;
   }
 
-  //Constructor
-  WebGLRenderingContext(
-    int width,
-    int height,
-    bool alpha,
-    bool depth,
-    bool stencil,
-    bool antialias,
-    bool premultipliedAlpha,
-    bool preserveDrawingBuffer,
-    bool preferLowPowerToHighPerformance,
-    bool failIfMajorPerformanceCaveat);
+  // Constructor
+  WebGLRenderingContext(int width, int height, bool alpha, bool depth, bool stencil, bool antialias,
+                        bool premultipliedAlpha, bool preserveDrawingBuffer,
+                        bool preferLowPowerToHighPerformance, bool failIfMajorPerformanceCaveat);
   virtual ~WebGLRenderingContext();
 
-  //Context validation
-  static WebGLRenderingContext* ACTIVE;
+  // Context validation
+  static WebGLRenderingContext *ACTIVE;
   bool setActive();
 
-  //Unpacks a buffer full of pixels into memory
-  unsigned char* unpackPixels(
-    GLenum type,
-    GLenum format,
-    GLint width,
-    GLint height,
-    unsigned char* pixels);
+  // Unpacks a buffer full of pixels into memory
+  unsigned char *unpackPixels(GLenum type, GLenum format, GLint width, GLint height,
+                              unsigned char *pixels);
 
-  //Error handling
+  // Error handling
   GLenum lastError;
   void setError(GLenum error);
   GLenum getError();
   static NAN_METHOD(SetError);
   static NAN_METHOD(GetError);
 
-  //Preferred depth format
+  // Preferred depth format
   GLenum preferredDepth;
 
-  //Destructors
+  // Destructors
   void dispose();
 
   static NAN_METHOD(DisposeAll);
