@@ -47,6 +47,7 @@
     "server",
     "gpgpu"
   ],
+  "types": "index.d.ts",
   "author": "Mikola Lysenko",
   "license": "BSD-2-Clause",
   "gypfile": true
