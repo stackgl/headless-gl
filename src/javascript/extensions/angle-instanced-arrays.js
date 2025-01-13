@@ -19,16 +19,6 @@ class ANGLEInstancedArrays {
   }
 
   vertexAttribDivisorANGLE (index, divisor) {
-    const { ctx } = this
-    index |= 0
-    divisor |= 0
-    if (divisor < 0 ||
-      index < 0 || index >= ctx._vertexObjectState._attribs.length) {
-      ctx.setError(gl.INVALID_VALUE)
-      return
-    }
-    const attrib = ctx._vertexObjectState._attribs[index]
-    attrib._divisor = divisor
     this._vertexAttribDivisorANGLE(index, divisor)
   }
 }
