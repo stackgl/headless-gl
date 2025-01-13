@@ -492,4 +492,8 @@ NAN_MODULE_INIT(Init) {
   Nan::Export(target, "setError", WebGLRenderingContext::SetError);
 }
 
+#if NODE_MAJOR_VERSION >= 10
+NAN_MODULE_WORKER_ENABLED(webgl, Init)
+#else
 NODE_MODULE(webgl, Init)
+#endif
