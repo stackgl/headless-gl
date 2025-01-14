@@ -16,7 +16,6 @@ class WebGLVertexArrayObjectAttribute {
     this._pointerStride = 0
     this._pointerType = gl.FLOAT
     this._pointerNormal = false
-    this._divisor = 0
     this._inputSize = 4
     this._inputStride = 0
   }

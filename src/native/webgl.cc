@@ -1,5 +1,6 @@
 #include <array>
 #include <cstring>
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -106,6 +107,17 @@ GLenum SizeFloatingPointFormat(GLenum format) {
   return format;
 }
 
+GLenum OverrideDrawBufferEnum(GLenum buffer) {
+  switch (buffer) {
+  case GL_BACK:
+    return GL_COLOR_ATTACHMENT0;
+  case GL_DEPTH:
+    return GL_DEPTH_ATTACHMENT;
+  case GL_STENCIL:
+    return GL_STENCIL_ATTACHMENT;
+  }
+}
+
 std::set<std::string> GetStringSetFromCString(const char *cstr) {
   std::set<std::string> result;
   std::istringstream iss(cstr); // Create an input string stream
@@ -154,12 +166,10 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
                                              bool preferLowPowerToHighPerformance,
                                              bool failIfMajorPerformanceCaveat)
     : state(GLCONTEXT_STATE_INIT), unpack_flip_y(false), unpack_premultiply_alpha(false),
-      unpack_colorspace_conversion(0x9244), unpack_alignment(4), next(NULL), prev(NULL),
-      lastError(GL_NO_ERROR) {
-
+      unpack_colorspace_conversion(0x9244), unpack_alignment(4), next(NULL), prev(NULL) {
   if (!eglGetProcAddress) {
     if (!eglLibrary.open("libEGL")) {
-      std::cerr << "Error opening ANGLE shared library." << std::endl;
+      errorMessage = "Error opening ANGLE shared library.";
       state = GLCONTEXT_STATE_ERROR;
       return;
     }
@@ -172,12 +182,14 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   if (!HAS_DISPLAY) {
     DISPLAY = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (DISPLAY == EGL_NO_DISPLAY) {
+      errorMessage = "Error retrieving EGL default display.";
       state = GLCONTEXT_STATE_ERROR;
       return;
     }
 
     // Initialize EGL
     if (!eglInitialize(DISPLAY, NULL, NULL)) {
+      errorMessage = "Error initializing EGL.";
       state = GLCONTEXT_STATE_ERROR;
       return;
     }
@@ -206,6 +218,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
                           EGL_NONE};
   EGLint num_config;
   if (!eglChooseConfig(DISPLAY, attrib_list, &config, 1, &num_config) || num_config != 1) {
+    errorMessage = "Error choosing EGL config.";
     state = GLCONTEXT_STATE_ERROR;
     return;
   }
@@ -217,6 +230,8 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
                              EGL_TRUE,
                              EGL_CONTEXT_OPENGL_BACKWARDS_COMPATIBLE_ANGLE,
                              EGL_FALSE,
+                             EGL_ROBUST_RESOURCE_INITIALIZATION_ANGLE,
+                             EGL_TRUE,
                              EGL_NONE};
   context = eglCreateContext(DISPLAY, config, EGL_NO_CONTEXT, contextAttribs);
   if (context == EGL_NO_CONTEXT) {
@@ -227,12 +242,14 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   EGLint surfaceAttribs[] = {EGL_WIDTH, (EGLint)width, EGL_HEIGHT, (EGLint)height, EGL_NONE};
   surface = eglCreatePbufferSurface(DISPLAY, config, surfaceAttribs);
   if (surface == EGL_NO_SURFACE) {
+    errorMessage = "Error creating EGL surface.";
     state = GLCONTEXT_STATE_ERROR;
     return;
   }
 
   // Set active
   if (!eglMakeCurrent(DISPLAY, surface, surface, context)) {
+    errorMessage = "Error making context current.";
     state = GLCONTEXT_STATE_ERROR;
     return;
   }
@@ -247,6 +264,12 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   // Enable the debug callback to debug GL errors.
   // EnableDebugCallback(nullptr);
 
+  // Log the GL_RENDERER and GL_VERSION strings.
+  // const char *rendererString = (const char *)glGetString(GL_RENDERER);
+  // const char *versionString = (const char *)glGetString(GL_VERSION);
+  // std::cout << "ANGLE GL_RENDERER: " << rendererString << std::endl;
+  // std::cout << "ANGLE GL_VERSION: " << versionString << std::endl;
+
   // Check extensions
   const char *extensionsString = (const char *)(glGetString(GL_EXTENSIONS));
   enabledExtensions = GetStringSetFromCString(extensionsString);
@@ -257,7 +280,6 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
 
   // Request necessary WebGL extensions.
   glRequestExtensionANGLE("GL_EXT_texture_storage");
-  glRequestExtensionANGLE("GL_ANGLE_instanced_arrays");
 
   // Select best preferred depth
   preferredDepth = GL_DEPTH_COMPONENT16;
@@ -302,15 +324,10 @@ bool WebGLRenderingContext::setActive() {
 }
 
 void WebGLRenderingContext::setError(GLenum error) {
-  if (error == GL_NO_ERROR || lastError != GL_NO_ERROR) {
+  if (error == GL_NO_ERROR || errorSet.count(error) > 0) {
     return;
   }
-  GLenum prevError = glGetError();
-  if (prevError == GL_NO_ERROR) {
-    lastError = error;
-  } else {
-    lastError = prevError;
-  }
+  errorSet.insert(error);
 }
 
 void WebGLRenderingContext::dispose() {
@@ -405,7 +422,12 @@ GL_METHOD(New) {
                                 (Nan::To<bool>(info[9]).ToChecked())); // fail if crap
 
   if (instance->state != GLCONTEXT_STATE_OK) {
-    return Nan::ThrowError("Error creating WebGLContext");
+    if (!instance->errorMessage.empty()) {
+      std::string error = std::string("Error creating WebGLContext: ") + instance->errorMessage;
+      return Nan::ThrowError(error.c_str());
+    } else {
+      return Nan::ThrowError("Error creating WebGLContext");
+    }
   }
 
   instance->Wrap(info.This());
@@ -549,11 +571,13 @@ GL_METHOD(BindAttribLocation) {
 }
 
 GLenum WebGLRenderingContext::getError() {
-  GLenum error = glGetError();
-  if (lastError != GL_NO_ERROR) {
-    error = lastError;
+  GLenum error = GL_NO_ERROR;
+  if (errorSet.empty()) {
+    error = glGetError();
+  } else {
+    error = *errorSet.begin();
+    errorSet.erase(errorSet.begin());
   }
-  lastError = GL_NO_ERROR;
   return error;
 }
 
@@ -801,8 +825,8 @@ GL_METHOD(ClearDepth) {
   glClearDepthf(depth);
 }
 
-// Two specific enums are accepted by ANGLE when they shouldn't be. This shows
-// up for headless, but not browsers, because browsers do additional validation.
+// Two specific enums are accepted by ANGLE when they shouldn't be. This shows up
+// for headless, but not browsers, because browsers do additional validation.
 // The ANGLE fix is to make EXT_multisample_compatibility "enableable".
 bool IsBuggedANGLECap(GLenum cap) { return cap == GL_MULTISAMPLE || cap == GL_SAMPLE_ALPHA_TO_ONE; }
 
@@ -849,8 +873,8 @@ GL_METHOD(BindTexture) {
   glBindTexture(target, texture);
 }
 
-unsigned char *WebGLRenderingContext::unpackPixels(GLenum type, GLenum format, GLint width,
-                                                   GLint height, unsigned char *pixels) {
+std::vector<uint8_t> WebGLRenderingContext::unpackPixels(GLenum type, GLenum format, GLint width,
+                                                         GLint height, unsigned char *pixels) {
 
   // Compute pixel size
   GLint pixelSize = 1;
@@ -883,15 +907,15 @@ unsigned char *WebGLRenderingContext::unpackPixels(GLenum type, GLenum format, G
   }
 
   GLint imageSize = rowStride * height;
-  unsigned char *unpacked = new unsigned char[imageSize];
+  std::vector<uint8_t> unpacked(imageSize);
 
   if (unpack_flip_y) {
     for (int i = 0, j = height - 1; j >= 0; ++i, --j) {
-      memcpy(reinterpret_cast<void *>(unpacked + j * rowStride),
-             reinterpret_cast<void *>(pixels + i * rowStride), width * pixelSize);
+      memcpy(&unpacked[j * rowStride], reinterpret_cast<void *>(pixels + i * rowStride),
+             width * pixelSize);
     }
   } else {
-    memcpy(reinterpret_cast<void *>(unpacked), reinterpret_cast<void *>(pixels), imageSize);
+    memcpy(unpacked.data(), reinterpret_cast<void *>(pixels), imageSize);
   }
 
   // Premultiply alpha unpacking
@@ -899,7 +923,7 @@ unsigned char *WebGLRenderingContext::unpackPixels(GLenum type, GLenum format, G
 
     for (int row = 0; row < height; ++row) {
       for (int col = 0; col < width; ++col) {
-        unsigned char *pixel = unpacked + (row * rowStride) + (col * pixelSize);
+        uint8_t *pixel = &unpacked[(row * rowStride) + (col * pixelSize)];
         if (format == GL_LUMINANCE_ALPHA) {
           pixel[0] *= pixel[1] / 255.0;
         } else if (type == GL_UNSIGNED_BYTE) {
@@ -934,15 +958,17 @@ unsigned char *WebGLRenderingContext::unpackPixels(GLenum type, GLenum format, G
 }
 
 void CallTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
-                    GLsizei height, GLint border, GLenum format, GLenum type, const void *pixels) {
+                    GLsizei height, GLint border, GLenum format, GLenum type, GLsizei bufSize,
+                    const void *pixels) {
   GLenum sizedInternalFormat = SizeFloatingPointFormat(internalformat);
   if (type == GL_FLOAT && sizedInternalFormat != internalformat) {
     glTexStorage2DEXT(target, 1, sizedInternalFormat, width, height);
     if (pixels) {
-      glTexSubImage2D(target, level, 0, 0, width, height, format, type, pixels);
+      glTexSubImage2DRobustANGLE(target, level, 0, 0, width, height, format, type, bufSize, pixels);
     }
   } else {
-    glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+    glTexImage2DRobustANGLE(target, level, internalformat, width, height, border, format, type,
+                            bufSize, pixels);
   }
 }
 
@@ -961,21 +987,15 @@ GL_METHOD(TexImage2D) {
 
   if (*pixels) {
     if (inst->unpack_flip_y || inst->unpack_premultiply_alpha) {
-      unsigned char *unpacked = inst->unpackPixels(type, format, width, height, *pixels);
-      CallTexImage2D(target, level, internalformat, width, height, border, format, type, unpacked);
-      delete[] unpacked;
+      std::vector<uint8_t> unpacked = inst->unpackPixels(type, format, width, height, *pixels);
+      CallTexImage2D(target, level, internalformat, width, height, border, format, type,
+                     unpacked.size(), unpacked.data());
     } else {
-      CallTexImage2D(target, level, internalformat, width, height, border, format, type, *pixels);
+      CallTexImage2D(target, level, internalformat, width, height, border, format, type,
+                     pixels.length(), *pixels);
     }
   } else {
-    size_t length = width * height * 4;
-    if (type == GL_FLOAT) {
-      length *= 4;
-    }
-    char *data = new char[length];
-    memset(data, 0, length);
-    CallTexImage2D(target, level, internalformat, width, height, border, format, type, data);
-    delete[] data;
+    CallTexImage2D(target, level, internalformat, width, height, border, format, type, 0, nullptr);
   }
 }
 
@@ -993,11 +1013,12 @@ GL_METHOD(TexSubImage2D) {
   Nan::TypedArrayContents<unsigned char> pixels(info[8]);
 
   if (inst->unpack_flip_y || inst->unpack_premultiply_alpha) {
-    unsigned char *unpacked = inst->unpackPixels(type, format, width, height, *pixels);
-    glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, unpacked);
-    delete[] unpacked;
+    std::vector<uint8_t> unpacked = inst->unpackPixels(type, format, width, height, *pixels);
+    glTexSubImage2DRobustANGLE(target, level, xoffset, yoffset, width, height, format, type,
+                               unpacked.size(), unpacked.data());
   } else {
-    glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, *pixels);
+    glTexSubImage2DRobustANGLE(target, level, xoffset, yoffset, width, height, format, type,
+                               pixels.length(), *pixels);
   }
 }
 
@@ -1751,9 +1772,21 @@ GL_METHOD(GetAttachedShaders) {
   delete[] shaders;
 }
 
+template <typename T>
+void ReturnParamValueOrNull(Nan::NAN_METHOD_ARGS_TYPE info, v8::Local<T> value,
+                            GLsizei bytesWritten) {
+  if (bytesWritten > 0) {
+    info.GetReturnValue().Set(value);
+  } else {
+    info.GetReturnValue().Set(Nan::Null());
+  }
+}
+
 GL_METHOD(GetParameter) {
   GL_BOILERPLATE;
   GLenum name = Nan::To<int32_t>(info[0]).ToChecked();
+
+  GLsizei bytesWritten = 0;
 
   switch (name) {
   case 0x9240 /* UNPACK_FLIP_Y_WEBGL */:
@@ -1777,10 +1810,10 @@ GL_METHOD(GetParameter) {
   case GL_SAMPLE_COVERAGE_INVERT:
   case GL_SCISSOR_TEST:
   case GL_STENCIL_TEST: {
-    GLboolean params;
-    glGetBooleanv(name, &params);
+    GLboolean params = GL_FALSE;
+    glGetBooleanvRobustANGLE(name, sizeof(GLboolean), &bytesWritten, &params);
 
-    info.GetReturnValue().Set(Nan::New<v8::Boolean>(params != 0));
+    ReturnParamValueOrNull(info, Nan::New<v8::Boolean>(params != 0), bytesWritten);
 
     return;
   }
@@ -1791,10 +1824,10 @@ GL_METHOD(GetParameter) {
   case GL_POLYGON_OFFSET_UNITS:
   case GL_SAMPLE_COVERAGE_VALUE:
   case GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT: {
-    GLfloat params;
-    glGetFloatv(name, &params);
+    GLfloat params = 0;
+    glGetFloatvRobustANGLE(name, sizeof(GLfloat), &bytesWritten, &params);
 
-    info.GetReturnValue().Set(Nan::New<v8::Number>(params));
+    ReturnParamValueOrNull(info, Nan::New<v8::Number>(params), bytesWritten);
 
     return;
   }
@@ -1812,28 +1845,28 @@ GL_METHOD(GetParameter) {
   }
 
   case GL_MAX_VIEWPORT_DIMS: {
-    GLint params[2];
-    glGetIntegerv(name, params);
+    GLint params[2] = {};
+    glGetIntegervRobustANGLE(name, sizeof(GLint) * 2, &bytesWritten, params);
 
     v8::Local<v8::Array> arr = Nan::New<v8::Array>(2);
     Nan::Set(arr, 0, Nan::New<v8::Integer>(params[0]));
     Nan::Set(arr, 1, Nan::New<v8::Integer>(params[1]));
-    info.GetReturnValue().Set(arr);
+    ReturnParamValueOrNull(info, arr, bytesWritten);
 
     return;
   }
 
   case GL_SCISSOR_BOX:
   case GL_VIEWPORT: {
-    GLint params[4];
-    glGetIntegerv(name, params);
+    GLint params[4] = {};
+    glGetIntegervRobustANGLE(name, sizeof(GLint) * 4, &bytesWritten, params);
 
     v8::Local<v8::Array> arr = Nan::New<v8::Array>(4);
     Nan::Set(arr, 0, Nan::New<v8::Integer>(params[0]));
     Nan::Set(arr, 1, Nan::New<v8::Integer>(params[1]));
     Nan::Set(arr, 2, Nan::New<v8::Integer>(params[2]));
     Nan::Set(arr, 3, Nan::New<v8::Integer>(params[3]));
-    info.GetReturnValue().Set(arr);
+    ReturnParamValueOrNull(info, arr, bytesWritten);
 
     return;
   }
@@ -1841,50 +1874,50 @@ GL_METHOD(GetParameter) {
   case GL_ALIASED_LINE_WIDTH_RANGE:
   case GL_ALIASED_POINT_SIZE_RANGE:
   case GL_DEPTH_RANGE: {
-    GLfloat params[2];
-    glGetFloatv(name, params);
+    GLfloat params[2] = {};
+    glGetFloatvRobustANGLE(name, sizeof(GLfloat) * 2, &bytesWritten, params);
 
     v8::Local<v8::Array> arr = Nan::New<v8::Array>(2);
     Nan::Set(arr, 0, Nan::New<v8::Number>(params[0]));
     Nan::Set(arr, 1, Nan::New<v8::Number>(params[1]));
-    info.GetReturnValue().Set(arr);
+    ReturnParamValueOrNull(info, arr, bytesWritten);
 
     return;
   }
 
   case GL_BLEND_COLOR:
   case GL_COLOR_CLEAR_VALUE: {
-    GLfloat params[4];
-    glGetFloatv(name, params);
+    GLfloat params[4] = {};
+    glGetFloatvRobustANGLE(name, sizeof(GLfloat) * 4, &bytesWritten, params);
 
     v8::Local<v8::Array> arr = Nan::New<v8::Array>(4);
     Nan::Set(arr, 0, Nan::New<v8::Number>(params[0]));
     Nan::Set(arr, 1, Nan::New<v8::Number>(params[1]));
     Nan::Set(arr, 2, Nan::New<v8::Number>(params[2]));
     Nan::Set(arr, 3, Nan::New<v8::Number>(params[3]));
-    info.GetReturnValue().Set(arr);
+    ReturnParamValueOrNull(info, arr, bytesWritten);
 
     return;
   }
 
   case GL_COLOR_WRITEMASK: {
-    GLboolean params[4];
-    glGetBooleanv(name, params);
+    GLboolean params[4] = {};
+    glGetBooleanvRobustANGLE(name, sizeof(GLboolean) * 4, &bytesWritten, params);
 
     v8::Local<v8::Array> arr = Nan::New<v8::Array>(4);
     Nan::Set(arr, 0, Nan::New<v8::Boolean>(params[0] == GL_TRUE));
     Nan::Set(arr, 1, Nan::New<v8::Boolean>(params[1] == GL_TRUE));
     Nan::Set(arr, 2, Nan::New<v8::Boolean>(params[2] == GL_TRUE));
     Nan::Set(arr, 3, Nan::New<v8::Boolean>(params[3] == GL_TRUE));
-    info.GetReturnValue().Set(arr);
+    ReturnParamValueOrNull(info, arr, bytesWritten);
 
     return;
   }
 
   default: {
-    GLint params;
-    glGetIntegerv(name, &params);
-    info.GetReturnValue().Set(Nan::New<v8::Integer>(params));
+    GLint params = 0;
+    glGetIntegervRobustANGLE(name, sizeof(GLint), &bytesWritten, &params);
+    ReturnParamValueOrNull(info, Nan::New<v8::Integer>(params), bytesWritten);
     return;
   }
   }
@@ -1909,7 +1942,7 @@ GL_METHOD(GetFramebufferAttachmentParameter) {
   GLenum attachment = Nan::To<int32_t>(info[1]).ToChecked();
   GLenum pname = Nan::To<int32_t>(info[2]).ToChecked();
 
-  GLint params;
+  GLint params = 0;
   glGetFramebufferAttachmentParameteriv(target, attachment, pname, &params);
 
   info.GetReturnValue().Set(Nan::New<v8::Integer>(params));
@@ -1998,14 +2031,14 @@ GL_METHOD(GetVertexAttrib) {
     return;
   }
 
+  case GL_VERTEX_ATTRIB_ARRAY_DIVISOR_ANGLE:
+    if (inst->enabledExtensions.count("GL_ANGLE_instanced_arrays") == 0) {
+      break;
+    }
+
   case GL_VERTEX_ATTRIB_ARRAY_SIZE:
   case GL_VERTEX_ATTRIB_ARRAY_STRIDE:
-  case GL_VERTEX_ATTRIB_ARRAY_TYPE: {
-    glGetVertexAttribiv(index, pname, &value);
-    info.GetReturnValue().Set(Nan::New<v8::Integer>(value));
-    return;
-  }
-
+  case GL_VERTEX_ATTRIB_ARRAY_TYPE:
   case GL_VERTEX_ATTRIB_ARRAY_BUFFER_BINDING: {
     glGetVertexAttribiv(index, pname, &value);
     info.GetReturnValue().Set(Nan::New<v8::Integer>(value));
@@ -2023,14 +2056,14 @@ GL_METHOD(GetVertexAttrib) {
     Nan::Set(arr, 2, Nan::New<v8::Number>(vextex_attribs[2]));
     Nan::Set(arr, 3, Nan::New<v8::Number>(vextex_attribs[3]));
     info.GetReturnValue().Set(arr);
-
     return;
   }
 
   default:
-    inst->setError(GL_INVALID_ENUM);
+    break;
   }
 
+  inst->setError(GL_INVALID_ENUM);
   info.GetReturnValue().SetNull();
 }
 
