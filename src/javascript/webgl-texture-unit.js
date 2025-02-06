@@ -5,6 +5,10 @@ class WebGLTextureUnit {
     this._mode = 0
     this._bind2D = null
     this._bindCube = null
+    if (ctx._isWebGL2) {
+      this._bind2DArray = null
+      this._bind3D = null
+    }
   }
 }
 
