@@ -29,7 +29,7 @@
     "angle-normals": "^1.0.0",
     "bunny": "^1.0.1",
     "faucet": "^0.0.4",
-    "gl-conformance": "^2.0.9",
+    "gl-conformance": "git+https://github.com/stackgl/gl-conformance/tree/v2.1.0",
     "prebuild": "^13.0.1",
     "snazzy": "^9.0.0",
     "standard": "^17.1.2",
