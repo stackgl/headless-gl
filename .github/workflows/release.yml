@@ -25,9 +25,13 @@ jobs:
           cache: 'npm'
           registry-url: 'https://npm.pkg.github.com'
       - if: runner.os == 'Linux'
-        run: sudo apt-get install -y build-essential libgl1-mesa-dri libglapi-mesa
-                                     libglew-dev libglu1-mesa-dev libosmesa6
-                                     libxi-dev mesa-utils pkg-config
+      - if: runner.os == 'Linux'
+        run: |
+          sudo add-apt-repository ppa:kisak/kisak-mesa
+          sudo apt update
+          sudo apt-get install -y build-essential libgl1-mesa-dri libglapi-mesa
+                                                  libglew-dev libglu1-mesa-dev libosmesa6
+                                                  libxi-dev mesa-utils pkg-config
       - run: npm ci --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
