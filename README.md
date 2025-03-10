@@ -46,7 +46,7 @@ Prebuilt binaries are generally available for LTS node versions (e.g. 18, 20). I
 
 gl runs on Linux, macOS, and Windows.
 
-Node.js versions 16 and up are supported.
+Node.js versions 18 and up are supported.
 
 ## API
 
