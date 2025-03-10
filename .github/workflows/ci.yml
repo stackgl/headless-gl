@@ -30,7 +30,7 @@ jobs:
       - run: npm ci --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: npm run build --if-present
+      - run: npm run rebuild
       - if: runner.os == 'Linux'
         run: xvfb-run glxinfo
       - if: runner.os == 'Linux'
