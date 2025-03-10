@@ -19,12 +19,14 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
       - if: runner.os == 'Linux'
         run: sudo apt-get install -y build-essential libgl1-mesa-dri libglapi-mesa
                                      libglew-dev libglu1-mesa-dev libosmesa6
                                      libxi-dev mesa-utils pkg-config
       - run: npm ci
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           npm_config_build_from_source: true
           # npm_config_build_from_source is used to force npm post install scripts to build native modules from source instead of downloading prebuilt binaries.
       - run: npm run build --if-present
