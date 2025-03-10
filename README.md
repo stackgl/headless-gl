@@ -242,8 +242,6 @@ After you have your [system dependencies installed](#system-dependencies), do th
 
 1. Clone this repo: `git clone git@github.com:stackgl/headless-gl.git`
 1. Switch to the headless gl directory: `cd headless-gl`
-1. Initialize the angle submodule: `git submodule init`
-1. Update the angle submodule: `git submodule update`
 1. Install npm dependencies: `npm install`
 1. Run node-gyp to generate build scripts: `npm run rebuild`
 
