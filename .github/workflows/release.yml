@@ -25,7 +25,6 @@ jobs:
           cache: 'npm'
           registry-url: 'https://npm.pkg.github.com'
       - if: runner.os == 'Linux'
-      - if: runner.os == 'Linux'
         run: |
           sudo add-apt-repository ppa:kisak/kisak-mesa
           sudo apt update
