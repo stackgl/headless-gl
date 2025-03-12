@@ -52,7 +52,18 @@
               }
            ]
         }],
-        ['OS=="linux"', {
+        ['OS=="linux" and target_arch=="arm64"', {
+            "copies": [
+              {
+                'destination': '<(PRODUCT_DIR)',
+                'files': [
+                  '<(module_root_dir)/deps/linux-arm64/so/libEGL.so',
+                  '<(module_root_dir)/deps/linux-arm64/so/libGLESv2.so',
+                ]
+              }
+           ]
+        }],
+        ['OS=="linux" and target_arch=="x64"', {
             "copies": [
               {
                 'destination': '<(PRODUCT_DIR)',
