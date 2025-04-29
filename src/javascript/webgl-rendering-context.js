@@ -20,6 +20,7 @@ const {
   typeSize,
   uniformTypeSize,
   extractImageData,
+  convertPixelFormats,
   isTypedArray,
   unpackTypedArray,
   convertPixels,
@@ -2296,6 +2297,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       width = pixels.width
       height = pixels.height
       pixels = pixels.data
+
+      pixels = convertPixelFormats(this, pixels, this.RGBA, format)
     }
 
     target |= 0
@@ -2366,6 +2369,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       width = pixels.width
       height = pixels.height
       pixels = pixels.data
+
+      pixels = convertPixelFormats(this, pixels, this.RGBA, format)
     }
 
     if (typeof pixels !== 'object') {
@@ -2384,6 +2389,28 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       format,
       type,
       data)
+  }
+
+  texSubImage3D (target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels) {
+    if (pixels === null || pixels === undefined) {
+      return
+    }
+
+    if (typeof pixels !== 'object') {
+      throw new TypeError('texSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
+    }
+
+    if (
+      typeof pixels === 'object' &&
+      typeof pixels.width !== 'undefined' &&
+      typeof pixels.height !== 'undefined'
+    ) {
+      pixels = extractImageData(pixels).data
+      pixels = convertPixelFormats(this, pixels, this.RGBA, format)
+    }
+    const data = convertPixels(pixels)
+
+    super.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data)
   }
 
   texParameterf (target, pname, param) {
