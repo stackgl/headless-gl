@@ -629,6 +629,40 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
+  bindBufferBase (target, index, buffer) {
+    target |= 0
+    index |= 0
+    if (!checkObject(buffer)) {
+      throw new TypeError('bindBufferBase(GLenum, GLuint, WebGLBuffer)')
+    }
+    
+    if (!buffer) {
+      return super.bindBufferBase(target, index, null)
+    } else if (buffer._pendingDelete) {
+      return
+    } else if (this._checkWrapper(buffer, WebGLBuffer)) {
+      return super.bindBufferBase(target, index, buffer._ | 0)
+    }
+  }
+
+  bindBufferRange (target, index, buffer, offset, size) {
+    target |= 0
+    index |= 0
+    offset |= 0
+    size |= 0
+    if (!checkObject(buffer)) {
+      throw new TypeError('bindBufferRange(GLenum, GLuint, WebGLBuffer, GLintptr, GLsizeiptr)')
+    }
+    
+    if (!buffer) {
+      return super.bindBufferRange(target, index, null, offset, size)
+    } else if (buffer._pendingDelete) {
+      return
+    } else if (this._checkWrapper(buffer, WebGLBuffer)) {
+      return super.bindBufferRange(target, index, buffer._ | 0, offset, size)
+    }
+  }
+
   bindRenderbuffer (target, object) {
     if (!checkObject(object)) {
       throw new TypeError('bindRenderbuffer(GLenum, WebGLRenderbuffer)')
@@ -1980,6 +2014,20 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return null
   }
 
+  getUniformBlockIndex (program, uniformBlockName) {
+    if (!checkObject(program)) {
+      throw new TypeError('getUniformBlockIndex(WebGLProgram, String)')
+    }
+    if (!program) {
+      this.setError(this.INVALID_VALUE)
+      return this.INVALID_INDEX || 0xffffffff
+    } else if (this._checkWrapper(program, WebGLProgram)) {
+      uniformBlockName += ''
+      return super.getUniformBlockIndex(program._ | 0, uniformBlockName)
+    }
+    return this.INVALID_INDEX || 0xffffffff
+  }
+
   getVertexAttrib (index, pname) {
     index |= 0
     pname |= 0
@@ -2744,6 +2792,20 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
     this.uniform4i(location, value[0], value[1], value[2], value[3])
+  }
+
+  uniformBlockBinding (program, uniformBlockIndex, uniformBlockBinding) {
+    if (!checkObject(program)) {
+      throw new TypeError('uniformBlockBinding(WebGLProgram, GLuint, GLuint)')
+    }
+    if (!program) {
+      this.setError(this.INVALID_VALUE)
+      return
+    } else if (this._checkWrapper(program, WebGLProgram)) {
+      uniformBlockIndex |= 0
+      uniformBlockBinding |= 0
+      return super.uniformBlockBinding(program._ | 0, uniformBlockIndex, uniformBlockBinding)
+    }
   }
 
   _checkUniformMatrix (location, transpose, value, name, count) {
