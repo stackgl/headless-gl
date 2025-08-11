@@ -293,12 +293,18 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return null
   }
 
-  _isConstantBlendFunc (factor) {
+  _isConstantColorBlendFunc (factor) {
     return (
       factor === this.CONSTANT_COLOR ||
-      factor === this.ONE_MINUS_CONSTANT_COLOR ||
+      factor === this.ONE_MINUS_CONSTANT_COLOR
+    )
+  }
+
+  _isConstantAlphaBlendFunc (factor) {
+    return (
       factor === this.CONSTANT_ALPHA ||
-      factor === this.ONE_MINUS_CONSTANT_ALPHA)
+      factor === this.ONE_MINUS_CONSTANT_ALPHA
+    )
   }
 
   _isObject (object, method, Wrapper) {
@@ -868,7 +874,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       this.setError(this.INVALID_ENUM)
       return
     }
-    if (this._isConstantBlendFunc(sfactor) && this._isConstantBlendFunc(dfactor)) {
+    if ((this._isConstantColorBlendFunc(sfactor) && this._isConstantAlphaBlendFunc(dfactor)) ||
+      (this._isConstantColorBlendFunc(dfactor) && this._isConstantAlphaBlendFunc(sfactor))) {
       this.setError(this.INVALID_OPERATION)
       return
     }
@@ -893,8 +900,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    if ((this._isConstantBlendFunc(srcRGB) && this._isConstantBlendFunc(dstRGB)) ||
-      (this._isConstantBlendFunc(srcAlpha) && this._isConstantBlendFunc(dstAlpha))) {
+    if ((this._isConstantColorBlendFunc(srcRGB) && this._isConstantAlphaBlendFunc(dstRGB)) ||
+      (this._isConstantColorBlendFunc(dstRGB) && this._isConstantAlphaBlendFunc(srcRGB))) {
       this.setError(this.INVALID_OPERATION)
       return
     }
