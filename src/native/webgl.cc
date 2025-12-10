@@ -7,6 +7,15 @@
 
 #include "webgl.h"
 
+// Uncomment this to enable RenderDoc debugging
+// #define RENDERDOC_ENABLED
+
+#if defined(RENDERDOC_ENABLED)
+#include "renderdoc_app.h"
+
+RENDERDOC_API_1_1_2 *rdoc_api = NULL;
+#endif
+
 const char *GetDebugMessageSourceString(GLenum source) {
   switch (source) {
   case GL_DEBUG_SOURCE_API:
@@ -143,6 +152,25 @@ std::string JoinStringSet(const std::set<std::string> &inputSet,
   return oss.str();
 }
 
+// Helper function to potentially end RenderDoc frame capture after a few draw calls
+#if defined(RENDERDOC_ENABLED)
+constexpr int RenderDocCaptureFrameCount = 200;
+
+static void MaybeEndRenderDocCapture() {
+  static int drawCallCounter = 0;
+  if (drawCallCounter++ >= RenderDocCaptureFrameCount && rdoc_api) {
+    rdoc_api->EndFrameCapture(NULL, NULL);
+    printf("RenderDoc capture ended after %d draw calls.\n", drawCallCounter);
+    drawCallCounter = 0;
+    rdoc_api->StartFrameCapture(NULL, NULL);
+  }
+}
+
+#define RENDERDOC_COUNTER() MaybeEndRenderDocCapture()
+#else
+#define RENDERDOC_COUNTER()
+#endif
+
 bool WebGLRenderingContext::HAS_DISPLAY = false;
 EGLDisplay WebGLRenderingContext::DISPLAY;
 WebGLRenderingContext *WebGLRenderingContext::ACTIVE = NULL;
@@ -190,6 +218,23 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
     : state(GLCONTEXT_STATE_INIT), unpack_flip_y(false), unpack_premultiply_alpha(false),
       unpack_colorspace_conversion(0x9244), unpack_alignment(4),
       webGLToANGLEExtensions(&CaseInsensitiveCompare), next(NULL), prev(NULL) {
+
+  // Uncomment on Windows to attach debugger
+  // MessageBoxA(NULL, "Hello", "Hello", MB_OK);
+
+#if defined(RENDERDOC_ENABLED)
+  if (!rdoc_api) {
+    if (HMODULE mod = GetModuleHandleA("renderdoc.dll")) {
+      pRENDERDOC_GetAPI RENDERDOC_GetAPI =
+          (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
+      int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_1_2, (void **)&rdoc_api);
+      printf("RENDERDOC_GetAPI ret: %d %p\n", ret, rdoc_api);
+      assert(ret == 1);
+    } else {
+      printf("renderdoc.dll not found\n");
+    }
+  }
+#endif
 
   if (!eglGetProcAddress) {
     if (!eglLibrary.open("libEGL")) {
@@ -342,6 +387,12 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
       supportedWebGLExtensions.insert(webGLExtension);
     }
   }
+
+#if defined(RENDERDOC_ENABLED)
+  if (rdoc_api) {
+    rdoc_api->StartFrameCapture(NULL, NULL);
+  }
+#endif
 }
 
 bool WebGLRenderingContext::setActive() {
@@ -367,6 +418,14 @@ void WebGLRenderingContext::setError(GLenum error) {
 }
 
 void WebGLRenderingContext::dispose() {
+
+  // Finish RenderDoc frame capture
+#if defined(RENDERDOC_ENABLED)
+  if (rdoc_api) {
+    rdoc_api->EndFrameCapture(NULL, NULL);
+  }
+#endif
+
   // Unregister context
   unregisterContext();
 
@@ -647,6 +706,7 @@ GL_METHOD(DrawArraysInstancedANGLE) {
   GLuint icount = Nan::To<uint32_t>(info[3]).ToChecked();
 
   glDrawArraysInstancedANGLE(mode, first, count, icount);
+  RENDERDOC_COUNTER();
 }
 
 GL_METHOD(DrawElementsInstancedANGLE) {
@@ -660,6 +720,7 @@ GL_METHOD(DrawElementsInstancedANGLE) {
 
   glDrawElementsInstancedANGLE(mode, count, type,
                                reinterpret_cast<GLvoid *>(static_cast<uintptr_t>(offset)), icount);
+  RENDERDOC_COUNTER();
 }
 
 GL_METHOD(DrawArrays) {
@@ -670,6 +731,7 @@ GL_METHOD(DrawArrays) {
   GLint count = Nan::To<int32_t>(info[2]).ToChecked();
 
   glDrawArrays(mode, first, count);
+  RENDERDOC_COUNTER();
 }
 
 GL_METHOD(UniformMatrix2fv) {
@@ -1056,6 +1118,10 @@ GL_METHOD(TexSubImage2D) {
   Nan::TypedArrayContents<unsigned char> pixels(info[8]);
 
   if (inst->unpack_flip_y || inst->unpack_premultiply_alpha) {
+    if (!*pixels) {
+      inst->setError(GL_INVALID_OPERATION);
+      return;
+    }
     std::vector<uint8_t> unpacked = inst->unpackPixels(type, format, width, height, *pixels);
     glTexSubImage2DRobustANGLE(target, level, xoffset, yoffset, width, height, format, type,
                                unpacked.size(), unpacked.data());
@@ -1228,6 +1294,7 @@ GL_METHOD(DrawElements) {
   size_t offset = Nan::To<uint32_t>(info[3]).ToChecked();
 
   glDrawElements(mode, count, type, reinterpret_cast<GLvoid *>(offset));
+  RENDERDOC_COUNTER();
 }
 
 GL_METHOD(Flush) {
@@ -2410,6 +2477,7 @@ GL_METHOD(TexImage3D) {
   GLint border = Nan::To<int32_t>(info[6]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[7]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[8]).ToChecked();
+
   if (info[9]->IsUndefined()) {
     glTexImage3D(target, level, internalformat, width, height, depth, border, format, type,
                  nullptr);
@@ -2435,17 +2503,10 @@ GL_METHOD(TexSubImage3D) {
   GLsizei depth = Nan::To<int32_t>(info[7]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[8]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[9]).ToChecked();
-  if (info[10]->IsUndefined()) {
-    glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type,
-                    nullptr);
-  } else if (info[10]->IsArrayBufferView()) {
-    auto buffer = info[10].As<v8::ArrayBufferView>();
-    void *bufferPtr = buffer->Buffer()->GetBackingStore()->Data();
-    glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type,
-                    bufferPtr);
-  } else {
-    Nan::ThrowTypeError("Invalid data type for TexSubImage3D");
-  }
+  Nan::TypedArrayContents<unsigned char> pixels(info[10]);
+
+  glTexSubImage3DRobustANGLE(target, level, xoffset, yoffset, zoffset, width, height, depth, format,
+                             type, pixels.length(), *pixels);
 }
 
 GL_METHOD(CopyTexSubImage3D) {
@@ -2708,6 +2769,7 @@ GL_METHOD(DrawArraysInstanced) {
   GLsizei count = Nan::To<int32_t>(info[2]).ToChecked();
   GLsizei instanceCount = Nan::To<int32_t>(info[3]).ToChecked();
   glDrawArraysInstanced(mode, first, count, instanceCount);
+  RENDERDOC_COUNTER();
 }
 
 GL_METHOD(DrawElementsInstanced) {
@@ -2718,6 +2780,7 @@ GL_METHOD(DrawElementsInstanced) {
   GLintptr offset = Nan::To<int64_t>(info[3]).ToChecked();
   GLsizei instanceCount = Nan::To<int32_t>(info[4]).ToChecked();
   glDrawElementsInstanced(mode, count, type, reinterpret_cast<const void *>(offset), instanceCount);
+  RENDERDOC_COUNTER();
 }
 
 GL_METHOD(DrawRangeElements) {
@@ -2729,6 +2792,7 @@ GL_METHOD(DrawRangeElements) {
   GLenum type = Nan::To<int32_t>(info[4]).ToChecked();
   GLintptr offset = Nan::To<int64_t>(info[5]).ToChecked();
   glDrawRangeElements(mode, start, end, count, type, reinterpret_cast<const void *>(offset));
+  RENDERDOC_COUNTER();
 }
 
 GL_METHOD(DrawBuffers) {
