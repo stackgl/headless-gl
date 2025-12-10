@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         node-version: [24.x]
-        os: [ubuntu-22.04, ubuntu-22.04-arm, windows-2022]
+        os: [ubuntu-22.04, ubuntu-22.04-arm, windows-2025]
         target: ["20.0.0", "22.0.0", "24.0.0"]
     runs-on: ${{ matrix.os }}
     permissions:
