@@ -416,9 +416,7 @@ void WebGLRenderingContext::dispose() {
   ACTIVE = NULL;
 
   // Destroy surface and context
-
-  // FIXME:  This shouldn't be commented out
-  // eglDestroySurface(DISPLAY, surface);
+  eglDestroySurface(DISPLAY, surface);
   eglDestroyContext(DISPLAY, context);
 }
 
