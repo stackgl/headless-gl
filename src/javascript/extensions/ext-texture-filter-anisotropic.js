@@ -1,19 +1,22 @@
 class EXTTextureFilterAnisotropic {
-  constructor () {
-    this.TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE
-    this.MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF
+  constructor() {
+    this.TEXTURE_MAX_ANISOTROPY_EXT = 0x84fe;
+    this.MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84ff;
   }
 }
 
-function getEXTTextureFilterAnisotropic (context) {
-  let result = null
-  const exts = context.getSupportedExtensions()
+function getEXTTextureFilterAnisotropic(context) {
+  let result = null;
+  const exts = context.getSupportedExtensions();
 
   if (exts && exts.indexOf('EXT_texture_filter_anisotropic') >= 0) {
-    result = new EXTTextureFilterAnisotropic()
+    result = new EXTTextureFilterAnisotropic();
   }
 
-  return result
+  return result;
 }
 
-module.exports = { getEXTTextureFilterAnisotropic, EXTTextureFilterAnisotropic }
+module.exports = {
+  getEXTTextureFilterAnisotropic,
+  EXTTextureFilterAnisotropic,
+};

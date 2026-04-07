@@ -7,9 +7,7 @@
 #include <utility>
 #include <vector>
 
-#include "nan.h"
-#include <node.h>
-#include <v8.h>
+#include <napi.h>
 
 #define EGL_EGL_PROTOTYPES 0
 #define GL_GLES_PROTOTYPES 0
@@ -41,7 +39,7 @@ using GLObjectReference = std::pair<GLuint, GLObjectType>;
 using WebGLToANGLEExtensionsMap =
     std::map<std::string, std::vector<std::string>, decltype(&CaseInsensitiveCompare)>;
 
-struct WebGLRenderingContext : public node::ObjectWrap {
+struct WebGLRenderingContext : public Napi::ObjectWrap<WebGLRenderingContext> {
 
   // The underlying OpenGL context
   static bool HAS_DISPLAY;
@@ -94,11 +92,16 @@ struct WebGLRenderingContext : public node::ObjectWrap {
     next = prev = NULL;
   }
 
-  // Constructor
-  WebGLRenderingContext(int width, int height, bool alpha, bool depth, bool stencil, bool antialias,
-                        bool premultipliedAlpha, bool preserveDrawingBuffer,
-                        bool preferLowPowerToHighPerformance, bool failIfMajorPerformanceCaveat,
-                        bool createWebGL2Context);
+  // Napi constructor
+  WebGLRenderingContext(const Napi::CallbackInfo& info);
+  static Napi::Function GetClass(Napi::Env env);
+
+  // Internal GL init helper (moved from old constructor)
+  void _initContext(int width, int height, bool alpha, bool depth, bool stencil, bool antialias,
+                    bool premultipliedAlpha, bool preserveDrawingBuffer,
+                    bool preferLowPowerToHighPerformance, bool failIfMajorPerformanceCaveat,
+                    bool createWebGL2Context);
+
   virtual ~WebGLRenderingContext();
 
   // Context validation
@@ -113,8 +116,8 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   std::set<GLenum> errorSet;
   void setError(GLenum error);
   GLenum getError();
-  static NAN_METHOD(SetError);
-  static NAN_METHOD(GetError);
+  Napi::Value SetError(const Napi::CallbackInfo& info);
+  Napi::Value GetError(const Napi::CallbackInfo& info);
 
   // Preferred depth format
   GLenum preferredDepth;
@@ -122,247 +125,246 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   // Destructors
   void dispose();
 
-  static NAN_METHOD(DisposeAll);
+  static Napi::Value DisposeAll(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(New);
-  static NAN_METHOD(Destroy);
+  Napi::Value Destroy(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(VertexAttribDivisorANGLE);
-  static NAN_METHOD(DrawArraysInstancedANGLE);
-  static NAN_METHOD(DrawElementsInstancedANGLE);
+  Napi::Value VertexAttribDivisorANGLE(const Napi::CallbackInfo& info);
+  Napi::Value DrawArraysInstancedANGLE(const Napi::CallbackInfo& info);
+  Napi::Value DrawElementsInstancedANGLE(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(Uniform1f);
-  static NAN_METHOD(Uniform2f);
-  static NAN_METHOD(Uniform3f);
-  static NAN_METHOD(Uniform4f);
-  static NAN_METHOD(Uniform1i);
-  static NAN_METHOD(Uniform2i);
-  static NAN_METHOD(Uniform3i);
-  static NAN_METHOD(Uniform4i);
+  Napi::Value Uniform1f(const Napi::CallbackInfo& info);
+  Napi::Value Uniform2f(const Napi::CallbackInfo& info);
+  Napi::Value Uniform3f(const Napi::CallbackInfo& info);
+  Napi::Value Uniform4f(const Napi::CallbackInfo& info);
+  Napi::Value Uniform1i(const Napi::CallbackInfo& info);
+  Napi::Value Uniform2i(const Napi::CallbackInfo& info);
+  Napi::Value Uniform3i(const Napi::CallbackInfo& info);
+  Napi::Value Uniform4i(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(PixelStorei);
-  static NAN_METHOD(BindAttribLocation);
-  static NAN_METHOD(DrawArrays);
-  static NAN_METHOD(UniformMatrix2fv);
-  static NAN_METHOD(UniformMatrix3fv);
-  static NAN_METHOD(UniformMatrix4fv);
-  static NAN_METHOD(GenerateMipmap);
-  static NAN_METHOD(GetAttribLocation);
-  static NAN_METHOD(DepthFunc);
-  static NAN_METHOD(Viewport);
-  static NAN_METHOD(CreateShader);
-  static NAN_METHOD(ShaderSource);
-  static NAN_METHOD(CompileShader);
-  static NAN_METHOD(GetShaderParameter);
-  static NAN_METHOD(GetShaderInfoLog);
-  static NAN_METHOD(CreateProgram);
-  static NAN_METHOD(AttachShader);
-  static NAN_METHOD(LinkProgram);
-  static NAN_METHOD(GetProgramParameter);
-  static NAN_METHOD(GetUniformLocation);
-  static NAN_METHOD(ClearColor);
-  static NAN_METHOD(ClearDepth);
-  static NAN_METHOD(Disable);
-  static NAN_METHOD(Enable);
-  static NAN_METHOD(CreateTexture);
-  static NAN_METHOD(BindTexture);
-  static NAN_METHOD(TexImage2D);
-  static NAN_METHOD(TexParameteri);
-  static NAN_METHOD(TexParameterf);
-  static NAN_METHOD(Clear);
-  static NAN_METHOD(UseProgram);
-  static NAN_METHOD(CreateBuffer);
-  static NAN_METHOD(BindBuffer);
-  static NAN_METHOD(CreateFramebuffer);
-  static NAN_METHOD(BindFramebuffer);
-  static NAN_METHOD(FramebufferTexture2D);
-  static NAN_METHOD(BufferData);
-  static NAN_METHOD(BufferSubData);
-  static NAN_METHOD(BlendEquation);
-  static NAN_METHOD(BlendFunc);
-  static NAN_METHOD(EnableVertexAttribArray);
-  static NAN_METHOD(VertexAttribPointer);
-  static NAN_METHOD(ActiveTexture);
-  static NAN_METHOD(DrawElements);
-  static NAN_METHOD(Flush);
-  static NAN_METHOD(Finish);
+  Napi::Value PixelStorei(const Napi::CallbackInfo& info);
+  Napi::Value BindAttribLocation(const Napi::CallbackInfo& info);
+  Napi::Value DrawArrays(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix2fv(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix3fv(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix4fv(const Napi::CallbackInfo& info);
+  Napi::Value GenerateMipmap(const Napi::CallbackInfo& info);
+  Napi::Value GetAttribLocation(const Napi::CallbackInfo& info);
+  Napi::Value DepthFunc(const Napi::CallbackInfo& info);
+  Napi::Value Viewport(const Napi::CallbackInfo& info);
+  Napi::Value CreateShader(const Napi::CallbackInfo& info);
+  Napi::Value ShaderSource(const Napi::CallbackInfo& info);
+  Napi::Value CompileShader(const Napi::CallbackInfo& info);
+  Napi::Value GetShaderParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetShaderInfoLog(const Napi::CallbackInfo& info);
+  Napi::Value CreateProgram(const Napi::CallbackInfo& info);
+  Napi::Value AttachShader(const Napi::CallbackInfo& info);
+  Napi::Value LinkProgram(const Napi::CallbackInfo& info);
+  Napi::Value GetProgramParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetUniformLocation(const Napi::CallbackInfo& info);
+  Napi::Value ClearColor(const Napi::CallbackInfo& info);
+  Napi::Value ClearDepth(const Napi::CallbackInfo& info);
+  Napi::Value Disable(const Napi::CallbackInfo& info);
+  Napi::Value Enable(const Napi::CallbackInfo& info);
+  Napi::Value CreateTexture(const Napi::CallbackInfo& info);
+  Napi::Value BindTexture(const Napi::CallbackInfo& info);
+  Napi::Value TexImage2D(const Napi::CallbackInfo& info);
+  Napi::Value TexParameteri(const Napi::CallbackInfo& info);
+  Napi::Value TexParameterf(const Napi::CallbackInfo& info);
+  Napi::Value Clear(const Napi::CallbackInfo& info);
+  Napi::Value UseProgram(const Napi::CallbackInfo& info);
+  Napi::Value CreateBuffer(const Napi::CallbackInfo& info);
+  Napi::Value BindBuffer(const Napi::CallbackInfo& info);
+  Napi::Value CreateFramebuffer(const Napi::CallbackInfo& info);
+  Napi::Value BindFramebuffer(const Napi::CallbackInfo& info);
+  Napi::Value FramebufferTexture2D(const Napi::CallbackInfo& info);
+  Napi::Value BufferData(const Napi::CallbackInfo& info);
+  Napi::Value BufferSubData(const Napi::CallbackInfo& info);
+  Napi::Value BlendEquation(const Napi::CallbackInfo& info);
+  Napi::Value BlendFunc(const Napi::CallbackInfo& info);
+  Napi::Value EnableVertexAttribArray(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttribPointer(const Napi::CallbackInfo& info);
+  Napi::Value ActiveTexture(const Napi::CallbackInfo& info);
+  Napi::Value DrawElements(const Napi::CallbackInfo& info);
+  Napi::Value Flush(const Napi::CallbackInfo& info);
+  Napi::Value Finish(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(VertexAttrib1f);
-  static NAN_METHOD(VertexAttrib2f);
-  static NAN_METHOD(VertexAttrib3f);
-  static NAN_METHOD(VertexAttrib4f);
+  Napi::Value VertexAttrib1f(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttrib2f(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttrib3f(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttrib4f(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(BlendColor);
-  static NAN_METHOD(BlendEquationSeparate);
-  static NAN_METHOD(BlendFuncSeparate);
-  static NAN_METHOD(ClearStencil);
-  static NAN_METHOD(ColorMask);
-  static NAN_METHOD(CopyTexImage2D);
-  static NAN_METHOD(CopyTexSubImage2D);
-  static NAN_METHOD(CullFace);
-  static NAN_METHOD(DepthMask);
-  static NAN_METHOD(DepthRange);
-  static NAN_METHOD(Hint);
-  static NAN_METHOD(IsEnabled);
-  static NAN_METHOD(LineWidth);
-  static NAN_METHOD(PolygonOffset);
+  Napi::Value BlendColor(const Napi::CallbackInfo& info);
+  Napi::Value BlendEquationSeparate(const Napi::CallbackInfo& info);
+  Napi::Value BlendFuncSeparate(const Napi::CallbackInfo& info);
+  Napi::Value ClearStencil(const Napi::CallbackInfo& info);
+  Napi::Value ColorMask(const Napi::CallbackInfo& info);
+  Napi::Value CopyTexImage2D(const Napi::CallbackInfo& info);
+  Napi::Value CopyTexSubImage2D(const Napi::CallbackInfo& info);
+  Napi::Value CullFace(const Napi::CallbackInfo& info);
+  Napi::Value DepthMask(const Napi::CallbackInfo& info);
+  Napi::Value DepthRange(const Napi::CallbackInfo& info);
+  Napi::Value Hint(const Napi::CallbackInfo& info);
+  Napi::Value IsEnabled(const Napi::CallbackInfo& info);
+  Napi::Value LineWidth(const Napi::CallbackInfo& info);
+  Napi::Value PolygonOffset(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(GetShaderPrecisionFormat);
+  Napi::Value GetShaderPrecisionFormat(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(StencilFunc);
-  static NAN_METHOD(StencilFuncSeparate);
-  static NAN_METHOD(StencilMask);
-  static NAN_METHOD(StencilMaskSeparate);
-  static NAN_METHOD(StencilOp);
-  static NAN_METHOD(StencilOpSeparate);
+  Napi::Value StencilFunc(const Napi::CallbackInfo& info);
+  Napi::Value StencilFuncSeparate(const Napi::CallbackInfo& info);
+  Napi::Value StencilMask(const Napi::CallbackInfo& info);
+  Napi::Value StencilMaskSeparate(const Napi::CallbackInfo& info);
+  Napi::Value StencilOp(const Napi::CallbackInfo& info);
+  Napi::Value StencilOpSeparate(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(Scissor);
+  Napi::Value Scissor(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(BindRenderbuffer);
-  static NAN_METHOD(CreateRenderbuffer);
-  static NAN_METHOD(FramebufferRenderbuffer);
+  Napi::Value BindRenderbuffer(const Napi::CallbackInfo& info);
+  Napi::Value CreateRenderbuffer(const Napi::CallbackInfo& info);
+  Napi::Value FramebufferRenderbuffer(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(DeleteBuffer);
-  static NAN_METHOD(DeleteFramebuffer);
-  static NAN_METHOD(DeleteProgram);
-  static NAN_METHOD(DeleteRenderbuffer);
-  static NAN_METHOD(DeleteShader);
-  static NAN_METHOD(DeleteTexture);
-  static NAN_METHOD(DetachShader);
+  Napi::Value DeleteBuffer(const Napi::CallbackInfo& info);
+  Napi::Value DeleteFramebuffer(const Napi::CallbackInfo& info);
+  Napi::Value DeleteProgram(const Napi::CallbackInfo& info);
+  Napi::Value DeleteRenderbuffer(const Napi::CallbackInfo& info);
+  Napi::Value DeleteShader(const Napi::CallbackInfo& info);
+  Napi::Value DeleteTexture(const Napi::CallbackInfo& info);
+  Napi::Value DetachShader(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(GetVertexAttribOffset);
-  static NAN_METHOD(DisableVertexAttribArray);
+  Napi::Value GetVertexAttribOffset(const Napi::CallbackInfo& info);
+  Napi::Value DisableVertexAttribArray(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(IsBuffer);
-  static NAN_METHOD(IsFramebuffer);
-  static NAN_METHOD(IsProgram);
-  static NAN_METHOD(IsRenderbuffer);
-  static NAN_METHOD(IsShader);
-  static NAN_METHOD(IsTexture);
+  Napi::Value IsBuffer(const Napi::CallbackInfo& info);
+  Napi::Value IsFramebuffer(const Napi::CallbackInfo& info);
+  Napi::Value IsProgram(const Napi::CallbackInfo& info);
+  Napi::Value IsRenderbuffer(const Napi::CallbackInfo& info);
+  Napi::Value IsShader(const Napi::CallbackInfo& info);
+  Napi::Value IsTexture(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(RenderbufferStorage);
-  static NAN_METHOD(GetShaderSource);
-  static NAN_METHOD(ValidateProgram);
+  Napi::Value RenderbufferStorage(const Napi::CallbackInfo& info);
+  Napi::Value GetShaderSource(const Napi::CallbackInfo& info);
+  Napi::Value ValidateProgram(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(TexSubImage2D);
-  static NAN_METHOD(ReadPixels);
-  static NAN_METHOD(GetTexParameter);
-  static NAN_METHOD(GetActiveAttrib);
-  static NAN_METHOD(GetActiveUniform);
-  static NAN_METHOD(GetAttachedShaders);
-  static NAN_METHOD(GetParameter);
-  static NAN_METHOD(GetBufferParameter);
-  static NAN_METHOD(GetFramebufferAttachmentParameter);
-  static NAN_METHOD(GetProgramInfoLog);
-  static NAN_METHOD(GetRenderbufferParameter);
-  static NAN_METHOD(GetVertexAttrib);
-  static NAN_METHOD(GetSupportedExtensions);
-  static NAN_METHOD(GetExtension);
-  static NAN_METHOD(CheckFramebufferStatus);
+  Napi::Value TexSubImage2D(const Napi::CallbackInfo& info);
+  Napi::Value ReadPixels(const Napi::CallbackInfo& info);
+  Napi::Value GetTexParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetActiveAttrib(const Napi::CallbackInfo& info);
+  Napi::Value GetActiveUniform(const Napi::CallbackInfo& info);
+  Napi::Value GetAttachedShaders(const Napi::CallbackInfo& info);
+  Napi::Value GetParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetBufferParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetFramebufferAttachmentParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetProgramInfoLog(const Napi::CallbackInfo& info);
+  Napi::Value GetRenderbufferParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetVertexAttrib(const Napi::CallbackInfo& info);
+  Napi::Value GetSupportedExtensions(const Napi::CallbackInfo& info);
+  Napi::Value GetExtension(const Napi::CallbackInfo& info);
+  Napi::Value CheckFramebufferStatus(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(FrontFace);
-  static NAN_METHOD(SampleCoverage);
-  static NAN_METHOD(GetUniform);
+  Napi::Value FrontFace(const Napi::CallbackInfo& info);
+  Napi::Value SampleCoverage(const Napi::CallbackInfo& info);
+  Napi::Value GetUniform(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(DrawBuffersWEBGL);
-  static NAN_METHOD(EXTWEBGL_draw_buffers);
+  Napi::Value DrawBuffersWEBGL(const Napi::CallbackInfo& info);
+  Napi::Value EXTWEBGL_draw_buffers(const Napi::CallbackInfo& info);
 
-  static NAN_METHOD(BindVertexArrayOES);
-  static NAN_METHOD(CreateVertexArrayOES);
-  static NAN_METHOD(DeleteVertexArrayOES);
-  static NAN_METHOD(IsVertexArrayOES);
+  Napi::Value BindVertexArrayOES(const Napi::CallbackInfo& info);
+  Napi::Value CreateVertexArrayOES(const Napi::CallbackInfo& info);
+  Napi::Value DeleteVertexArrayOES(const Napi::CallbackInfo& info);
+  Napi::Value IsVertexArrayOES(const Napi::CallbackInfo& info);
 
   // WebGL 2 methods
-  static NAN_METHOD(CopyBufferSubData);
-  static NAN_METHOD(GetBufferSubData);
-  static NAN_METHOD(BlitFramebuffer);
-  static NAN_METHOD(FramebufferTextureLayer);
-  static NAN_METHOD(InvalidateFramebuffer);
-  static NAN_METHOD(InvalidateSubFramebuffer);
-  static NAN_METHOD(ReadBuffer);
-  static NAN_METHOD(GetInternalformatParameter);
-  static NAN_METHOD(RenderbufferStorageMultisample);
-  static NAN_METHOD(TexStorage2D);
-  static NAN_METHOD(TexStorage3D);
-  static NAN_METHOD(TexImage3D);
-  static NAN_METHOD(TexSubImage3D);
-  static NAN_METHOD(CopyTexSubImage3D);
-  static NAN_METHOD(CompressedTexImage3D);
-  static NAN_METHOD(CompressedTexSubImage3D);
-  static NAN_METHOD(GetFragDataLocation);
-  static NAN_METHOD(Uniform1ui);
-  static NAN_METHOD(Uniform2ui);
-  static NAN_METHOD(Uniform3ui);
-  static NAN_METHOD(Uniform4ui);
-  static NAN_METHOD(Uniform1uiv);
-  static NAN_METHOD(Uniform2uiv);
-  static NAN_METHOD(Uniform3uiv);
-  static NAN_METHOD(Uniform4uiv);
-  static NAN_METHOD(UniformMatrix3x2fv);
-  static NAN_METHOD(UniformMatrix4x2fv);
-  static NAN_METHOD(UniformMatrix2x3fv);
-  static NAN_METHOD(UniformMatrix4x3fv);
-  static NAN_METHOD(UniformMatrix2x4fv);
-  static NAN_METHOD(UniformMatrix3x4fv);
-  static NAN_METHOD(VertexAttribI4i);
-  static NAN_METHOD(VertexAttribI4iv);
-  static NAN_METHOD(VertexAttribI4ui);
-  static NAN_METHOD(VertexAttribI4uiv);
-  static NAN_METHOD(VertexAttribIPointer);
-  static NAN_METHOD(VertexAttribDivisor);
-  static NAN_METHOD(DrawArraysInstanced);
-  static NAN_METHOD(DrawElementsInstanced);
-  static NAN_METHOD(DrawRangeElements);
-  static NAN_METHOD(DrawBuffers);
-  static NAN_METHOD(ClearBufferfv);
-  static NAN_METHOD(ClearBufferiv);
-  static NAN_METHOD(ClearBufferuiv);
-  static NAN_METHOD(ClearBufferfi);
-  static NAN_METHOD(CreateQuery);
-  static NAN_METHOD(DeleteQuery);
-  static NAN_METHOD(IsQuery);
-  static NAN_METHOD(BeginQuery);
-  static NAN_METHOD(EndQuery);
-  static NAN_METHOD(GetQuery);
-  static NAN_METHOD(GetQueryParameter);
-  static NAN_METHOD(CreateSampler);
-  static NAN_METHOD(DeleteSampler);
-  static NAN_METHOD(IsSampler);
-  static NAN_METHOD(BindSampler);
-  static NAN_METHOD(SamplerParameteri);
-  static NAN_METHOD(SamplerParameterf);
-  static NAN_METHOD(GetSamplerParameter);
-  static NAN_METHOD(FenceSync);
-  static NAN_METHOD(IsSync);
-  static NAN_METHOD(DeleteSync);
-  static NAN_METHOD(ClientWaitSync);
-  static NAN_METHOD(WaitSync);
-  static NAN_METHOD(GetSyncParameter);
-  static NAN_METHOD(CreateTransformFeedback);
-  static NAN_METHOD(DeleteTransformFeedback);
-  static NAN_METHOD(IsTransformFeedback);
-  static NAN_METHOD(BindTransformFeedback);
-  static NAN_METHOD(BeginTransformFeedback);
-  static NAN_METHOD(EndTransformFeedback);
-  static NAN_METHOD(TransformFeedbackVaryings);
-  static NAN_METHOD(GetTransformFeedbackVarying);
-  static NAN_METHOD(PauseTransformFeedback);
-  static NAN_METHOD(ResumeTransformFeedback);
-  static NAN_METHOD(BindBufferBase);
-  static NAN_METHOD(BindBufferRange);
-  static NAN_METHOD(GetIndexedParameter);
-  static NAN_METHOD(GetUniformIndices);
-  static NAN_METHOD(GetActiveUniforms);
-  static NAN_METHOD(GetUniformBlockIndex);
-  static NAN_METHOD(GetActiveUniformBlockParameter);
-  static NAN_METHOD(GetActiveUniformBlockName);
-  static NAN_METHOD(UniformBlockBinding);
-  static NAN_METHOD(CreateVertexArray);
-  static NAN_METHOD(DeleteVertexArray);
-  static NAN_METHOD(IsVertexArray);
-  static NAN_METHOD(BindVertexArray);
+  Napi::Value CopyBufferSubData(const Napi::CallbackInfo& info);
+  Napi::Value GetBufferSubData(const Napi::CallbackInfo& info);
+  Napi::Value BlitFramebuffer(const Napi::CallbackInfo& info);
+  Napi::Value FramebufferTextureLayer(const Napi::CallbackInfo& info);
+  Napi::Value InvalidateFramebuffer(const Napi::CallbackInfo& info);
+  Napi::Value InvalidateSubFramebuffer(const Napi::CallbackInfo& info);
+  Napi::Value ReadBuffer(const Napi::CallbackInfo& info);
+  Napi::Value GetInternalformatParameter(const Napi::CallbackInfo& info);
+  Napi::Value RenderbufferStorageMultisample(const Napi::CallbackInfo& info);
+  Napi::Value TexStorage2D(const Napi::CallbackInfo& info);
+  Napi::Value TexStorage3D(const Napi::CallbackInfo& info);
+  Napi::Value TexImage3D(const Napi::CallbackInfo& info);
+  Napi::Value TexSubImage3D(const Napi::CallbackInfo& info);
+  Napi::Value CopyTexSubImage3D(const Napi::CallbackInfo& info);
+  Napi::Value CompressedTexImage3D(const Napi::CallbackInfo& info);
+  Napi::Value CompressedTexSubImage3D(const Napi::CallbackInfo& info);
+  Napi::Value GetFragDataLocation(const Napi::CallbackInfo& info);
+  Napi::Value Uniform1ui(const Napi::CallbackInfo& info);
+  Napi::Value Uniform2ui(const Napi::CallbackInfo& info);
+  Napi::Value Uniform3ui(const Napi::CallbackInfo& info);
+  Napi::Value Uniform4ui(const Napi::CallbackInfo& info);
+  Napi::Value Uniform1uiv(const Napi::CallbackInfo& info);
+  Napi::Value Uniform2uiv(const Napi::CallbackInfo& info);
+  Napi::Value Uniform3uiv(const Napi::CallbackInfo& info);
+  Napi::Value Uniform4uiv(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix3x2fv(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix4x2fv(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix2x3fv(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix4x3fv(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix2x4fv(const Napi::CallbackInfo& info);
+  Napi::Value UniformMatrix3x4fv(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttribI4i(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttribI4iv(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttribI4ui(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttribI4uiv(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttribIPointer(const Napi::CallbackInfo& info);
+  Napi::Value VertexAttribDivisor(const Napi::CallbackInfo& info);
+  Napi::Value DrawArraysInstanced(const Napi::CallbackInfo& info);
+  Napi::Value DrawElementsInstanced(const Napi::CallbackInfo& info);
+  Napi::Value DrawRangeElements(const Napi::CallbackInfo& info);
+  Napi::Value DrawBuffers(const Napi::CallbackInfo& info);
+  Napi::Value ClearBufferfv(const Napi::CallbackInfo& info);
+  Napi::Value ClearBufferiv(const Napi::CallbackInfo& info);
+  Napi::Value ClearBufferuiv(const Napi::CallbackInfo& info);
+  Napi::Value ClearBufferfi(const Napi::CallbackInfo& info);
+  Napi::Value CreateQuery(const Napi::CallbackInfo& info);
+  Napi::Value DeleteQuery(const Napi::CallbackInfo& info);
+  Napi::Value IsQuery(const Napi::CallbackInfo& info);
+  Napi::Value BeginQuery(const Napi::CallbackInfo& info);
+  Napi::Value EndQuery(const Napi::CallbackInfo& info);
+  Napi::Value GetQuery(const Napi::CallbackInfo& info);
+  Napi::Value GetQueryParameter(const Napi::CallbackInfo& info);
+  Napi::Value CreateSampler(const Napi::CallbackInfo& info);
+  Napi::Value DeleteSampler(const Napi::CallbackInfo& info);
+  Napi::Value IsSampler(const Napi::CallbackInfo& info);
+  Napi::Value BindSampler(const Napi::CallbackInfo& info);
+  Napi::Value SamplerParameteri(const Napi::CallbackInfo& info);
+  Napi::Value SamplerParameterf(const Napi::CallbackInfo& info);
+  Napi::Value GetSamplerParameter(const Napi::CallbackInfo& info);
+  Napi::Value FenceSync(const Napi::CallbackInfo& info);
+  Napi::Value IsSync(const Napi::CallbackInfo& info);
+  Napi::Value DeleteSync(const Napi::CallbackInfo& info);
+  Napi::Value ClientWaitSync(const Napi::CallbackInfo& info);
+  Napi::Value WaitSync(const Napi::CallbackInfo& info);
+  Napi::Value GetSyncParameter(const Napi::CallbackInfo& info);
+  Napi::Value CreateTransformFeedback(const Napi::CallbackInfo& info);
+  Napi::Value DeleteTransformFeedback(const Napi::CallbackInfo& info);
+  Napi::Value IsTransformFeedback(const Napi::CallbackInfo& info);
+  Napi::Value BindTransformFeedback(const Napi::CallbackInfo& info);
+  Napi::Value BeginTransformFeedback(const Napi::CallbackInfo& info);
+  Napi::Value EndTransformFeedback(const Napi::CallbackInfo& info);
+  Napi::Value TransformFeedbackVaryings(const Napi::CallbackInfo& info);
+  Napi::Value GetTransformFeedbackVarying(const Napi::CallbackInfo& info);
+  Napi::Value PauseTransformFeedback(const Napi::CallbackInfo& info);
+  Napi::Value ResumeTransformFeedback(const Napi::CallbackInfo& info);
+  Napi::Value BindBufferBase(const Napi::CallbackInfo& info);
+  Napi::Value BindBufferRange(const Napi::CallbackInfo& info);
+  Napi::Value GetIndexedParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetUniformIndices(const Napi::CallbackInfo& info);
+  Napi::Value GetActiveUniforms(const Napi::CallbackInfo& info);
+  Napi::Value GetUniformBlockIndex(const Napi::CallbackInfo& info);
+  Napi::Value GetActiveUniformBlockParameter(const Napi::CallbackInfo& info);
+  Napi::Value GetActiveUniformBlockName(const Napi::CallbackInfo& info);
+  Napi::Value UniformBlockBinding(const Napi::CallbackInfo& info);
+  Napi::Value CreateVertexArray(const Napi::CallbackInfo& info);
+  Napi::Value DeleteVertexArray(const Napi::CallbackInfo& info);
+  Napi::Value IsVertexArray(const Napi::CallbackInfo& info);
+  Napi::Value BindVertexArray(const Napi::CallbackInfo& info);
 };
 
-void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info);
+void BindWebGL2(Napi::Object target, Napi::Env env);
 
 #endif

@@ -7,9 +7,9 @@ const BLACKLIST = [
   'rendering_polygon-offset',
 
   // Fails on direct x
-  'rendering_point-no-attributes'
-]
+  'rendering_point-no-attributes',
+];
 
 require('./util/conformance')(function (str) {
-  return str.indexOf('rendering') === 0 && BLACKLIST.indexOf(str) < 0
-})
+  return str.indexOf('rendering') === 0 && BLACKLIST.indexOf(str) < 0;
+});

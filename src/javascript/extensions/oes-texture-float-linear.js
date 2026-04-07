@@ -1,14 +1,14 @@
 class OESTextureFloatLinear {}
 
-function getOESTextureFloatLinear (context) {
-  let result = null
-  const exts = context.getSupportedExtensions()
+function getOESTextureFloatLinear(context) {
+  let result = null;
+  const exts = context.getSupportedExtensions();
 
   if (exts && exts.indexOf('OES_texture_float_linear') >= 0) {
-    result = new OESTextureFloatLinear()
+    result = new OESTextureFloatLinear();
   }
 
-  return result
+  return result;
 }
 
-module.exports = { getOESTextureFloatLinear, OESTextureFloatLinear }
+module.exports = { getOESTextureFloatLinear, OESTextureFloatLinear };

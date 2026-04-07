@@ -16,9 +16,9 @@ const BLACKLIST = [
   'textures_texture-copying-feedback-loops',
 
   // Not sure what's happening here
-  'textures_texture-mips'
-]
+  'textures_texture-mips',
+];
 
 require('./util/conformance')(function (str) {
-  return str.indexOf('textures') === 0 && BLACKLIST.indexOf(str) < 0
-})
+  return str.indexOf('textures') === 0 && BLACKLIST.indexOf(str) < 0;
+});

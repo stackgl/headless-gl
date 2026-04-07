@@ -5,9 +5,9 @@ const BLACKLIST = [
 
   // Not sure what is happening here.  This test segfaults on travis-ci (bad)
   // Can't get it to reproduce locally and it is taking too long to debug.
-  'uniforms_uniform-default-values'
-]
+  'uniforms_uniform-default-values',
+];
 
 require('./util/conformance')(function (str) {
-  return str.indexOf('uniforms') === 0 && BLACKLIST.indexOf(str) < 0
-})
+  return str.indexOf('uniforms') === 0 && BLACKLIST.indexOf(str) < 0;
+});

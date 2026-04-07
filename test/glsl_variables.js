@@ -1,3 +1,3 @@
 require('./util/conformance')(function (str) {
-  return str.indexOf('glsl_variables') === 0
-})
+  return str.indexOf('glsl_variables') === 0;
+});

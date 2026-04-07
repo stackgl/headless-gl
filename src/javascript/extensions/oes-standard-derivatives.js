@@ -1,18 +1,18 @@
 class OESStandardDerivatives {
-  constructor () {
-    this.FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8B8B
+  constructor() {
+    this.FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8b8b;
   }
 }
 
-function getOESStandardDerivatives (context) {
-  let result = null
-  const exts = context.getSupportedExtensions()
+function getOESStandardDerivatives(context) {
+  let result = null;
+  const exts = context.getSupportedExtensions();
 
   if (exts && exts.indexOf('OES_standard_derivatives') >= 0) {
-    result = new OESStandardDerivatives()
+    result = new OESStandardDerivatives();
   }
 
-  return result
+  return result;
 }
 
-module.exports = { getOESStandardDerivatives, OESStandardDerivatives }
+module.exports = { getOESStandardDerivatives, OESStandardDerivatives };

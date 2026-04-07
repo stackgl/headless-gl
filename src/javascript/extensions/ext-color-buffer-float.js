@@ -1,14 +1,14 @@
 class EXTColorBufferFloat {}
 
-function getEXTColorBufferFloat (context) {
-  let result = null
-  const exts = context.getSupportedExtensions()
+function getEXTColorBufferFloat(context) {
+  let result = null;
+  const exts = context.getSupportedExtensions();
 
   if (exts && exts.indexOf('EXT_color_buffer_float') >= 0) {
-    result = new EXTColorBufferFloat()
+    result = new EXTColorBufferFloat();
   }
 
-  return result
+  return result;
 }
 
-module.exports = { getEXTColorBufferFloat, EXTColorBufferFloat }
+module.exports = { getEXTColorBufferFloat, EXTColorBufferFloat };
