@@ -138,6 +138,18 @@ function wrapContext (ctx) {
       set (value) {
         ctx.drawingBufferHeight = value
       }
+    },
+    destroy: {
+      value: ctx.destroy.bind(ctx),
+      writable: true,
+      configurable: true,
+      enumerable: false
+    },
+    resize: {
+      value: ctx.resize.bind(ctx),
+      writable: true,
+      configurable: true,
+      enumerable: false
     }
   })
 
@@ -516,12 +528,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
     if (this._extensions.webgl_draw_buffers) {
       // eslint-disable-line
-      const { webgl_draw_buffers } = this._extensions; // eslint-disable-line
+      const webglDrawBuffers = this._extensions.webgl_draw_buffers // eslint-disable-line
       return (
         attachment <
-        webgl_draw_buffers.COLOR_ATTACHMENT0_WEBGL +
-          webgl_draw_buffers._maxDrawBuffers
-      ); // eslint-disable-line
+        webglDrawBuffers.COLOR_ATTACHMENT0_WEBGL +
+          webglDrawBuffers._maxDrawBuffers
+      ) // eslint-disable-line
     }
 
     return false

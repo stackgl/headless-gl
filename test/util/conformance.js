@@ -1,5 +1,4 @@
 const tape = require('tape')
-const runConformance = require('@stackgl/gl-conformance')
 const createContext = require('../../index')
 
 // Inject WebGL types into global namespaces, required by some conformance tests
@@ -15,7 +14,21 @@ WebGLActiveInfo = require('../../src/javascript/webgl-active-info').WebGLActiveI
 WebGLShaderPrecisionFormat = require('../../src/javascript/webgl-shader-precision-format').WebGLShaderPrecisionFormat // eslint-disable-line
 WebGLContextAttributes = require('../../src/javascript/webgl-context-attributes').WebGLContextAttributes // eslint-disable-line
 
+let runConformance = null
+try {
+  runConformance = require('@stackgl/gl-conformance')
+} catch (e) {
+  runConformance = null
+}
+
 module.exports = function (filter) {
+  if (!runConformance) {
+    tape('conformance tests skipped (gl-conformance not built)', function (t) {
+      t.skip('@stackgl/gl-conformance requires conformance-suites data — run build.js first')
+      t.end()
+    })
+    return
+  }
   return runConformance({
     tape,
     createContext: function (width, height, options) {
