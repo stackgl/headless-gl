@@ -41,4 +41,5 @@ declare function createContext(
   options?: WebGLContextAttributes & { createWebGL2Context?: boolean }
 ): (WebGLRenderingContext | WebGL2RenderingContext) & createContext.StackGLExtension;
 
-export = createContext;
+export default createContext;
+export { createContext };

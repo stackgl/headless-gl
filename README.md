@@ -1,6 +1,7 @@
-# roomle-headless-gl
+# gl
 
-This is a fork of [headless-gl](https://github.com/stackgl/headless-gl) that replaces Nan with [Napi](https://github.com/nodejs/node-addon-api), uses Typescript and runs on Bun and Node.js.
+[![ci](https://github.com/stackgl/headless-gl/actions/workflows/ci.yml/badge.svg)](https://github.com/stackgl/headless-gl/actions/workflows/ci.yml)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 
 `gl` lets you create a WebGL context in [Node.js](https://nodejs.org/en/) without making a window or loading a full browser environment.
 

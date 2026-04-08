@@ -1,14 +1,14 @@
 {
-  "name": "@roomle/headless-gl",
+  "name": "gl",
   "version": "9.0.0-rc.9",
   "description": "Creates a WebGL context without a window",
-  "main": "dist/index.js",
+  "main": "index.js",
   "browser": "src/browser-index.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./index.d.ts",
       "import": "./index.mjs",
-      "require": "./dist/index.js"
+      "require": "./index.js"
     }
   },
   "directories": {
@@ -21,7 +21,7 @@
     "build": "tsc",
     "test": "standard | snazzy && tape test/*.js | faucet",
     "rebuild": "node-gyp rebuild --verbose",
-    "native-prebuild": "prebuild --all --strip",
+    "prebuild": "prebuild --all --strip",
     "install": "prebuild-install || node-gyp rebuild"
   },
   "dependencies": {
@@ -33,7 +33,6 @@
     "prebuild-install": "7.1.3"
   },
   "devDependencies": {
-    "@stackgl/gl-conformance": "2.1.3",
     "@types/node": "20.19.39",
     "angle-normals": "1.0.0",
     "bunny": "1.0.1",
@@ -56,7 +55,7 @@
     "server",
     "gpgpu"
   ],
-  "types": "dist/index.d.ts",
+  "types": "index.d.ts",
   "author": "Mikola Lysenko",
   "license": "BSD-2-Clause",
   "gypfile": true

@@ -1,3 +1,3 @@
 require('./util/conformance')(function (str) {
-  return str.indexOf('attribs') === 0;
-});
+  return str.indexOf('attribs') === 0
+})
