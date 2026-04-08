@@ -12,7 +12,7 @@ function bindPublics (props, wrapper, privateInstance, privateMethods) {
           value: value.bind(privateInstance),
           writable: true,
           configurable: true,
-          enumerable: false
+          enumerable: true
         })
       }
     } else {

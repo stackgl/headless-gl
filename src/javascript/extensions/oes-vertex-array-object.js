@@ -73,7 +73,7 @@ class OESVertexArrayObject {
 
     if (!array) {
       array = null
-      gl.bindVertexArrayOES.call(ctx, null)
+      gl.bindVertexArrayOES.call(ctx, 0)
     } else if (
       array instanceof WebGLVertexArrayObjectOES &&
       array._pendingDelete

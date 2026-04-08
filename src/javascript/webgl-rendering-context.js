@@ -1546,7 +1546,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       target,
       attachment,
       renderbufferTarget,
-      renderbuffer?._ ?? null
+      renderbuffer?._ ?? 0
     )
   }
 
@@ -1576,7 +1576,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       target,
       attachment,
       textarget,
-      texture?._ ?? null,
+      texture?._ ?? 0,
       level
     )
   }
@@ -1606,7 +1606,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     super.framebufferTextureLayer(
       target,
       attachment,
-      texture?._ ?? null,
+      texture?._ ?? 0,
       level,
       layer
     )
@@ -1687,6 +1687,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   getParameter (pname) {
+    if (typeof pname !== 'number' && isNaN(+pname)) return null
+    pname = pname | 0
     switch (pname) {
       case this.COMPRESSED_TEXTURE_FORMATS:
         return new Uint32Array(0)
@@ -2718,7 +2720,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform1f (location, v0) {
     if (!this._checkUniformValid(location, v0, 'uniform1f', 1, 'f')) return
-    super.uniform1f(location._ | 0, v0)
+    super.uniform1f(location._ | 0, +v0)
   }
 
   uniform1fv (location, value) {
@@ -2754,7 +2756,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform2f (location, v0, v1) {
     if (!this._checkUniformValid(location, v0, 'uniform2f', 2, 'f')) return
-    super.uniform2f(location._ | 0, v0, v1)
+    super.uniform2f(location._ | 0, +v0, +v1)
   }
 
   uniform2fv (location, value) {
@@ -2772,7 +2774,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform2i (location, v0, v1) {
     if (!this._checkUniformValid(location, v0, 'uniform2i', 2, 'i')) return
-    super.uniform2i(location._ | 0, v0, v1)
+    super.uniform2i(location._ | 0, v0 | 0, v1 | 0)
   }
 
   uniform2iv (location, value) {
@@ -2790,7 +2792,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform3f (location, v0, v1, v2) {
     if (!this._checkUniformValid(location, v0, 'uniform3f', 3, 'f')) return
-    super.uniform3f(location._ | 0, v0, v1, v2)
+    super.uniform3f(location._ | 0, +v0, +v1, +v2)
   }
 
   uniform3fv (location, value) {
@@ -2808,7 +2810,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform3i (location, v0, v1, v2) {
     if (!this._checkUniformValid(location, v0, 'uniform3i', 3, 'i')) return
-    super.uniform3i(location._ | 0, v0, v1, v2)
+    super.uniform3i(location._ | 0, v0 | 0, v1 | 0, v2 | 0)
   }
 
   uniform3iv (location, value) {
@@ -2826,7 +2828,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform4f (location, v0, v1, v2, v3) {
     if (!this._checkUniformValid(location, v0, 'uniform4f', 4, 'f')) return
-    super.uniform4f(location._ | 0, v0, v1, v2, v3)
+    super.uniform4f(location._ | 0, +v0, +v1, +v2, +v3)
   }
 
   uniform4fv (location, value) {
@@ -2850,7 +2852,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform4i (location, v0, v1, v2, v3) {
     if (!this._checkUniformValid(location, v0, 'uniform4i', 4, 'i')) return
-    super.uniform4i(location._ | 0, v0, v1, v2, v3)
+    super.uniform4i(location._ | 0, v0 | 0, v1 | 0, v2 | 0, v3 | 0)
   }
 
   uniform4iv (location, value) {
