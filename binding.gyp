@@ -54,6 +54,9 @@
               }
            ]
         }],
+        ['OS=="linux"', {
+            'ldflags': ['-Wl,-rpath,$$ORIGIN'],
+        }],
         ['OS=="linux" and target_arch=="arm64"', {
             "copies": [
               {
