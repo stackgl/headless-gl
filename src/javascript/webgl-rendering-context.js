@@ -1,17 +1,35 @@
 const HEADLESS_VERSION = require('../../package.json').version
 const { gl, NativeWebGLRenderingContext, NativeWebGL } = require('./native-gl')
-const { getANGLEInstancedArrays } = require('./extensions/angle-instanced-arrays')
-const { getOESElementIndexUint } = require('./extensions/oes-element-index-unit')
-const { getOESStandardDerivatives } = require('./extensions/oes-standard-derivatives')
+const {
+  getANGLEInstancedArrays
+} = require('./extensions/angle-instanced-arrays')
+const {
+  getOESElementIndexUint
+} = require('./extensions/oes-element-index-unit')
+const {
+  getOESStandardDerivatives
+} = require('./extensions/oes-standard-derivatives')
 const { getOESTextureFloat } = require('./extensions/oes-texture-float')
-const { getOESTextureFloatLinear } = require('./extensions/oes-texture-float-linear')
-const { getSTACKGLDestroyContext } = require('./extensions/stackgl-destroy-context')
-const { getSTACKGLResizeDrawingBuffer } = require('./extensions/stackgl-resize-drawing-buffer')
+const {
+  getOESTextureFloatLinear
+} = require('./extensions/oes-texture-float-linear')
+const {
+  getSTACKGLDestroyContext
+} = require('./extensions/stackgl-destroy-context')
+const {
+  getSTACKGLResizeDrawingBuffer
+} = require('./extensions/stackgl-resize-drawing-buffer')
 const { getWebGLDrawBuffers } = require('./extensions/webgl-draw-buffers')
 const { getEXTBlendMinMax } = require('./extensions/ext-blend-minmax')
-const { getEXTTextureFilterAnisotropic } = require('./extensions/ext-texture-filter-anisotropic')
-const { getEXTShaderTextureLod } = require('./extensions/ext-shader-texture-lod')
-const { getOESVertexArrayObject } = require('./extensions/oes-vertex-array-object')
+const {
+  getEXTTextureFilterAnisotropic
+} = require('./extensions/ext-texture-filter-anisotropic')
+const {
+  getEXTShaderTextureLod
+} = require('./extensions/ext-shader-texture-lod')
+const {
+  getOESVertexArrayObject
+} = require('./extensions/oes-vertex-array-object')
 const {
   bindPublics,
   checkObject,
@@ -33,11 +51,15 @@ const { WebGLDrawingBufferWrapper } = require('./webgl-drawing-buffer-wrapper')
 const { WebGLProgram } = require('./webgl-program')
 const { WebGLRenderbuffer } = require('./webgl-renderbuffer')
 const { WebGLShader } = require('./webgl-shader')
-const { WebGLShaderPrecisionFormat } = require('./webgl-shader-precision-format')
+const {
+  WebGLShaderPrecisionFormat
+} = require('./webgl-shader-precision-format')
 const { WebGLTexture } = require('./webgl-texture')
 const { WebGLUniformLocation } = require('./webgl-uniform-location')
 const { WebGLVertexArrayObject } = require('./webgl-vertex-array-object')
-const { getEXTColorBufferFloat } = require('./extensions/ext-color-buffer-float')
+const {
+  getEXTColorBufferFloat
+} = require('./extensions/ext-color-buffer-float')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -68,33 +90,66 @@ const availableExtensions = {
   ext_color_buffer_float: getEXTColorBufferFloat
 }
 
-const privateMethods = [
-  'constructor',
-  'resize',
-  'destroy'
-]
+const privateMethods = ['constructor', 'resize', 'destroy']
 
 function wrapContext (ctx) {
   const isWebGL2 = ctx.constructor.name === 'WebGL2RenderingContext'
-  const wrapper = isWebGL2 ? new WebGL2RenderingContext() : new WebGLRenderingContext()
+  const wrapper = isWebGL2
+    ? new WebGL2RenderingContext()
+    : new WebGLRenderingContext()
 
   let proto = ctx
   while (proto && proto !== Object.prototype) {
     bindPublics(Object.keys(proto), wrapper, ctx, privateMethods)
-    bindPublics(Object.keys(proto.constructor.prototype), wrapper, ctx, privateMethods)
-    bindPublics(Object.getOwnPropertyNames(proto), wrapper, ctx, privateMethods)
-    bindPublics(Object.getOwnPropertyNames(proto.constructor.prototype), wrapper, ctx, privateMethods)
+    bindPublics(
+      Object.keys(proto.constructor.prototype),
+      wrapper,
+      ctx,
+      privateMethods
+    )
+    bindPublics(
+      Object.getOwnPropertyNames(proto),
+      wrapper,
+      ctx,
+      privateMethods
+    )
+    bindPublics(
+      Object.getOwnPropertyNames(proto.constructor.prototype),
+      wrapper,
+      ctx,
+      privateMethods
+    )
     proto = Object.getPrototypeOf(proto)
   }
 
   Object.defineProperties(wrapper, {
     drawingBufferWidth: {
-      get () { return ctx.drawingBufferWidth },
-      set (value) { ctx.drawingBufferWidth = value }
+      get () {
+        return ctx.drawingBufferWidth
+      },
+      set (value) {
+        ctx.drawingBufferWidth = value
+      }
     },
     drawingBufferHeight: {
-      get () { return ctx.drawingBufferHeight },
-      set (value) { ctx.drawingBufferHeight = value }
+      get () {
+        return ctx.drawingBufferHeight
+      },
+      set (value) {
+        ctx.drawingBufferHeight = value
+      }
+    },
+    destroy: {
+      value: ctx.destroy.bind(ctx),
+      writable: true,
+      configurable: true,
+      enumerable: false
+    },
+    resize: {
+      value: ctx.resize.bind(ctx),
+      writable: true,
+      configurable: true,
+      enumerable: false
     }
   })
 
@@ -107,8 +162,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!(location instanceof WebGLUniformLocation)) {
       this.setError(this.INVALID_VALUE)
       return false
-    } else if (location._program._ctx !== this ||
-      location._linkCount !== location._program._linkCount) {
+    } else if (
+      location._program._ctx !== this ||
+      location._linkCount !== location._program._linkCount
+    ) {
       this.setError(this.INVALID_OPERATION)
       return false
     }
@@ -128,8 +185,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   _checkOwns (object) {
-    return typeof object === 'object' &&
-      object._ctx === this
+    return typeof object === 'object' && object._ctx === this
   }
 
   _checkShaderSource (shader) {
@@ -188,7 +244,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     // Record attribute attributeLocations
-    const numAttribs = this.getProgramParameter(program, this.ACTIVE_ATTRIBUTES)
+    const numAttribs = this.getProgramParameter(
+      program,
+      this.ACTIVE_ATTRIBUTES
+    )
     const names = new Array(numAttribs)
     program._attributes.length = numAttribs
     for (let i = 0; i < numAttribs; ++i) {
@@ -205,10 +264,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     for (let i = 0; i < numAttribs; ++i) {
-      super.bindAttribLocation(
-        program._ | 0,
-        program._attributes[i],
-        names[i])
+      super.bindAttribLocation(program._ | 0, program._attributes[i], names[i])
     }
 
     super.linkProgram(program._ | 0)
@@ -222,7 +278,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     // Check attribute and uniform name lengths
     for (let i = 0; i < program._uniforms.length; ++i) {
       if (program._uniforms[i].name.length > MAX_UNIFORM_LENGTH) {
-        program._linkInfoLog = 'uniform ' + program._uniforms[i].name + ' is too long'
+        program._linkInfoLog =
+          'uniform ' + program._uniforms[i].name + ' is too long'
         return false
       }
     }
@@ -271,11 +328,15 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   _getAttachments () {
-    return this._extensions.webgl_draw_buffers ? this._extensions.webgl_draw_buffers._ALL_ATTACHMENTS : DEFAULT_ATTACHMENTS
+    return this._extensions.webgl_draw_buffers
+      ? this._extensions.webgl_draw_buffers._ALL_ATTACHMENTS
+      : DEFAULT_ATTACHMENTS
   }
 
   _getColorAttachments () {
-    return this._extensions.webgl_draw_buffers ? this._extensions.webgl_draw_buffers._ALL_COLOR_ATTACHMENTS : DEFAULT_COLOR_ATTACHMENTS
+    return this._extensions.webgl_draw_buffers
+      ? this._extensions.webgl_draw_buffers._ALL_COLOR_ATTACHMENTS
+      : DEFAULT_COLOR_ATTACHMENTS
   }
 
   _getParameterDirect (pname) {
@@ -295,21 +356,21 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   _isConstantColorBlendFunc (factor) {
     return (
-      factor === this.CONSTANT_COLOR ||
-      factor === this.ONE_MINUS_CONSTANT_COLOR
+      factor === this.CONSTANT_COLOR || factor === this.ONE_MINUS_CONSTANT_COLOR
     )
   }
 
   _isConstantAlphaBlendFunc (factor) {
     return (
-      factor === this.CONSTANT_ALPHA ||
-      factor === this.ONE_MINUS_CONSTANT_ALPHA
+      factor === this.CONSTANT_ALPHA || factor === this.ONE_MINUS_CONSTANT_ALPHA
     )
   }
 
   _isObject (object, method, Wrapper) {
-    if (!(object === null || object === undefined) &&
-      !(object instanceof Wrapper)) {
+    if (
+      !(object === null || object === undefined) &&
+      !(object instanceof Wrapper)
+    ) {
       throw new TypeError(method + '(' + Wrapper.name + ')')
     }
     if (this._checkValid(object, Wrapper) && this._checkOwns(object)) {
@@ -335,7 +396,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         attachments[i],
         this.TEXTURE_2D,
         0,
-        0)
+        0
+      )
     }
 
     // Update color attachment
@@ -350,7 +412,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       0,
       colorFormat,
       this.UNSIGNED_BYTE,
-      null)
+      null
+    )
     super.texParameteri(this.TEXTURE_2D, this.TEXTURE_MIN_FILTER, this.NEAREST)
     super.texParameteri(this.TEXTURE_2D, this.TEXTURE_MAG_FILTER, this.NEAREST)
     super.framebufferTexture2D(
@@ -358,7 +421,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       this.COLOR_ATTACHMENT0,
       this.TEXTURE_2D,
       drawingBuffer._color,
-      0)
+      0
+    )
 
     // Update depth-stencil attachments if needed
     let storage = 0
@@ -367,7 +431,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       storage = this.DEPTH_STENCIL
       attachment = this.DEPTH_STENCIL_ATTACHMENT
     } else if (contextAttributes.depth) {
-      storage = 0x81A7
+      storage = 0x81a7
       attachment = this.DEPTH_ATTACHMENT
     } else if (contextAttributes.stencil) {
       storage = this.STENCIL_INDEX8
@@ -375,19 +439,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     if (storage) {
-      super.bindRenderbuffer(
-        this.RENDERBUFFER,
-        drawingBuffer._depthStencil)
-      super.renderbufferStorage(
-        this.RENDERBUFFER,
-        storage,
-        width,
-        height)
+      super.bindRenderbuffer(this.RENDERBUFFER, drawingBuffer._depthStencil)
+      super.renderbufferStorage(this.RENDERBUFFER, storage, width, height)
       super.framebufferRenderbuffer(
         this.FRAMEBUFFER,
         attachment,
         this.RENDERBUFFER,
-        drawingBuffer._depthStencil)
+        drawingBuffer._depthStencil
+      )
     }
 
     // Restore previous binding state
@@ -417,7 +476,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   _validBlendFunc (factor) {
-    return factor === this.ZERO ||
+    return (
+      factor === this.ZERO ||
       factor === this.ONE ||
       factor === this.SRC_COLOR ||
       factor === this.ONE_MINUS_SRC_COLOR ||
@@ -432,24 +492,29 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       factor === this.ONE_MINUS_CONSTANT_COLOR ||
       factor === this.CONSTANT_ALPHA ||
       factor === this.ONE_MINUS_CONSTANT_ALPHA
+    )
   }
 
   _validBlendMode (mode) {
-    return mode === this.FUNC_ADD ||
+    return (
+      mode === this.FUNC_ADD ||
       mode === this.FUNC_SUBTRACT ||
       mode === this.FUNC_REVERSE_SUBTRACT ||
-      (this._extensions.ext_blend_minmax && (
-        mode === this._extensions.ext_blend_minmax.MIN_EXT ||
-        mode === this._extensions.ext_blend_minmax.MAX_EXT))
+      (this._extensions.ext_blend_minmax &&
+        (mode === this._extensions.ext_blend_minmax.MIN_EXT ||
+          mode === this._extensions.ext_blend_minmax.MAX_EXT))
+    )
   }
 
   _validCubeTarget (target) {
-    return target === this.TEXTURE_CUBE_MAP_POSITIVE_X ||
+    return (
+      target === this.TEXTURE_CUBE_MAP_POSITIVE_X ||
       target === this.TEXTURE_CUBE_MAP_NEGATIVE_X ||
       target === this.TEXTURE_CUBE_MAP_POSITIVE_Y ||
       target === this.TEXTURE_CUBE_MAP_NEGATIVE_Y ||
       target === this.TEXTURE_CUBE_MAP_POSITIVE_Z ||
       target === this.TEXTURE_CUBE_MAP_NEGATIVE_Z
+    )
   }
 
   _validFramebufferAttachment (attachment) {
@@ -461,23 +526,29 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         return true
     }
 
-    if (this._extensions.webgl_draw_buffers) { // eslint-disable-line
-      const { webgl_draw_buffers } = this._extensions; // eslint-disable-line
-      return attachment < (webgl_draw_buffers.COLOR_ATTACHMENT0_WEBGL + webgl_draw_buffers._maxDrawBuffers) // eslint-disable-line
+    if (this._extensions.webgl_draw_buffers) {
+      // eslint-disable-line
+      const webglDrawBuffers = this._extensions.webgl_draw_buffers // eslint-disable-line
+      return (
+        attachment <
+        webglDrawBuffers.COLOR_ATTACHMENT0_WEBGL +
+          webglDrawBuffers._maxDrawBuffers
+      ) // eslint-disable-line
     }
 
     return false
   }
 
   _validGLSLIdentifier (str) {
-    return !(str.indexOf('webgl_') === 0 ||
+    return !(
+      str.indexOf('webgl_') === 0 ||
       str.indexOf('_webgl_') === 0 ||
-      str.length > 256)
+      str.length > 256
+    )
   }
 
   _validTextureTarget (target) {
-    return target === this.TEXTURE_2D ||
-      target === this.TEXTURE_CUBE_MAP
+    return target === this.TEXTURE_2D || target === this.TEXTURE_CUBE_MAP
   }
 
   _verifyTextureCompleteness (target, pname, param) {
@@ -490,7 +561,18 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     // oes_texture_float but not oes_texture_float_linear
-    if (this._extensions.oes_texture_float && !this._extensions.oes_texture_float_linear && texture && texture._type === this.FLOAT && (pname === this.TEXTURE_MAG_FILTER || pname === this.TEXTURE_MIN_FILTER) && (param === this.LINEAR || param === this.LINEAR_MIPMAP_NEAREST || param === this.NEAREST_MIPMAP_LINEAR || param === this.LINEAR_MIPMAP_LINEAR)) {
+    if (
+      this._extensions.oes_texture_float &&
+      !this._extensions.oes_texture_float_linear &&
+      texture &&
+      texture._type === this.FLOAT &&
+      (pname === this.TEXTURE_MAG_FILTER ||
+        pname === this.TEXTURE_MIN_FILTER) &&
+      (param === this.LINEAR ||
+        param === this.LINEAR_MIPMAP_NEAREST ||
+        param === this.NEAREST_MIPMAP_LINEAR ||
+        param === this.LINEAR_MIPMAP_LINEAR)
+    ) {
       texture._complete = false
       this.bindTexture(target, texture)
       return
@@ -518,22 +600,21 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   attachShader (program, shader) {
-    if (!checkObject(program) ||
-      !checkObject(shader)) {
+    if (!checkObject(program) || !checkObject(shader)) {
       throw new TypeError('attachShader(WebGLProgram, WebGLShader)')
     }
     if (!program || !shader) {
       this.setError(this.INVALID_VALUE)
       return
-    } else if (program instanceof WebGLProgram &&
+    } else if (
+      program instanceof WebGLProgram &&
       shader instanceof WebGLShader &&
       this._checkOwns(program) &&
-      this._checkOwns(shader)) {
+      this._checkOwns(shader)
+    ) {
       if (!program._linked(shader)) {
         this._saveError()
-        super.attachShader(
-          program._ | 0,
-          shader._ | 0)
+        super.attachShader(program._ | 0, shader._ | 0)
         const error = this.getError()
         this._restoreError(error)
         if (error === this.NO_ERROR) {
@@ -546,8 +627,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   bindAttribLocation (program, index, name) {
-    if (!checkObject(program) ||
-      typeof name !== 'string') {
+    if (!checkObject(program) || typeof name !== 'string') {
       throw new TypeError('bindAttribLocation(WebGLProgram, GLint, String)')
     }
     name += ''
@@ -556,10 +636,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     } else if (/^_?webgl_a/.test(name)) {
       this.setError(this.INVALID_OPERATION)
     } else if (this._checkWrapper(program, WebGLProgram)) {
-      return super.bindAttribLocation(
-        program._ | 0,
-        index | 0,
-        name)
+      return super.bindAttribLocation(program._ | 0, index | 0, name)
     }
   }
 
@@ -570,18 +647,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     let error = 0
     if (!framebuffer) {
       this._saveError()
-      super.bindFramebuffer(
-        target,
-        this._drawingBuffer._framebuffer)
+      super.bindFramebuffer(target, this._drawingBuffer._framebuffer)
       error = super.getError()
       this._restoreError(error)
     } else if (framebuffer._pendingDelete) {
       return
     } else if (this._checkWrapper(framebuffer, WebGLFramebuffer)) {
       this._saveError()
-      super.bindFramebuffer(
-        target,
-        framebuffer._ | 0)
+      super.bindFramebuffer(target, framebuffer._ | 0)
       error = super.getError()
       this._restoreError(error)
     } else {
@@ -603,8 +676,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!checkObject(buffer)) {
       throw new TypeError('bindBuffer(GLenum, WebGLBuffer)')
     }
-    if (target !== this.ARRAY_BUFFER &&
-      target !== this.ELEMENT_ARRAY_BUFFER) {
+    if (target !== this.ARRAY_BUFFER && target !== this.ELEMENT_ARRAY_BUFFER) {
       this.setError(this.INVALID_ENUM)
       return
     }
@@ -646,15 +718,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     if (!object) {
-      super.bindRenderbuffer(
-        target | 0,
-        0)
+      super.bindRenderbuffer(target | 0, 0)
     } else if (object._pendingDelete) {
       return
     } else if (this._checkWrapper(object, WebGLRenderbuffer)) {
-      super.bindRenderbuffer(
-        target | 0,
-        object._ | 0)
+      super.bindRenderbuffer(target | 0, object._ | 0)
     } else {
       return
     }
@@ -682,8 +750,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     let textureId = 0
     if (!texture) {
       texture = null
-    } else if (texture instanceof WebGLTexture &&
-      texture._pendingDelete) {
+    } else if (texture instanceof WebGLTexture && texture._pendingDelete) {
       // Special case: error codes for deleted textures don't get set for some dumb reason
       return
     } else if (this._checkWrapper(texture, WebGLTexture)) {
@@ -694,9 +761,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     this._saveError()
-    super.bindTexture(
-      target,
-      textureId)
+    super.bindTexture(target, textureId)
     const error = this.getError()
     this._restoreError(error)
 
@@ -737,8 +802,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!array) {
       array = null
       super.bindVertexArray(null)
-    } else if (array instanceof WebGLVertexArrayObject &&
-      array._pendingDelete) {
+    } else if (
+      array instanceof WebGLVertexArrayObject &&
+      array._pendingDelete
+    ) {
       this.setError(gl.INVALID_OPERATION)
       return
     } else if (this._checkWrapper(array, WebGLVertexArrayObject)) {
@@ -869,62 +936,66 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   blendFunc (sfactor, dfactor) {
     sfactor |= 0
     dfactor |= 0
-    if (!this._validBlendFunc(sfactor) ||
-      !this._validBlendFunc(dfactor)) {
+    if (!this._validBlendFunc(sfactor) || !this._validBlendFunc(dfactor)) {
       this.setError(this.INVALID_ENUM)
       return
     }
-    if ((this._isConstantColorBlendFunc(sfactor) && this._isConstantAlphaBlendFunc(dfactor)) ||
-      (this._isConstantColorBlendFunc(dfactor) && this._isConstantAlphaBlendFunc(sfactor))) {
+    if (
+      (this._isConstantColorBlendFunc(sfactor) &&
+        this._isConstantAlphaBlendFunc(dfactor)) ||
+      (this._isConstantColorBlendFunc(dfactor) &&
+        this._isConstantAlphaBlendFunc(sfactor))
+    ) {
       this.setError(this.INVALID_OPERATION)
       return
     }
     super.blendFunc(sfactor, dfactor)
   }
 
-  blendFuncSeparate (
-    srcRGB,
-    dstRGB,
-    srcAlpha,
-    dstAlpha) {
+  blendFuncSeparate (srcRGB, dstRGB, srcAlpha, dstAlpha) {
     srcRGB |= 0
     dstRGB |= 0
     srcAlpha |= 0
     dstAlpha |= 0
 
-    if (!(this._validBlendFunc(srcRGB) &&
-      this._validBlendFunc(dstRGB) &&
-      this._validBlendFunc(srcAlpha) &&
-      this._validBlendFunc(dstAlpha))) {
+    if (
+      !(
+        this._validBlendFunc(srcRGB) &&
+        this._validBlendFunc(dstRGB) &&
+        this._validBlendFunc(srcAlpha) &&
+        this._validBlendFunc(dstAlpha)
+      )
+    ) {
       this.setError(this.INVALID_ENUM)
       return
     }
 
-    if ((this._isConstantColorBlendFunc(srcRGB) && this._isConstantAlphaBlendFunc(dstRGB)) ||
-      (this._isConstantColorBlendFunc(dstRGB) && this._isConstantAlphaBlendFunc(srcRGB))) {
+    if (
+      (this._isConstantColorBlendFunc(srcRGB) &&
+        this._isConstantAlphaBlendFunc(dstRGB)) ||
+      (this._isConstantColorBlendFunc(dstRGB) &&
+        this._isConstantAlphaBlendFunc(srcRGB))
+    ) {
       this.setError(this.INVALID_OPERATION)
       return
     }
 
-    super.blendFuncSeparate(
-      srcRGB,
-      dstRGB,
-      srcAlpha,
-      dstAlpha)
+    super.blendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha)
   }
 
   bufferData (target, data, usage) {
     target |= 0
     usage |= 0
-    if (usage !== this.STREAM_DRAW &&
+    if (
+      usage !== this.STREAM_DRAW &&
       usage !== this.STATIC_DRAW &&
-      usage !== this.DYNAMIC_DRAW) {
+      usage !== this.DYNAMIC_DRAW
+    ) {
       this.setError(this.INVALID_ENUM)
       return
     }
 
-    if (target !== this.ARRAY_BUFFER &&
-      target !== this.ELEMENT_ARRAY_BUFFER) {
+    if (target !== this.ARRAY_BUFFER && target !== this.ELEMENT_ARRAY_BUFFER) {
       this.setError(this.INVALID_ENUM)
       return
     }
@@ -947,10 +1018,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       }
 
       this._saveError()
-      super.bufferData(
-        target,
-        u8Data,
-        usage)
+      super.bufferData(target, u8Data, usage)
       const error = this.getError()
       this._restoreError(error)
       if (error !== this.NO_ERROR) {
@@ -969,10 +1037,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       }
 
       this._saveError()
-      super.bufferData(
-        target,
-        size,
-        usage)
+      super.bufferData(target, size, usage)
       const error = this.getError()
       this._restoreError(error)
       if (error !== this.NO_ERROR) {
@@ -992,8 +1057,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     target |= 0
     offset |= 0
 
-    if (target !== this.ARRAY_BUFFER &&
-      target !== this.ELEMENT_ARRAY_BUFFER) {
+    if (target !== this.ARRAY_BUFFER && target !== this.ELEMENT_ARRAY_BUFFER) {
       this.setError(this.INVALID_ENUM)
       return
     }
@@ -1037,10 +1101,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       active._elements.set(u8Data, offset)
     }
 
-    super.bufferSubData(
-      target,
-      offset,
-      u8Data)
+    super.bufferSubData(target, offset, u8Data)
   }
 
   checkFramebufferStatus (target) {
@@ -1075,26 +1136,24 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!checkObject(shader)) {
       throw new TypeError('compileShader(WebGLShader)')
     }
-    if (this._checkWrapper(shader, WebGLShader) &&
-      this._checkShaderSource(shader)) {
+    if (
+      this._checkWrapper(shader, WebGLShader) &&
+      this._checkShaderSource(shader)
+    ) {
       const prevError = this.getError()
       super.compileShader(shader._ | 0)
       const error = this.getError()
       shader._compileStatus = !!super.getShaderParameter(
         shader._ | 0,
-        this.COMPILE_STATUS)
+        this.COMPILE_STATUS
+      )
       shader._compileInfo = super.getShaderInfoLog(shader._ | 0)
       this.getError()
       this.setError(prevError || error)
     }
   }
 
-  copyTexImage2D (
-    target,
-    level,
-    internalFormat,
-    x, y, width, height,
-    border) {
+  copyTexImage2D (target, level, internalFormat, x, y, width, height, border) {
     target |= 0
     level |= 0
     internalFormat |= 0
@@ -1113,7 +1172,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       y,
       width,
       height,
-      border)
+      border
+    )
     const error = this.getError()
     this._restoreError(error)
 
@@ -1124,11 +1184,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
-  copyTexSubImage2D (
-    target,
-    level,
-    xoffset, yoffset,
-    x, y, width, height) {
+  copyTexSubImage2D (target, level, xoffset, yoffset, x, y, width, height) {
     target |= 0
     level |= 0
     xoffset |= 0
@@ -1146,7 +1202,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       x,
       y,
       width,
-      height)
+      height
+    )
   }
 
   cullFace (mode) {
@@ -1155,8 +1212,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   createShader (type) {
     type |= 0
-    if (type !== this.FRAGMENT_SHADER &&
-      type !== this.VERTEX_SHADER) {
+    if (type !== this.FRAGMENT_SHADER && type !== this.VERTEX_SHADER) {
       this.setError(this.INVALID_ENUM)
       return null
     }
@@ -1181,8 +1237,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!checkObject(object)) {
       throw new TypeError(name + '(' + Type.name + ')')
     }
-    if (object instanceof Type &&
-      this._checkOwns(object)) {
+    if (object instanceof Type && this._checkOwns(object)) {
       object._pendingDelete = true
       object._checkDelete()
       return
@@ -1193,13 +1248,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   deleteBuffer (buffer) {
-    if (!checkObject(buffer) ||
-      (buffer !== null && !(buffer instanceof WebGLBuffer))) {
+    if (
+      !checkObject(buffer) ||
+      (buffer !== null && !(buffer instanceof WebGLBuffer))
+    ) {
       throw new TypeError('deleteBuffer(WebGLBuffer)')
     }
 
-    if (!(buffer instanceof WebGLBuffer &&
-      this._checkOwns(buffer))) {
+    if (!(buffer instanceof WebGLBuffer && this._checkOwns(buffer))) {
       this.setError(this.INVALID_OPERATION)
       return
     }
@@ -1226,13 +1282,17 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('deleteFramebuffer(WebGLFramebuffer)')
     }
 
-    if (!(framebuffer instanceof WebGLFramebuffer &&
-      this._checkOwns(framebuffer))) {
+    if (
+      !(framebuffer instanceof WebGLFramebuffer && this._checkOwns(framebuffer))
+    ) {
       this.setError(this.INVALID_OPERATION)
       return
     }
 
-    if (this._activeFramebuffers.draw === framebuffer && this._activeFramebuffers.read === framebuffer) {
+    if (
+      this._activeFramebuffers.draw === framebuffer &&
+      this._activeFramebuffers.read === framebuffer
+    ) {
       this.bindFramebuffer(this.FRAMEBUFFER, null)
     } else if (this._isWebGL2()) {
       if (this._activeFramebuffers.read === framebuffer) {
@@ -1262,8 +1322,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('deleteRenderbuffer(WebGLRenderbuffer)')
     }
 
-    if (!(renderbuffer instanceof WebGLRenderbuffer &&
-      this._checkOwns(renderbuffer))) {
+    if (
+      !(
+        renderbuffer instanceof WebGLRenderbuffer &&
+        this._checkOwns(renderbuffer)
+      )
+    ) {
       this.setError(this.INVALID_OPERATION)
       return
     }
@@ -1321,8 +1385,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('deleteVertexArray(WebGLVertexArrayObject)')
     }
 
-    if (!(array instanceof WebGLVertexArrayObject &&
-      this._checkOwns(array))) {
+    if (!(array instanceof WebGLVertexArrayObject && this._checkOwns(array))) {
       this.setError(gl.INVALID_OPERATION)
       return
     }
@@ -1374,12 +1437,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   detachShader (program, shader) {
-    if (!checkObject(program) ||
-      !checkObject(shader)) {
+    if (!checkObject(program) || !checkObject(shader)) {
       throw new TypeError('detachShader(WebGLProgram, WebGLShader)')
     }
-    if (this._checkWrapper(program, WebGLProgram) &&
-      this._checkWrapper(shader, WebGLShader)) {
+    if (
+      this._checkWrapper(program, WebGLProgram) &&
+      this._checkWrapper(shader, WebGLShader)
+    ) {
       if (program._linked(shader)) {
         super.detachShader(program._, shader._)
         program._unlink(shader)
@@ -1392,8 +1456,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   disable (cap) {
     cap |= 0
     super.disable(cap)
-    if (cap === this.TEXTURE_2D ||
-      cap === this.TEXTURE_CUBE_MAP) {
+    if (cap === this.TEXTURE_2D || cap === this.TEXTURE_CUBE_MAP) {
       const active = this._getActiveTextureUnit()
       if (active._mode === cap) {
         active._mode = 0
@@ -1457,13 +1520,16 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     target,
     attachment,
     renderbufferTarget,
-    renderbuffer) {
+    renderbuffer
+  ) {
     target = target | 0
     attachment = attachment | 0
     renderbufferTarget = renderbufferTarget | 0
 
     if (!checkObject(renderbuffer)) {
-      throw new TypeError('framebufferRenderbuffer(GLenum, GLenum, GLenum, WebGLRenderbuffer)')
+      throw new TypeError(
+        'framebufferRenderbuffer(GLenum, GLenum, GLenum, WebGLRenderbuffer)'
+      )
     }
 
     // Since we emulate the default framebuffer, we can't rely on ANGLE's validation.
@@ -1476,21 +1542,23 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    super.framebufferRenderbuffer(target, attachment, renderbufferTarget, renderbuffer?._ ?? null)
+    super.framebufferRenderbuffer(
+      target,
+      attachment,
+      renderbufferTarget,
+      renderbuffer?._ ?? 0
+    )
   }
 
-  framebufferTexture2D (
-    target,
-    attachment,
-    textarget,
-    texture,
-    level) {
+  framebufferTexture2D (target, attachment, textarget, texture, level) {
     target |= 0
     attachment |= 0
     textarget |= 0
     level |= 0
     if (!checkObject(texture)) {
-      throw new TypeError('framebufferTexture2D(GLenum, GLenum, GLenum, WebGLTexture, GLint)')
+      throw new TypeError(
+        'framebufferTexture2D(GLenum, GLenum, GLenum, WebGLTexture, GLint)'
+      )
     }
 
     // Check object ownership
@@ -1504,7 +1572,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    super.framebufferTexture2D(target, attachment, textarget, texture?._ ?? null, level)
+    super.framebufferTexture2D(
+      target,
+      attachment,
+      textarget,
+      texture?._ ?? 0,
+      level
+    )
   }
 
   framebufferTextureLayer (target, attachment, texture, level, layer) {
@@ -1513,7 +1587,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     level |= 0
     layer |= 0
     if (!checkObject(texture)) {
-      throw new TypeError('framebufferTextureLayer(GLenum, GLenum, WebGLTexture, GLint, GLint)')
+      throw new TypeError(
+        'framebufferTextureLayer(GLenum, GLenum, WebGLTexture, GLint, GLint)'
+      )
     }
 
     // Check object ownership
@@ -1527,7 +1603,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    super.framebufferTextureLayer(target, attachment, texture?._ ?? null, level, layer)
+    super.framebufferTextureLayer(
+      target,
+      attachment,
+      texture?._ ?? 0,
+      level,
+      layer
+    )
   }
 
   frontFace (mode) {
@@ -1567,10 +1649,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   getAttachedShaders (program) {
-    if (!checkObject(program) ||
+    if (
+      !checkObject(program) ||
       (typeof program === 'object' &&
         program !== null &&
-        !(program instanceof WebGLProgram))) {
+        !(program instanceof WebGLProgram))
+    ) {
       throw new TypeError('getAttachedShaders(WebGLProgram)')
     }
     if (!program) {
@@ -1603,6 +1687,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   getParameter (pname) {
+    if (typeof pname !== 'number' && isNaN(+pname)) return null
+    pname = pname | 0
     switch (pname) {
       case this.COMPRESSED_TEXTURE_FORMATS:
         return new Uint32Array(0)
@@ -1633,28 +1719,36 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
       default:
         if (this._extensions) {
-          if (this._extensions.oes_vertex_array_object && pname === this._extensions.oes_vertex_array_object.VERTEX_ARRAY_BINDING_OES) {
-            return this._extensions.oes_vertex_array_object._activeVertexArrayObject
+          if (
+            this._extensions.oes_vertex_array_object &&
+            pname ===
+              this._extensions.oes_vertex_array_object.VERTEX_ARRAY_BINDING_OES
+          ) {
+            return this._extensions.oes_vertex_array_object
+              ._activeVertexArrayObject
           }
         }
         return super.getParameter(pname)
     }
   }
 
-  getShaderPrecisionFormat (
-    shaderType,
-    precisionType) {
+  getShaderPrecisionFormat (shaderType, precisionType) {
     shaderType |= 0
     precisionType |= 0
 
-    if (!(shaderType === this.FRAGMENT_SHADER ||
-      shaderType === this.VERTEX_SHADER) ||
-      !(precisionType === this.LOW_FLOAT ||
+    if (
+      !(
+        shaderType === this.FRAGMENT_SHADER || shaderType === this.VERTEX_SHADER
+      ) ||
+      !(
+        precisionType === this.LOW_FLOAT ||
         precisionType === this.MEDIUM_FLOAT ||
         precisionType === this.HIGH_FLOAT ||
         precisionType === this.LOW_INT ||
         precisionType === this.MEDIUM_INT ||
-        precisionType === this.HIGH_INT)) {
+        precisionType === this.HIGH_INT
+      )
+    ) {
       this.setError(this.INVALID_ENUM)
       return
     }
@@ -1670,8 +1764,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   getBufferParameter (target, pname) {
     target |= 0
     pname |= 0
-    if (target !== this.ARRAY_BUFFER &&
-      target !== this.ELEMENT_ARRAY_BUFFER) {
+    if (target !== this.ARRAY_BUFFER && target !== this.ELEMENT_ARRAY_BUFFER) {
       this.setError(this.INVALID_ENUM)
       return null
     }
@@ -1702,7 +1795,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     this._saveError()
-    const result = super.getFramebufferAttachmentParameter(target, attachment, pname)
+    const result = super.getFramebufferAttachmentParameter(
+      target,
+      attachment,
+      pname
+    )
     const error = super.getError()
     this._restoreError(error)
 
@@ -1710,8 +1807,15 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return null
     }
 
-    if (error === this.NO_ERROR && pname === this.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME) {
-      const type = super.getFramebufferAttachmentParameter(target, attachment, this.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)
+    if (
+      error === this.NO_ERROR &&
+      pname === this.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME
+    ) {
+      const type = super.getFramebufferAttachmentParameter(
+        target,
+        attachment,
+        this.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE
+      )
       if (type === this.RENDERBUFFER) {
         return this._renderbuffers[result]
       } else {
@@ -1833,8 +1937,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     const unit = this._getActiveTextureUnit()
-    if ((target === this.TEXTURE_2D && !unit._bind2D) ||
-      (target === this.TEXTURE_CUBE_MAP && !unit._bindCube)) {
+    if (
+      (target === this.TEXTURE_2D && !unit._bind2D) ||
+      (target === this.TEXTURE_CUBE_MAP && !unit._bindCube)
+    ) {
       this.setError(this.INVALID_OPERATION)
       return null
     }
@@ -1847,7 +1953,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         return super.getTexParameter(target, pname)
     }
 
-    if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
+    if (
+      this._extensions.ext_texture_filter_anisotropic &&
+      pname ===
+        this._extensions.ext_texture_filter_anisotropic
+          .TEXTURE_MAX_ANISOTROPY_EXT
+    ) {
       return super.getTexParameter(target, pname)
     }
 
@@ -1856,8 +1967,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   getUniform (program, location) {
-    if (!checkObject(program) ||
-      !checkObject(location)) {
+    if (!checkObject(program) || !checkObject(location)) {
       throw new TypeError('getUniform(WebGLProgram, WebGLUniformLocation)')
     } else if (!program) {
       this.setError(this.INVALID_VALUE)
@@ -1948,10 +2058,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
           return null
         }
 
-        const result = new WebGLUniformLocation(
-          loc,
-          program,
-          info)
+        const result = new WebGLUniformLocation(loc, program, info)
 
         // handle array case
         if (/\[0\]$/.test(name)) {
@@ -1966,7 +2073,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
           for (let i = 0; this.getError() === this.NO_ERROR; ++i) {
             const xloc = super.getUniformLocation(
               program._ | 0,
-              baseName + '[' + i + ']')
+              baseName + '[' + i + ']'
+            )
             if (this.getError() !== this.NO_ERROR || xloc < 0) {
               break
             }
@@ -1976,7 +2084,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
           result._array = arrayLocs
         } else if (/\[(\d+)\]$/.test(name)) {
-          const offset = +(/\[(\d+)\]$/.exec(name))[1]
+          const offset = +/\[(\d+)\]$/.exec(name)[1]
           if (offset < 0 || offset >= info.size) {
             return null
           }
@@ -2036,19 +2144,24 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     target |= 0
     mode |= 0
 
-    if (!(
-      target === this.GENERATE_MIPMAP_HINT ||
-      (
-        this._extensions.oes_standard_derivatives && target === this._extensions.oes_standard_derivatives.FRAGMENT_SHADER_DERIVATIVE_HINT_OES
+    if (
+      !(
+        target === this.GENERATE_MIPMAP_HINT ||
+        (this._extensions.oes_standard_derivatives &&
+          target ===
+            this._extensions.oes_standard_derivatives
+              .FRAGMENT_SHADER_DERIVATIVE_HINT_OES)
       )
-    )) {
+    ) {
       this.setError(this.INVALID_ENUM)
       return
     }
 
-    if (mode !== this.FASTEST &&
+    if (
+      mode !== this.FASTEST &&
       mode !== this.NICEST &&
-      mode !== this.DONT_CARE) {
+      mode !== this.DONT_CARE
+    ) {
       this.setError(this.INVALID_ENUM)
       return
     }
@@ -2062,7 +2175,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   isFramebuffer (object) {
-    if (!this._isObject(object, 'isFramebuffer', WebGLFramebuffer)) return false
+    if (!this._isObject(object, 'isFramebuffer', WebGLFramebuffer)) { return false }
     return super.isFramebuffer(object._ | 0)
   }
 
@@ -2072,7 +2185,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   isRenderbuffer (object) {
-    if (!this._isObject(object, 'isRenderbuffer', WebGLRenderbuffer)) return false
+    if (!this._isObject(object, 'isRenderbuffer', WebGLRenderbuffer)) { return false }
     return super.isRenderbuffer(object._ | 0)
   }
 
@@ -2087,7 +2200,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   isVertexArray (object) {
-    if (!this._isObject(object, 'isVertexArray', WebGLVertexArrayObject)) return false
+    if (!this._isObject(object, 'isVertexArray', WebGLVertexArrayObject)) { return false }
     return super.isVertexArray(object._ | 0)
   }
 
@@ -2125,20 +2238,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     pname |= 0
     param |= 0
     if (pname === this.UNPACK_ALIGNMENT) {
-      if (param === 1 ||
-        param === 2 ||
-        param === 4 ||
-        param === 8) {
+      if (param === 1 || param === 2 || param === 4 || param === 8) {
         this._unpackAlignment = param
       } else {
         this.setError(this.INVALID_VALUE)
         return
       }
     } else if (pname === this.PACK_ALIGNMENT) {
-      if (param === 1 ||
-        param === 2 ||
-        param === 4 ||
-        param === 8) {
+      if (param === 1 || param === 2 || param === 4 || param === 8) {
         this._packAlignment = param
       } else {
         this.setError(this.INVALID_VALUE)
@@ -2163,21 +2270,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     width |= 0
     height |= 0
 
-    super.readPixels(
-      x,
-      y,
-      width,
-      height,
-      format,
-      type,
-      pixels)
+    super.readPixels(x, y, width, height, format, type, pixels)
   }
 
-  renderbufferStorage (
-    target,
-    internalFormat,
-    width,
-    height) {
+  renderbufferStorage (target, internalFormat, width, height) {
     target |= 0
     internalFormat |= 0
     width |= 0
@@ -2195,11 +2291,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     this._saveError()
-    super.renderbufferStorage(
-      target,
-      internalFormat,
-      width,
-      height)
+    super.renderbufferStorage(target, internalFormat, width, height)
     const error = this.getError()
     this._restoreError(error)
     if (error !== this.NO_ERROR) {
@@ -2216,8 +2308,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     height = height | 0
     if (!(width > 0 && height > 0)) {
       throw new Error('Invalid surface dimensions')
-    } else if (width !== this.drawingBufferWidth ||
-      height !== this.drawingBufferHeight) {
+    } else if (
+      width !== this.drawingBufferWidth ||
+      height !== this.drawingBufferHeight
+    ) {
       this._resizeDrawingBuffer(width, height)
       this.drawingBufferWidth = width
       this.drawingBufferHeight = height
@@ -2244,7 +2338,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!isValidString(source)) {
       this.setError(this.INVALID_VALUE)
     } else if (this._checkWrapper(shader, WebGLShader)) {
-      super.shaderSource(shader._ | 0, this._wrapShader(shader._type, source)) // eslint-disable-line
+      super.shaderSource(shader._ | 0, this._wrapShader(shader._type, source)); // eslint-disable-line
       shader._source = source
     }
   }
@@ -2288,7 +2382,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     border,
     format,
     type,
-    pixels) {
+    pixels
+  ) {
     if (arguments.length === 6) {
       pixels = border
       type = height
@@ -2297,7 +2392,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       pixels = extractImageData(pixels)
 
       if (pixels == null) {
-        throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
+        throw new TypeError(
+          'texImage2D(GLenum, GLint, GLenum, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)'
+        )
       }
 
       width = pixels.width
@@ -2315,7 +2412,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     type |= 0
 
     if (typeof pixels !== 'object' && pixels !== undefined) {
-      throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
+      throw new TypeError(
+        'texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)'
+      )
     }
 
     // Note: there's an ANGLE bug where it doesn't check for setting texImage2D on texture zero in WebGL compat.
@@ -2339,7 +2438,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       border,
       format,
       type,
-      data)
+      data
+    )
     const error = this.getError()
     this._restoreError(error)
     if (error === this.NO_ERROR) {
@@ -2358,7 +2458,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     height,
     format,
     type,
-    pixels) {
+    pixels
+  ) {
     if (arguments.length === 7) {
       pixels = format
       type = height
@@ -2367,7 +2468,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       pixels = extractImageData(pixels)
 
       if (pixels == null) {
-        throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
+        throw new TypeError(
+          'texSubImage2D(GLenum, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)'
+        )
       }
 
       width = pixels.width
@@ -2376,7 +2479,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     if (typeof pixels !== 'object') {
-      throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
+      throw new TypeError(
+        'texSubImage2D(GLenum, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)'
+      )
     }
 
     const data = convertPixels(pixels)
@@ -2390,7 +2495,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       height,
       format,
       type,
-      data)
+      data
+    )
   }
 
   texParameterf (target, pname, param) {
@@ -2408,7 +2514,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
           return super.texParameterf(target, pname, param)
       }
 
-      if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
+      if (
+        this._extensions.ext_texture_filter_anisotropic &&
+        pname ===
+          this._extensions.ext_texture_filter_anisotropic
+            .TEXTURE_MAX_ANISOTROPY_EXT
+      ) {
         return super.texParameterf(target, pname, param)
       }
 
@@ -2457,13 +2568,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
-  vertexAttribPointer (
-    index,
-    size,
-    type,
-    normalized,
-    stride,
-    offset) {
+  vertexAttribPointer (index, size, type, normalized, stride, offset) {
     if (stride < 0 || offset < 0) {
       this.setError(this.INVALID_VALUE)
       return
@@ -2476,10 +2581,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     stride |= 0
     offset |= 0
 
-    if (stride < 0 ||
+    if (
+      stride < 0 ||
       offset < 0 ||
-      index < 0 || index >= this._vertexObjectState._attribs.length ||
-      !(size === 1 || size === 2 || size === 3 || size === 4)) {
+      index < 0 ||
+      index >= this._vertexObjectState._attribs.length ||
+      !(size === 1 || size === 2 || size === 3 || size === 4)
+    ) {
       this.setError(this.INVALID_VALUE)
       return
     }
@@ -2491,9 +2599,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
     // fixed, int and unsigned int aren't allowed in WebGL
     const byteSize = typeSize(type)
-    if (byteSize === 0 ||
-      type === this.INT ||
-      type === this.UNSIGNED_INT) {
+    if (byteSize === 0 || type === this.INT || type === this.UNSIGNED_INT) {
       this.setError(this.INVALID_ENUM)
       return
     }
@@ -2504,8 +2610,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     // stride and offset must be multiples of size
-    if ((stride % byteSize) !== 0 ||
-      (offset % byteSize) !== 0) {
+    if (stride % byteSize !== 0 || offset % byteSize !== 0) {
       this.setError(this.INVALID_OPERATION)
       return
     }
@@ -2519,7 +2624,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       /* index */ index,
       /* pointerSize */ size * byteSize,
       /* pointerOffset */ offset,
-      /* pointerStride */ stride || (size * byteSize),
+      /* pointerStride */ stride || size * byteSize,
       /* pointerType */ type,
       /* pointerNormal */ normalized,
       /* inputStride */ stride,
@@ -2535,7 +2640,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     this._drawingBuffer = new WebGLDrawingBufferWrapper(
       super.createFramebuffer(),
       super.createTexture(),
-      super.createRenderbuffer())
+      super.createRenderbuffer()
+    )
 
     this._resizeDrawingBuffer(width, height)
   }
@@ -2583,14 +2689,17 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   _checkUniformValueValid (location, value, name, count, type) {
-    if (!checkObject(location) ||
-      !checkObject(value)) {
+    if (!checkObject(location) || !checkObject(value)) {
       throw new TypeError(`${name}v(WebGLUniformLocation, Array)`)
     } else if (!location) {
       return false
     } else if (!this._checkLocationActive(location)) {
       return false
-    } else if (typeof value !== 'object' || !value || typeof value.length !== 'number') {
+    } else if (
+      typeof value !== 'object' ||
+      !value ||
+      typeof value.length !== 'number'
+    ) {
       throw new TypeError(`Second argument to ${name} must be array`)
     } else if (uniformTypeSize(location._activeInfo.type) > count) {
       this.setError(this.INVALID_OPERATION)
@@ -2611,11 +2720,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform1f (location, v0) {
     if (!this._checkUniformValid(location, v0, 'uniform1f', 1, 'f')) return
-    super.uniform1f(location._ | 0, v0)
+    super.uniform1f(location._ | 0, +v0)
   }
 
   uniform1fv (location, value) {
-    if (!this._checkUniformValueValid(location, value, 'uniform1fv', 1, 'f')) return
+    if (!this._checkUniformValueValid(location, value, 'uniform1fv', 1, 'f')) { return }
     if (location._array) {
       const locs = location._array
       for (let i = 0; i < locs.length && i < value.length; ++i) {
@@ -2629,11 +2738,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform1i (location, v0) {
     if (!this._checkUniformValid(location, v0, 'uniform1i', 1, 'i')) return
-    super.uniform1i(location._ | 0, v0)
+    super.uniform1i(location._ | 0, v0 | 0)
   }
 
   uniform1iv (location, value) {
-    if (!this._checkUniformValueValid(location, value, 'uniform1iv', 1, 'i')) return
+    if (!this._checkUniformValueValid(location, value, 'uniform1iv', 1, 'i')) { return }
     if (location._array) {
       const locs = location._array
       for (let i = 0; i < locs.length && i < value.length; ++i) {
@@ -2647,16 +2756,16 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform2f (location, v0, v1) {
     if (!this._checkUniformValid(location, v0, 'uniform2f', 2, 'f')) return
-    super.uniform2f(location._ | 0, v0, v1)
+    super.uniform2f(location._ | 0, +v0, +v1)
   }
 
   uniform2fv (location, value) {
-    if (!this._checkUniformValueValid(location, value, 'uniform2fv', 2, 'f')) return
+    if (!this._checkUniformValueValid(location, value, 'uniform2fv', 2, 'f')) { return }
     if (location._array) {
       const locs = location._array
       for (let i = 0; i < locs.length && 2 * i < value.length; ++i) {
         const loc = locs[i]
-        super.uniform2f(loc, value[2 * i], value[(2 * i) + 1])
+        super.uniform2f(loc, value[2 * i], value[2 * i + 1])
       }
       return
     }
@@ -2665,11 +2774,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform2i (location, v0, v1) {
     if (!this._checkUniformValid(location, v0, 'uniform2i', 2, 'i')) return
-    super.uniform2i(location._ | 0, v0, v1)
+    super.uniform2i(location._ | 0, v0 | 0, v1 | 0)
   }
 
   uniform2iv (location, value) {
-    if (!this._checkUniformValueValid(location, value, 'uniform2iv', 2, 'i')) return
+    if (!this._checkUniformValueValid(location, value, 'uniform2iv', 2, 'i')) { return }
     if (location._array) {
       const locs = location._array
       for (let i = 0; i < locs.length && 2 * i < value.length; ++i) {
@@ -2683,11 +2792,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform3f (location, v0, v1, v2) {
     if (!this._checkUniformValid(location, v0, 'uniform3f', 3, 'f')) return
-    super.uniform3f(location._ | 0, v0, v1, v2)
+    super.uniform3f(location._ | 0, +v0, +v1, +v2)
   }
 
   uniform3fv (location, value) {
-    if (!this._checkUniformValueValid(location, value, 'uniform3fv', 3, 'f')) return
+    if (!this._checkUniformValueValid(location, value, 'uniform3fv', 3, 'f')) { return }
     if (location._array) {
       const locs = location._array
       for (let i = 0; i < locs.length && 3 * i < value.length; ++i) {
@@ -2701,11 +2810,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform3i (location, v0, v1, v2) {
     if (!this._checkUniformValid(location, v0, 'uniform3i', 3, 'i')) return
-    super.uniform3i(location._ | 0, v0, v1, v2)
+    super.uniform3i(location._ | 0, v0 | 0, v1 | 0, v2 | 0)
   }
 
   uniform3iv (location, value) {
-    if (!this._checkUniformValueValid(location, value, 'uniform3iv', 3, 'i')) return
+    if (!this._checkUniformValueValid(location, value, 'uniform3iv', 3, 'i')) { return }
     if (location._array) {
       const locs = location._array
       for (let i = 0; i < locs.length && 3 * i < value.length; ++i) {
@@ -2719,16 +2828,22 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform4f (location, v0, v1, v2, v3) {
     if (!this._checkUniformValid(location, v0, 'uniform4f', 4, 'f')) return
-    super.uniform4f(location._ | 0, v0, v1, v2, v3)
+    super.uniform4f(location._ | 0, +v0, +v1, +v2, +v3)
   }
 
   uniform4fv (location, value) {
-    if (!this._checkUniformValueValid(location, value, 'uniform4fv', 4, 'f')) return
+    if (!this._checkUniformValueValid(location, value, 'uniform4fv', 4, 'f')) { return }
     if (location._array) {
       const locs = location._array
       for (let i = 0; i < locs.length && 4 * i < value.length; ++i) {
         const loc = locs[i]
-        super.uniform4f(loc, value[4 * i], value[4 * i + 1], value[4 * i + 2], value[4 * i + 3])
+        super.uniform4f(
+          loc,
+          value[4 * i],
+          value[4 * i + 1],
+          value[4 * i + 2],
+          value[4 * i + 3]
+        )
       }
       return
     }
@@ -2737,16 +2852,22 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   uniform4i (location, v0, v1, v2, v3) {
     if (!this._checkUniformValid(location, v0, 'uniform4i', 4, 'i')) return
-    super.uniform4i(location._ | 0, v0, v1, v2, v3)
+    super.uniform4i(location._ | 0, v0 | 0, v1 | 0, v2 | 0, v3 | 0)
   }
 
   uniform4iv (location, value) {
-    if (!this._checkUniformValueValid(location, value, 'uniform4iv', 4, 'i')) return
+    if (!this._checkUniformValueValid(location, value, 'uniform4iv', 4, 'i')) { return }
     if (location._array) {
       const locs = location._array
       for (let i = 0; i < locs.length && 4 * i < value.length; ++i) {
         const loc = locs[i]
-        super.uniform4i(loc, value[4 * i], value[4 * i + 1], value[4 * i + 2], value[4 * i + 3])
+        super.uniform4i(
+          loc,
+          value[4 * i],
+          value[4 * i + 1],
+          value[4 * i + 2],
+          value[4 * i + 3]
+        )
       }
       return
     }
@@ -2754,14 +2875,15 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   _checkUniformMatrix (location, transpose, value, name, count) {
-    if (!checkObject(location) ||
-      typeof value !== 'object') {
+    if (!checkObject(location) || typeof value !== 'object') {
       throw new TypeError(name + '(WebGLUniformLocation, Boolean, Array)')
-    } else if (!!transpose ||
+    } else if (
+      !!transpose ||
       typeof value !== 'object' ||
       value === null ||
       !value.length ||
-      value.length % count * count !== 0) {
+      (value.length % count) * count !== 0
+    ) {
       this.setError(this.INVALID_VALUE)
       return false
     }
@@ -2782,30 +2904,45 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   uniformMatrix2fv (location, transpose, value) {
-    if (!this._checkUniformMatrix(location, transpose, value, 'uniformMatrix2fv', 2)) return
+    if (
+      !this._checkUniformMatrix(
+        location,
+        transpose,
+        value,
+        'uniformMatrix2fv',
+        2
+      )
+    ) { return }
     const data = new Float32Array(value)
-    super.uniformMatrix2fv(
-      location._ | 0,
-      !!transpose,
-      data)
+    super.uniformMatrix2fv(location._ | 0, !!transpose, data)
   }
 
   uniformMatrix3fv (location, transpose, value) {
-    if (!this._checkUniformMatrix(location, transpose, value, 'uniformMatrix3fv', 3)) return
+    if (
+      !this._checkUniformMatrix(
+        location,
+        transpose,
+        value,
+        'uniformMatrix3fv',
+        3
+      )
+    ) { return }
     const data = new Float32Array(value)
-    super.uniformMatrix3fv(
-      location._ | 0,
-      !!transpose,
-      data)
+    super.uniformMatrix3fv(location._ | 0, !!transpose, data)
   }
 
   uniformMatrix4fv (location, transpose, value) {
-    if (!this._checkUniformMatrix(location, transpose, value, 'uniformMatrix4fv', 4)) return
+    if (
+      !this._checkUniformMatrix(
+        location,
+        transpose,
+        value,
+        'uniformMatrix4fv',
+        4
+      )
+    ) { return }
     const data = new Float32Array(value)
-    super.uniformMatrix4fv(
-      location._ | 0,
-      !!transpose,
-      data)
+    super.uniformMatrix4fv(location._ | 0, !!transpose, data)
   }
 
   vertexAttrib1f (index, v0) {
@@ -2900,7 +3037,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     data[2] = value[2]
     data[1] = value[1]
     data[0] = value[0]
-    return super.vertexAttrib4f(index | 0, +value[0], +value[1], +value[2], +value[3])
+    return super.vertexAttrib4f(
+      index | 0,
+      +value[0],
+      +value[1],
+      +value[2],
+      +value[3]
+    )
   }
 
   _isWebGL2 () {

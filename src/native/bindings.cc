@@ -8,253 +8,20 @@
 #include "webgl.h"
 #include <cstdlib>
 
-Nan::Persistent<v8::FunctionTemplate> WEBGL_TEMPLATE;
-
-#define JS_GL_METHOD(webgl_name, method_name)                                                      \
-  Nan::SetPrototypeTemplate(webgl_template, webgl_name,                                            \
-                            Nan::New<v8::FunctionTemplate>(WebGLRenderingContext::method_name))
-
-#define JS_CONSTANT(x, v) Nan::SetPrototypeTemplate(webgl_template, #x, Nan::New<v8::Integer>(v))
+#define JS_CONSTANT(x, v) proto.Set(#x, Napi::Number::New(env, v))
 
 #define JS_GL_CONSTANT(name) JS_CONSTANT(name, GL_##name)
 
-#define JS_SET_CONSTANT(name, v)                                                                   \
-  Nan::Set(info.This(), Nan::New(#name).ToLocalChecked(), Nan::New(v))
+#define JS_SET_CONSTANT(name, v) obj.Set(#name, Napi::Number::New(env, v))
 
 #define JS_SET_GL_CONSTANT(name) JS_SET_CONSTANT(name, GL_##name)
 
-NAN_MODULE_INIT(Init) {
-  v8::Local<v8::FunctionTemplate> webgl_template =
-      Nan::New<v8::FunctionTemplate>(WebGLRenderingContext::New);
-
-  webgl_template->InstanceTemplate()->SetInternalFieldCount(1);
-  webgl_template->SetClassName(Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked());
-
-  /* WebGL methods */
-  JS_GL_METHOD("_drawArraysInstancedANGLE", DrawArraysInstancedANGLE);
-  JS_GL_METHOD("_drawElementsInstancedANGLE", DrawElementsInstancedANGLE);
-  JS_GL_METHOD("_vertexAttribDivisorANGLE", VertexAttribDivisorANGLE);
-
-  JS_GL_METHOD("getUniform", GetUniform);
-  JS_GL_METHOD("uniform1f", Uniform1f);
-  JS_GL_METHOD("uniform2f", Uniform2f);
-  JS_GL_METHOD("uniform3f", Uniform3f);
-  JS_GL_METHOD("uniform4f", Uniform4f);
-  JS_GL_METHOD("uniform1i", Uniform1i);
-  JS_GL_METHOD("uniform2i", Uniform2i);
-  JS_GL_METHOD("uniform3i", Uniform3i);
-  JS_GL_METHOD("uniform4i", Uniform4i);
-  JS_GL_METHOD("pixelStorei", PixelStorei);
-  JS_GL_METHOD("bindAttribLocation", BindAttribLocation);
-  JS_GL_METHOD("getError", GetError);
-  JS_GL_METHOD("drawArrays", DrawArrays);
-  JS_GL_METHOD("uniformMatrix2fv", UniformMatrix2fv);
-  JS_GL_METHOD("uniformMatrix3fv", UniformMatrix3fv);
-  JS_GL_METHOD("uniformMatrix4fv", UniformMatrix4fv);
-  JS_GL_METHOD("generateMipmap", GenerateMipmap);
-  JS_GL_METHOD("getAttribLocation", GetAttribLocation);
-  JS_GL_METHOD("depthFunc", DepthFunc);
-  JS_GL_METHOD("viewport", Viewport);
-  JS_GL_METHOD("createShader", CreateShader);
-  JS_GL_METHOD("shaderSource", ShaderSource);
-  JS_GL_METHOD("compileShader", CompileShader);
-  JS_GL_METHOD("getShaderParameter", GetShaderParameter);
-  JS_GL_METHOD("getShaderInfoLog", GetShaderInfoLog);
-  JS_GL_METHOD("createProgram", CreateProgram);
-  JS_GL_METHOD("attachShader", AttachShader);
-  JS_GL_METHOD("linkProgram", LinkProgram);
-  JS_GL_METHOD("getProgramParameter", GetProgramParameter);
-  JS_GL_METHOD("getUniformLocation", GetUniformLocation);
-  JS_GL_METHOD("clearColor", ClearColor);
-  JS_GL_METHOD("clearDepth", ClearDepth);
-  JS_GL_METHOD("disable", Disable);
-  JS_GL_METHOD("createTexture", CreateTexture);
-  JS_GL_METHOD("bindTexture", BindTexture);
-  JS_GL_METHOD("texImage2D", TexImage2D);
-  JS_GL_METHOD("texParameteri", TexParameteri);
-  JS_GL_METHOD("texParameterf", TexParameterf);
-  JS_GL_METHOD("clear", Clear);
-  JS_GL_METHOD("useProgram", UseProgram);
-  JS_GL_METHOD("createFramebuffer", CreateFramebuffer);
-  JS_GL_METHOD("bindFramebuffer", BindFramebuffer);
-  JS_GL_METHOD("framebufferTexture2D", FramebufferTexture2D);
-  JS_GL_METHOD("createBuffer", CreateBuffer);
-  JS_GL_METHOD("bindBuffer", BindBuffer);
-  JS_GL_METHOD("bufferData", BufferData);
-  JS_GL_METHOD("bufferSubData", BufferSubData);
-  JS_GL_METHOD("enable", Enable);
-  JS_GL_METHOD("blendEquation", BlendEquation);
-  JS_GL_METHOD("blendFunc", BlendFunc);
-  JS_GL_METHOD("enableVertexAttribArray", EnableVertexAttribArray);
-  JS_GL_METHOD("vertexAttribPointer", VertexAttribPointer);
-  JS_GL_METHOD("activeTexture", ActiveTexture);
-  JS_GL_METHOD("drawElements", DrawElements);
-  JS_GL_METHOD("flush", Flush);
-  JS_GL_METHOD("finish", Finish);
-  JS_GL_METHOD("vertexAttrib1f", VertexAttrib1f);
-  JS_GL_METHOD("vertexAttrib2f", VertexAttrib2f);
-  JS_GL_METHOD("vertexAttrib3f", VertexAttrib3f);
-  JS_GL_METHOD("vertexAttrib4f", VertexAttrib4f);
-  JS_GL_METHOD("blendColor", BlendColor);
-  JS_GL_METHOD("blendEquationSeparate", BlendEquationSeparate);
-  JS_GL_METHOD("blendFuncSeparate", BlendFuncSeparate);
-  JS_GL_METHOD("clearStencil", ClearStencil);
-  JS_GL_METHOD("colorMask", ColorMask);
-  JS_GL_METHOD("copyTexImage2D", CopyTexImage2D);
-  JS_GL_METHOD("copyTexSubImage2D", CopyTexSubImage2D);
-  JS_GL_METHOD("cullFace", CullFace);
-  JS_GL_METHOD("depthMask", DepthMask);
-  JS_GL_METHOD("depthRange", DepthRange);
-  JS_GL_METHOD("disableVertexAttribArray", DisableVertexAttribArray);
-  JS_GL_METHOD("hint", Hint);
-  JS_GL_METHOD("isEnabled", IsEnabled);
-  JS_GL_METHOD("lineWidth", LineWidth);
-  JS_GL_METHOD("polygonOffset", PolygonOffset);
-  JS_GL_METHOD("scissor", Scissor);
-  JS_GL_METHOD("stencilFunc", StencilFunc);
-  JS_GL_METHOD("stencilFuncSeparate", StencilFuncSeparate);
-  JS_GL_METHOD("stencilMask", StencilMask);
-  JS_GL_METHOD("stencilMaskSeparate", StencilMaskSeparate);
-  JS_GL_METHOD("stencilOp", StencilOp);
-  JS_GL_METHOD("stencilOpSeparate", StencilOpSeparate);
-  JS_GL_METHOD("bindRenderbuffer", BindRenderbuffer);
-  JS_GL_METHOD("createRenderbuffer", CreateRenderbuffer);
-  JS_GL_METHOD("deleteBuffer", DeleteBuffer);
-  JS_GL_METHOD("deleteFramebuffer", DeleteFramebuffer);
-  JS_GL_METHOD("deleteProgram", DeleteProgram);
-  JS_GL_METHOD("deleteRenderbuffer", DeleteRenderbuffer);
-  JS_GL_METHOD("deleteShader", DeleteShader);
-  JS_GL_METHOD("deleteTexture", DeleteTexture);
-  JS_GL_METHOD("detachShader", DetachShader);
-  JS_GL_METHOD("framebufferRenderbuffer", FramebufferRenderbuffer);
-  JS_GL_METHOD("getVertexAttribOffset", GetVertexAttribOffset);
-  JS_GL_METHOD("isBuffer", IsBuffer);
-  JS_GL_METHOD("isFramebuffer", IsFramebuffer);
-  JS_GL_METHOD("isProgram", IsProgram);
-  JS_GL_METHOD("isRenderbuffer", IsRenderbuffer);
-  JS_GL_METHOD("isShader", IsShader);
-  JS_GL_METHOD("isTexture", IsTexture);
-  JS_GL_METHOD("renderbufferStorage", RenderbufferStorage);
-  JS_GL_METHOD("getShaderSource", GetShaderSource);
-  JS_GL_METHOD("validateProgram", ValidateProgram);
-  JS_GL_METHOD("texSubImage2D", TexSubImage2D);
-  JS_GL_METHOD("readPixels", ReadPixels);
-  JS_GL_METHOD("getTexParameter", GetTexParameter);
-  JS_GL_METHOD("getActiveAttrib", GetActiveAttrib);
-  JS_GL_METHOD("getActiveUniform", GetActiveUniform);
-  JS_GL_METHOD("getAttachedShaders", GetAttachedShaders);
-  JS_GL_METHOD("getParameter", GetParameter);
-  JS_GL_METHOD("getBufferParameter", GetBufferParameter);
-  JS_GL_METHOD("getFramebufferAttachmentParameter", GetFramebufferAttachmentParameter);
-  JS_GL_METHOD("getProgramInfoLog", GetProgramInfoLog);
-  JS_GL_METHOD("getRenderbufferParameter", GetRenderbufferParameter);
-  JS_GL_METHOD("getVertexAttrib", GetVertexAttrib);
-  JS_GL_METHOD("getSupportedExtensions", GetSupportedExtensions);
-  JS_GL_METHOD("getExtension", GetExtension);
-  JS_GL_METHOD("checkFramebufferStatus", CheckFramebufferStatus);
-  JS_GL_METHOD("getShaderPrecisionFormat", GetShaderPrecisionFormat);
-  JS_GL_METHOD("frontFace", FrontFace);
-  JS_GL_METHOD("sampleCoverage", SampleCoverage);
-  JS_GL_METHOD("destroy", Destroy);
-  JS_GL_METHOD("drawBuffersWEBGL", DrawBuffersWEBGL);
-  JS_GL_METHOD("extWEBGL_draw_buffers", EXTWEBGL_draw_buffers);
-  JS_GL_METHOD("createVertexArrayOES", CreateVertexArrayOES);
-  JS_GL_METHOD("deleteVertexArrayOES", DeleteVertexArrayOES);
-  JS_GL_METHOD("isVertexArrayOES", IsVertexArrayOES);
-  JS_GL_METHOD("bindVertexArrayOES", BindVertexArrayOES);
-
-  // WebGL 2.0 functions:
-  JS_GL_METHOD("copyBufferSubData", CopyBufferSubData);
-  JS_GL_METHOD("getBufferSubData", GetBufferSubData);
-  JS_GL_METHOD("blitFramebuffer", BlitFramebuffer);
-  JS_GL_METHOD("framebufferTextureLayer", FramebufferTextureLayer);
-  JS_GL_METHOD("invalidateFramebuffer", InvalidateFramebuffer);
-  JS_GL_METHOD("invalidateSubFramebuffer", InvalidateSubFramebuffer);
-  JS_GL_METHOD("readBuffer", ReadBuffer);
-  JS_GL_METHOD("getInternalformatParameter", GetInternalformatParameter);
-  JS_GL_METHOD("renderbufferStorageMultisample", RenderbufferStorageMultisample);
-  JS_GL_METHOD("texStorage2D", TexStorage2D);
-  JS_GL_METHOD("texStorage3D", TexStorage3D);
-  JS_GL_METHOD("texImage3D", TexImage3D);
-  JS_GL_METHOD("texSubImage3D", TexSubImage3D);
-  JS_GL_METHOD("copyTexSubImage3D", CopyTexSubImage3D);
-  JS_GL_METHOD("compressedTexImage3D", CompressedTexImage3D);
-  JS_GL_METHOD("compressedTexSubImage3D", CompressedTexSubImage3D);
-  JS_GL_METHOD("getFragDataLocation", GetFragDataLocation);
-  JS_GL_METHOD("uniform1ui", Uniform1ui);
-  JS_GL_METHOD("uniform2ui", Uniform2ui);
-  JS_GL_METHOD("uniform3ui", Uniform3ui);
-  JS_GL_METHOD("uniform4ui", Uniform4ui);
-  JS_GL_METHOD("uniform1uiv", Uniform1uiv);
-  JS_GL_METHOD("uniform2uiv", Uniform2uiv);
-  JS_GL_METHOD("uniform3uiv", Uniform3uiv);
-  JS_GL_METHOD("uniform4uiv", Uniform4uiv);
-  JS_GL_METHOD("uniformMatrix3x2fv", UniformMatrix3x2fv);
-  JS_GL_METHOD("uniformMatrix4x2fv", UniformMatrix4x2fv);
-  JS_GL_METHOD("uniformMatrix2x3fv", UniformMatrix2x3fv);
-  JS_GL_METHOD("uniformMatrix4x3fv", UniformMatrix4x3fv);
-  JS_GL_METHOD("uniformMatrix2x4fv", UniformMatrix2x4fv);
-  JS_GL_METHOD("uniformMatrix3x4fv", UniformMatrix3x4fv);
-  JS_GL_METHOD("vertexAttribI4i", VertexAttribI4i);
-  JS_GL_METHOD("vertexAttribI4iv", VertexAttribI4iv);
-  JS_GL_METHOD("vertexAttribI4ui", VertexAttribI4ui);
-  JS_GL_METHOD("vertexAttribI4uiv", VertexAttribI4uiv);
-  JS_GL_METHOD("vertexAttribIPointer", VertexAttribIPointer);
-  JS_GL_METHOD("vertexAttribDivisor", VertexAttribDivisor);
-  JS_GL_METHOD("drawArraysInstanced", DrawArraysInstanced);
-  JS_GL_METHOD("drawElementsInstanced", DrawElementsInstanced);
-  JS_GL_METHOD("drawRangeElements", DrawRangeElements);
-  JS_GL_METHOD("drawBuffers", DrawBuffers);
-  JS_GL_METHOD("clearBufferfv", ClearBufferfv);
-  JS_GL_METHOD("clearBufferiv", ClearBufferiv);
-  JS_GL_METHOD("clearBufferuiv", ClearBufferuiv);
-  JS_GL_METHOD("clearBufferfi", ClearBufferfi);
-  JS_GL_METHOD("createQuery", CreateQuery);
-  JS_GL_METHOD("deleteQuery", DeleteQuery);
-  JS_GL_METHOD("isQuery", IsQuery);
-  JS_GL_METHOD("beginQuery", BeginQuery);
-  JS_GL_METHOD("endQuery", EndQuery);
-  JS_GL_METHOD("getQuery", GetQuery);
-  JS_GL_METHOD("getQueryParameter", GetQueryParameter);
-  JS_GL_METHOD("createSampler", CreateSampler);
-  JS_GL_METHOD("deleteSampler", DeleteSampler);
-  JS_GL_METHOD("isSampler", IsSampler);
-  JS_GL_METHOD("bindSampler", BindSampler);
-  JS_GL_METHOD("samplerParameteri", SamplerParameteri);
-  JS_GL_METHOD("samplerParameterf", SamplerParameterf);
-  JS_GL_METHOD("getSamplerParameter", GetSamplerParameter);
-  JS_GL_METHOD("fenceSync", FenceSync);
-  JS_GL_METHOD("isSync", IsSync);
-  JS_GL_METHOD("deleteSync", DeleteSync);
-  JS_GL_METHOD("clientWaitSync", ClientWaitSync);
-  JS_GL_METHOD("waitSync", WaitSync);
-  JS_GL_METHOD("getSyncParameter", GetSyncParameter);
-  JS_GL_METHOD("createTransformFeedback", CreateTransformFeedback);
-  JS_GL_METHOD("deleteTransformFeedback", DeleteTransformFeedback);
-  JS_GL_METHOD("isTransformFeedback", IsTransformFeedback);
-  JS_GL_METHOD("bindTransformFeedback", BindTransformFeedback);
-  JS_GL_METHOD("beginTransformFeedback", BeginTransformFeedback);
-  JS_GL_METHOD("endTransformFeedback", EndTransformFeedback);
-  JS_GL_METHOD("transformFeedbackVaryings", TransformFeedbackVaryings);
-  JS_GL_METHOD("getTransformFeedbackVarying", GetTransformFeedbackVarying);
-  JS_GL_METHOD("pauseTransformFeedback", PauseTransformFeedback);
-  JS_GL_METHOD("resumeTransformFeedback", ResumeTransformFeedback);
-  JS_GL_METHOD("bindBufferBase", BindBufferBase);
-  JS_GL_METHOD("bindBufferRange", BindBufferRange);
-  JS_GL_METHOD("getIndexedParameter", GetIndexedParameter);
-  JS_GL_METHOD("getUniformIndices", GetUniformIndices);
-  JS_GL_METHOD("getActiveUniforms", GetActiveUniforms);
-  JS_GL_METHOD("getUniformBlockIndex", GetUniformBlockIndex);
-  JS_GL_METHOD("getActiveUniformBlockParameter", GetActiveUniformBlockParameter);
-  JS_GL_METHOD("getActiveUniformBlockName", GetActiveUniformBlockName);
-  JS_GL_METHOD("uniformBlockBinding", UniformBlockBinding);
-  JS_GL_METHOD("createVertexArray", CreateVertexArray);
-  JS_GL_METHOD("deleteVertexArray", DeleteVertexArray);
-  JS_GL_METHOD("isVertexArray", IsVertexArray);
-  JS_GL_METHOD("bindVertexArray", BindVertexArray);
+Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  Napi::Function ctor = WebGLRenderingContext::GetClass(env);
+  Napi::Object proto = ctor.Get("prototype").As<Napi::Object>();
 
   // Windows defines a macro called NO_ERROR which messes this up
-  Nan::SetPrototypeTemplate(webgl_template, "NO_ERROR", Nan::New<v8::Integer>(GL_NO_ERROR));
+  proto.Set("NO_ERROR", Napi::Number::New(env, GL_NO_ERROR));
   JS_GL_CONSTANT(INVALID_ENUM);
   JS_GL_CONSTANT(INVALID_VALUE);
   JS_GL_CONSTANT(INVALID_OPERATION);
@@ -556,17 +323,24 @@ NAN_MODULE_INIT(Init) {
   JS_CONSTANT(IMPLEMENTATION_COLOR_READ_TYPE, 0x8B9A);
   JS_CONSTANT(IMPLEMENTATION_COLOR_READ_FORMAT, 0x8B9B);
 
-  // Export template
-  WEBGL_TEMPLATE.Reset(webgl_template);
-  Nan::Set(target, Nan::New<v8::String>("WebGLRenderingContext").ToLocalChecked(),
-           Nan::GetFunction(webgl_template).ToLocalChecked());
+  exports.Set("WebGLRenderingContext", ctor);
 
-  // Export helper methods for clean up and error handling
-  Nan::Export(target, "cleanup", WebGLRenderingContext::DisposeAll);
-  Nan::Export(target, "setError", WebGLRenderingContext::SetError);
+  // Export cleanup helper
+  exports.Set("cleanup", Napi::Function::New(env, &WebGLRenderingContext::DisposeAll));
+
+  // Export setError — called as NativeWebGL.setError.call(glInstance, code)
+  exports.Set("setError", Napi::Function::New(env, [](const Napi::CallbackInfo& cbInfo) -> Napi::Value {
+    auto* inst = Napi::ObjectWrap<WebGLRenderingContext>::Unwrap(cbInfo.This().As<Napi::Object>());
+    if (inst && inst->setActive()) {
+      inst->setError((GLenum)(cbInfo[0].As<Napi::Number>().Int32Value()));
+    }
+    return cbInfo.Env().Undefined();
+  }));
+
+  return exports;
 }
 
-void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info) {
+void BindWebGL2(Napi::Object obj, Napi::Env env) {
   /* ES3 enums */
   JS_SET_GL_CONSTANT(READ_BUFFER);
   JS_SET_GL_CONSTANT(UNPACK_ROW_LENGTH);
@@ -660,6 +434,7 @@ void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info) {
   JS_SET_GL_CONSTANT(UNSIGNED_INT_10F_11F_11F_REV);
   JS_SET_GL_CONSTANT(RGB9_E5);
   JS_SET_GL_CONSTANT(UNSIGNED_INT_5_9_9_9_REV);
+  JS_SET_GL_CONSTANT(TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH);
   JS_SET_GL_CONSTANT(TRANSFORM_FEEDBACK_BUFFER_MODE);
   JS_SET_GL_CONSTANT(MAX_TRANSFORM_FEEDBACK_SEPARATE_COMPONENTS);
   JS_SET_GL_CONSTANT(TRANSFORM_FEEDBACK_VARYINGS);
@@ -714,6 +489,8 @@ void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info) {
   JS_SET_GL_CONSTANT(FRAMEBUFFER_ATTACHMENT_DEPTH_SIZE);
   JS_SET_GL_CONSTANT(FRAMEBUFFER_ATTACHMENT_STENCIL_SIZE);
   JS_SET_GL_CONSTANT(FRAMEBUFFER_DEFAULT);
+  JS_SET_GL_CONSTANT(DEPTH_STENCIL_ATTACHMENT);
+  JS_SET_GL_CONSTANT(DEPTH_STENCIL);
   JS_SET_GL_CONSTANT(UNSIGNED_INT_24_8);
   JS_SET_GL_CONSTANT(DEPTH24_STENCIL8);
   JS_SET_GL_CONSTANT(UNSIGNED_NORMALIZED);
@@ -768,6 +545,7 @@ void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info) {
   JS_SET_GL_CONSTANT(RGB8_SNORM);
   JS_SET_GL_CONSTANT(RGBA8_SNORM);
   JS_SET_GL_CONSTANT(SIGNED_NORMALIZED);
+  JS_SET_GL_CONSTANT(PRIMITIVE_RESTART_FIXED_INDEX);
   JS_SET_GL_CONSTANT(COPY_READ_BUFFER);
   JS_SET_GL_CONSTANT(COPY_WRITE_BUFFER);
   JS_SET_GL_CONSTANT(COPY_READ_BUFFER_BINDING);
@@ -838,4 +616,4 @@ void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info) {
   JS_SET_GL_CONSTANT(RGBA8);
 }
 
-NODE_MODULE(webgl, Init)
+NODE_API_MODULE(webgl, Init)

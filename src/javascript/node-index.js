@@ -1,8 +1,15 @@
 const bits = require('bit-twiddle')
 const { WebGLContextAttributes } = require('./webgl-context-attributes')
-const { WebGLRenderingContext, WebGL2RenderingContext, wrapContext } = require('./webgl-rendering-context')
+const {
+  WebGLRenderingContext,
+  WebGL2RenderingContext,
+  wrapContext
+} = require('./webgl-rendering-context')
 const { WebGLTextureUnit } = require('./webgl-texture-unit')
-const { WebGLVertexArrayObjectState, WebGLVertexArrayGlobalState } = require('./webgl-vertex-attribute')
+const {
+  WebGLVertexArrayObjectState,
+  WebGLVertexArrayGlobalState
+} = require('./webgl-vertex-attribute')
 
 let CONTEXT_COUNTER = 0
 
@@ -29,13 +36,16 @@ function createContext (width, height, options) {
     flag(options, 'preserveDrawingBuffer', false),
     flag(options, 'preferLowPowerToHighPerformance', false),
     flag(options, 'failIfMajorPerformanceCaveat', false),
-    flag(options, 'createWebGL2Context', false))
+    flag(options, 'createWebGL2Context', false)
+  )
 
   // Can only use premultipliedAlpha if alpha is set
   contextAttributes.premultipliedAlpha =
     contextAttributes.premultipliedAlpha && contextAttributes.alpha
 
-  const WebGLContext = contextAttributes.createWebGL2Context ? WebGL2RenderingContext : WebGLRenderingContext
+  const WebGLContext = contextAttributes.createWebGL2Context
+    ? WebGL2RenderingContext
+    : WebGLRenderingContext
   let ctx
   try {
     ctx = new WebGLContext(
@@ -49,7 +59,8 @@ function createContext (width, height, options) {
       contextAttributes.preserveDrawingBuffer,
       contextAttributes.preferLowPowerToHighPerformance,
       contextAttributes.failIfMajorPerformanceCaveat,
-      contextAttributes.createWebGL2Context)
+      contextAttributes.createWebGL2Context
+    )
   } catch (e) {}
   if (!ctx) {
     return null
@@ -129,7 +140,9 @@ function createContext (width, height, options) {
   ctx.clearDepth(1)
   ctx.clearColor(0, 0, 0, 0)
   ctx.clearStencil(0)
-  ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT | ctx.STENCIL_BUFFER_BIT)
+  ctx.clear(
+    ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT | ctx.STENCIL_BUFFER_BIT
+  )
 
   return wrapContext(ctx)
 }

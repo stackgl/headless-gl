@@ -23,7 +23,7 @@ class WebGLVertexArrayObjectOES extends Linkable {
 
 class OESVertexArrayObject {
   constructor (ctx) {
-    this.VERTEX_ARRAY_BINDING_OES = 0x85B5
+    this.VERTEX_ARRAY_BINDING_OES = 0x85b5
 
     this._ctx = ctx
     this._vaos = {}
@@ -45,8 +45,9 @@ class OESVertexArrayObject {
       throw new TypeError('deleteVertexArrayOES(WebGLVertexArrayObjectOES)')
     }
 
-    if (!(array instanceof WebGLVertexArrayObjectOES &&
-      ctx._checkOwns(array))) {
+    if (
+      !(array instanceof WebGLVertexArrayObjectOES && ctx._checkOwns(array))
+    ) {
       ctx.setError(gl.INVALID_OPERATION)
       return
     }
@@ -64,16 +65,19 @@ class OESVertexArrayObject {
   }
 
   bindVertexArrayOES (array) {
-    const { _ctx: ctx, _activeVertexArrayObject: activeVertexArrayObject } = this
+    const { _ctx: ctx, _activeVertexArrayObject: activeVertexArrayObject } =
+      this
     if (!checkObject(array)) {
       throw new TypeError('bindVertexArrayOES(WebGLVertexArrayObjectOES)')
     }
 
     if (!array) {
       array = null
-      gl.bindVertexArrayOES.call(ctx, null)
-    } else if (array instanceof WebGLVertexArrayObjectOES &&
-      array._pendingDelete) {
+      gl.bindVertexArrayOES.call(ctx, 0)
+    } else if (
+      array instanceof WebGLVertexArrayObjectOES &&
+      array._pendingDelete
+    ) {
       ctx.setError(gl.INVALID_OPERATION)
       return
     } else if (ctx._checkWrapper(array, WebGLVertexArrayObjectOES)) {
@@ -104,7 +108,7 @@ class OESVertexArrayObject {
 
   isVertexArrayOES (object) {
     const { _ctx: ctx } = this
-    if (!ctx._isObject(object, 'isVertexArrayOES', WebGLVertexArrayObjectOES)) return false
+    if (!ctx._isObject(object, 'isVertexArrayOES', WebGLVertexArrayObjectOES)) { return false }
     return gl.isVertexArrayOES.call(ctx, object._ | 0)
   }
 }

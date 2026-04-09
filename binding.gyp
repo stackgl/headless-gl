@@ -11,7 +11,8 @@
     {
       'target_name': 'webgl',
       'defines': [
-        'VERSION=1.0.0'
+        'VERSION=1.0.0',
+        'NAPI_VERSION=8'
       ],
       'sources': [
           'src/native/bindings.cc',
@@ -21,10 +22,11 @@
           'src/native/angle-loader/gles_loader.cc'
       ],
       'include_dirs': [
-        "<!(node -e \"require('nan')\")",
+        "<!@(node -p \"require('node-addon-api').include\")",
         '<(module_root_dir)/deps/include',
         "src/native/angle-includes"
       ],
+      'defines': ['NAPI_DISABLE_CPP_EXCEPTIONS'],
       'library_dirs': [
         '<(module_root_dir)/deps/<(platform)'
       ],
@@ -51,6 +53,9 @@
                 ]
               }
            ]
+        }],
+        ['OS=="linux"', {
+            'ldflags': ['-Wl,-rpath,$$ORIGIN'],
         }],
         ['OS=="linux" and target_arch=="arm64"', {
             "copies": [

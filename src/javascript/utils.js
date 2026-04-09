@@ -8,12 +8,15 @@ function bindPublics (props, wrapper, privateInstance, privateMethods) {
     const value = privateInstance[prop]
     if (typeof value === 'function') {
       if (privateMethods.indexOf(prop) === -1) {
-        wrapper[prop] = value.bind(privateInstance)
+        Object.defineProperty(wrapper, prop, {
+          value: value.bind(privateInstance),
+          writable: true,
+          configurable: true,
+          enumerable: true
+        })
       }
     } else {
-      if (prop[0] === '_' ||
-        prop[0] === '0' ||
-        prop[0] === '1') {
+      if (prop[0] === '_' || prop[0] === '0' || prop[0] === '1') {
         continue
       }
       wrapper[prop] = value
@@ -22,18 +25,20 @@ function bindPublics (props, wrapper, privateInstance, privateMethods) {
 }
 
 function checkObject (object) {
-  return typeof object === 'object' ||
-    (object === undefined)
+  return typeof object === 'object' || object === undefined
 }
 
 function checkUniform (program, location) {
-  return location instanceof WebGLUniformLocation &&
+  return (
+    location instanceof WebGLUniformLocation &&
     location._program === program &&
     location._linkCount === program._linkCount
+  )
 }
 
 function isTypedArray (data) {
-  return data instanceof Uint8Array ||
+  return (
+    data instanceof Uint8Array ||
     data instanceof Uint8ClampedArray ||
     data instanceof Int8Array ||
     data instanceof Uint16Array ||
@@ -42,13 +47,17 @@ function isTypedArray (data) {
     data instanceof Int32Array ||
     data instanceof Float32Array ||
     data instanceof Float64Array
+  )
 }
 
 // Don't allow: ", $, `, @, \, ', \0
 function isValidString (str) {
   // Remove comments first
-  const c = str.replace(/(?:\/\*(?:[\s\S]*?)\*\/)|(?:([\s;])+\/\/(?:.*)$)/gm, '')
-  return !(/["$`@\\'\0]/.test(c))
+  const c = str.replace(
+    /(?:\/\*(?:[\s\S]*?)\*\/)|(?:([\s;])+\/\/(?:.*)$)/gm,
+    ''
+  )
+  return !/["$`@\\'\0]/.test(c)
 }
 
 function vertexCount (primitive, count) {
@@ -122,13 +131,18 @@ function uniformTypeSize (type) {
 }
 
 function unpackTypedArray (array) {
-  return (new Uint8Array(array.buffer)).subarray(
+  return new Uint8Array(array.buffer).subarray(
     array.byteOffset,
-    array.byteLength + array.byteOffset)
+    array.byteLength + array.byteOffset
+  )
 }
 
 function extractImageData (pixels) {
-  if (typeof pixels === 'object' && typeof pixels.width !== 'undefined' && typeof pixels.height !== 'undefined') {
+  if (
+    typeof pixels === 'object' &&
+    typeof pixels.width !== 'undefined' &&
+    typeof pixels.height !== 'undefined'
+  ) {
     if (typeof pixels.data !== 'undefined') {
       return pixels
     }
@@ -137,10 +151,17 @@ function extractImageData (pixels) {
 
     if (typeof pixels.getContext === 'function') {
       context = pixels.getContext('2d')
-    } else if (typeof pixels.src !== 'undefined' && typeof document === 'object' && typeof document.createElement === 'function') {
+    } else if (
+      typeof pixels.src !== 'undefined' &&
+      typeof document === 'object' &&
+      typeof document.createElement === 'function'
+    ) {
       const canvas = document.createElement('canvas')
 
-      if (typeof canvas === 'object' && typeof canvas.getContext === 'function') {
+      if (
+        typeof canvas === 'object' &&
+        typeof canvas.getContext === 'function'
+      ) {
         canvas.width = pixels.width
         canvas.height = pixels.height
         context = canvas.getContext('2d')
@@ -178,10 +199,12 @@ function convertPixels (pixels) {
   if (typeof pixels === 'object' && pixels !== null) {
     if (pixels instanceof ArrayBuffer) {
       return new Uint8Array(pixels)
-    } else if (pixels instanceof Uint8Array ||
+    } else if (
+      pixels instanceof Uint8Array ||
       pixels instanceof Uint16Array ||
       pixels instanceof Uint8ClampedArray ||
-      pixels instanceof Float32Array) {
+      pixels instanceof Float32Array
+    ) {
       return unpackTypedArray(pixels)
     } else if (pixels instanceof Buffer) {
       return new Uint8Array(pixels)
@@ -196,16 +219,19 @@ function checkFormat (format) {
     format === gl.LUMINANCE_ALPHA ||
     format === gl.LUMINANCE ||
     format === gl.RGB ||
-    format === gl.RGBA)
+    format === gl.RGBA
+  )
 }
 
 function validCubeTarget (target) {
-  return target === gl.TEXTURE_CUBE_MAP_POSITIVE_X ||
+  return (
+    target === gl.TEXTURE_CUBE_MAP_POSITIVE_X ||
     target === gl.TEXTURE_CUBE_MAP_NEGATIVE_X ||
     target === gl.TEXTURE_CUBE_MAP_POSITIVE_Y ||
     target === gl.TEXTURE_CUBE_MAP_NEGATIVE_Y ||
     target === gl.TEXTURE_CUBE_MAP_POSITIVE_Z ||
     target === gl.TEXTURE_CUBE_MAP_NEGATIVE_Z
+  )
 }
 
 module.exports = {

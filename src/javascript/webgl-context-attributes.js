@@ -8,7 +8,8 @@ class WebGLContextAttributes {
     preserveDrawingBuffer,
     preferLowPowerToHighPerformance,
     failIfMajorPerformanceCaveat,
-    createWebGL2Context) {
+    createWebGL2Context
+  ) {
     this.alpha = alpha
     this.depth = depth
     this.stencil = stencil

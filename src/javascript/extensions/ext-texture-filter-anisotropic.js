@@ -1,7 +1,7 @@
 class EXTTextureFilterAnisotropic {
   constructor () {
-    this.TEXTURE_MAX_ANISOTROPY_EXT = 0x84FE
-    this.MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84FF
+    this.TEXTURE_MAX_ANISOTROPY_EXT = 0x84fe
+    this.MAX_TEXTURE_MAX_ANISOTROPY_EXT = 0x84ff
   }
 }
 
@@ -16,4 +16,7 @@ function getEXTTextureFilterAnisotropic (context) {
   return result
 }
 
-module.exports = { getEXTTextureFilterAnisotropic, EXTTextureFilterAnisotropic }
+module.exports = {
+  getEXTTextureFilterAnisotropic,
+  EXTTextureFilterAnisotropic
+}

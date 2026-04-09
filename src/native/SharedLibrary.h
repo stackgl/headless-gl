@@ -29,8 +29,10 @@ public:
   SharedLibrary() {}
 
   bool open(const std::string &libraryPath) {
-    const std::string libraryPathWithExt =
-        GetModuleDirectory() + "/" + libraryPath + GetSharedLibraryExtension();
+    const std::string dir = GetModuleDirectory();
+    const std::string libraryPathWithExt = dir.empty()
+        ? libraryPath + GetSharedLibraryExtension()
+        : dir + "/" + libraryPath + GetSharedLibraryExtension();
 #ifdef _WIN32
     handle = LoadLibraryA(libraryPathWithExt.c_str());
 #else

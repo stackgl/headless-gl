@@ -8,7 +8,9 @@ class WebGLDrawBuffers {
     if (exts && exts.indexOf('WEBGL_draw_buffers') >= 0) {
       Object.assign(this, ctx.extWEBGL_draw_buffers())
       this._buffersState = [ctx.BACK]
-      this._maxDrawBuffers = ctx._getParameterDirect(this.MAX_DRAW_BUFFERS_WEBGL)
+      this._maxDrawBuffers = ctx._getParameterDirect(
+        this.MAX_DRAW_BUFFERS_WEBGL
+      )
       this._ALL_ATTACHMENTS = []
       this._ALL_COLOR_ATTACHMENTS = []
       const allColorAttachments = [

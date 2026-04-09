@@ -96,7 +96,8 @@ class WebGLVertexArrayObjectState {
     pointerType,
     pointerNormal,
     inputStride,
-    inputSize) {
+    inputSize
+  ) {
     const attrib = this._attribs[index]
     if (buffer !== attrib._pointerBuffer) {
       if (attrib._pointerBuffer) {

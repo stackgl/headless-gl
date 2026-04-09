@@ -47,7 +47,8 @@ function createContext (width, height, options) {
   const _supportedExtensions = gl.getSupportedExtensions().slice()
   _supportedExtensions.push(
     'STACKGL_destroy_context',
-    'STACKGL_resize_drawingbuffer')
+    'STACKGL_resize_drawingbuffer'
+  )
   gl.getSupportedExtensions = function () {
     return _supportedExtensions.slice()
   }

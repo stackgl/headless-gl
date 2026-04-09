@@ -33,9 +33,7 @@ class Linkable {
   }
 
   _checkDelete () {
-    if (this._refCount <= 0 &&
-      this._pendingDelete &&
-      this._ !== 0) {
+    if (this._refCount <= 0 && this._pendingDelete && this._ !== 0) {
       while (this._references.length > 0) {
         this._unlink(this._references[0])
       }

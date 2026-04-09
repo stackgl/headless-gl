@@ -1,6 +1,6 @@
 class OESStandardDerivatives {
   constructor () {
-    this.FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8B8B
+    this.FRAGMENT_SHADER_DERIVATIVE_HINT_OES = 0x8b8b
   }
 }
 
