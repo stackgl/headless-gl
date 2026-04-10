@@ -257,6 +257,12 @@ Once this is done, you should be good to go! A few more things
 
 Note: the `gl-conformance` package is currently hosted on GitHub Package Registry. To install from there, you may need to add `//npm.pkg.github.com` to your user directory's `.npmrc` file
 
+### Debugging with RenderDoc
+
+To debug with RenderDoc, you can set the `RENDERDOC_ENABLED` define in the `src/native/webgl.cc` file.
+
+You'll need to also install RenderDoc and attach it to the gl process when you launch your program. The easiest way to attach to the running process is to uncomment the MessageBoxA call in the `src/native/webgl.cc` file.
+
 ## License
 
 See LICENSES
