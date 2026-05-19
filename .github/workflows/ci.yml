@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [24.x]
+        node-version: [24.x, 26.x]
         os: [ubuntu-24.04, ubuntu-24.04-arm, windows-2025, macos-15, macos-26]
     steps:
       - uses: actions/checkout@v6
