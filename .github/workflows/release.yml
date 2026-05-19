@@ -11,7 +11,7 @@ jobs:
       matrix:
         node-version: [26.x]
         os: [ubuntu-24.04, ubuntu-24.04-arm, windows-2025]
-        target: ["20.0.0", "22.0.0", "24.0.0", "26.0.0"]
+        target: ["22.0.0", "24.0.0", "26.0.0"]
     runs-on: ${{ matrix.os }}
     permissions:
       id-token: write
