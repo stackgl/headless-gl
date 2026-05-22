@@ -642,11 +642,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!checkObject(buffer)) {
       throw new TypeError('bindBufferBase(GLenum, GLuint, WebGLBuffer)')
     }
-    
+
     if (!buffer) {
       return super.bindBufferBase(target, index, null)
     } else if (buffer._pendingDelete) {
-      return
+
     } else if (this._checkWrapper(buffer, WebGLBuffer)) {
       return super.bindBufferBase(target, index, buffer._ | 0)
     }
@@ -660,11 +660,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!checkObject(buffer)) {
       throw new TypeError('bindBufferRange(GLenum, GLuint, WebGLBuffer, GLintptr, GLsizeiptr)')
     }
-    
+
     if (!buffer) {
       return super.bindBufferRange(target, index, null, offset, size)
     } else if (buffer._pendingDelete) {
-      return
+
     } else if (this._checkWrapper(buffer, WebGLBuffer)) {
       return super.bindBufferRange(target, index, buffer._ | 0, offset, size)
     }
@@ -2833,7 +2833,6 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
     if (!program) {
       this.setError(this.INVALID_VALUE)
-      return
     } else if (this._checkWrapper(program, WebGLProgram)) {
       uniformBlockIndex |= 0
       uniformBlockBinding |= 0
