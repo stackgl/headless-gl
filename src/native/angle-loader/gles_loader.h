@@ -261,6 +261,7 @@
 #define glUniformMatrix3x4fv l_glUniformMatrix3x4fv
 #define glUniformMatrix4x3fv l_glUniformMatrix4x3fv
 #define glBlitFramebuffer l_glBlitFramebuffer
+#define glGetBufferSubData l_glGetBufferSubData
 #define glRenderbufferStorageMultisample l_glRenderbufferStorageMultisample
 #define glFramebufferTextureLayer l_glFramebufferTextureLayer
 #define glMapBufferRange l_glMapBufferRange
@@ -1103,6 +1104,7 @@ extern PFNGLUNIFORMMATRIX4X2FVPROC l_glUniformMatrix4x2fv;
 extern PFNGLUNIFORMMATRIX3X4FVPROC l_glUniformMatrix3x4fv;
 extern PFNGLUNIFORMMATRIX4X3FVPROC l_glUniformMatrix4x3fv;
 extern PFNGLBLITFRAMEBUFFERPROC l_glBlitFramebuffer;
+extern PFNGLGETBUFFERSUBDATAPROC l_glGetBufferSubData;
 extern PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC l_glRenderbufferStorageMultisample;
 extern PFNGLFRAMEBUFFERTEXTURELAYERPROC l_glFramebufferTextureLayer;
 extern PFNGLMAPBUFFERRANGEPROC l_glMapBufferRange;
