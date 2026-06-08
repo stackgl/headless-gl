@@ -1767,16 +1767,25 @@ GL_METHOD(GetShaderSource) {
 
 GL_METHOD(ReadPixels) {
   GL_BOILERPLATE;
-
+  
   GLint x = Nan::To<int32_t>(info[0]).ToChecked();
   GLint y = Nan::To<int32_t>(info[1]).ToChecked();
   GLsizei width = Nan::To<int32_t>(info[2]).ToChecked();
   GLsizei height = Nan::To<int32_t>(info[3]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[4]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[5]).ToChecked();
-  Nan::TypedArrayContents<char> pixels(info[6]);
 
-  glReadPixels(x, y, width, height, format, type, *pixels);
+  GLint pbo_binding = 0;
+  glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &pbo_binding);
+
+  if (pbo_binding > 0) {
+    intptr_t offset = static_cast<intptr_t>(Nan::To<int64_t>(info[6]).ToChecked());
+    glReadPixels(x, y, width, height, format, type, reinterpret_cast<void*>(offset));
+  } else {
+    Nan::TypedArrayContents<char> pixels(info[6]);
+    if (!*pixels) return Nan::ThrowTypeError("Invalid pixel data buffer");
+    glReadPixels(x, y, width, height, format, type, *pixels);
+  }
 }
 
 GL_METHOD(GetTexParameter) {
@@ -2356,12 +2365,29 @@ GL_METHOD(CopyBufferSubData) {
 
 GL_METHOD(GetBufferSubData) {
   GL_BOILERPLATE;
-  GLenum target = Nan::To<int32_t>(info[0]).ToChecked();
-  GLintptr srcByteOffset = Nan::To<int64_t>(info[1]).ToChecked();
-  auto buffer = info[2].As<v8::ArrayBufferView>();
-  void *bufferPtr = buffer->Buffer()->GetBackingStore()->Data();
-  GLsizeiptr bufferSize = buffer->ByteLength();
-  // TODO:  glGetBufferSubData(target, srcByteOffset, bufferSize, bufferPtr);
+  GLenum target = Nan::To<uint32_t>(info[0]).ToChecked();
+  GLintptr offset = static_cast<GLintptr>(Nan::To<int64_t>(info[1]).ToChecked());
+  
+  if (!info[2]->IsArrayBufferView()) {
+    return Nan::ThrowTypeError("Argument 3 must be an ArrayBufferView");
+  }
+
+  v8::Local<v8::ArrayBufferView> view = info[2].As<v8::ArrayBufferView>();
+  void *dest = static_cast<uint8_t*>(view->Buffer()->GetBackingStore()->Data()) + view->ByteOffset();
+  GLsizeiptr length = static_cast<GLsizeiptr>(view->ByteLength());
+
+  if (l_glMapBufferRange && l_glUnmapBuffer) {
+    // 0x0001 is GL_MAP_READ_BIT
+    void* gpuPtr = glMapBufferRange(target, offset, length, GL_MAP_READ_BIT);
+    if (gpuPtr) {
+      memcpy(dest, gpuPtr, length);
+      glUnmapBuffer(target);
+    } else {
+      return Nan::ThrowError("glMapBufferRange failed. Is the buffer bound?");
+    }
+  } else {
+    return Nan::ThrowError("Buffer mapping not supported by this driver.");
+  }
 }
 
 GL_METHOD(BlitFramebuffer) {
