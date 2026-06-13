@@ -200,10 +200,7 @@ function convertPixels (pixels) {
   if (typeof pixels === 'object' && pixels !== null) {
     if (isInstanceOfType(pixels, 'ArrayBuffer')) {
       return new Uint8Array(pixels)
-    } else if (isInstanceOfType(pixels, 'Uint8Array') ||
-      isInstanceOfType(pixels, 'Uint16Array') ||
-      isInstanceOfType(pixels, 'Uint8ClampedArray') ||
-      isInstanceOfType(pixels, 'Float32Array')) {
+    } else if (isTypedArray(pixels) || pixels instanceof DataView) {
       return unpackTypedArray(pixels)
     } else if (isInstanceOfType(pixels, 'Buffer')) {
       return new Uint8Array(pixels)
