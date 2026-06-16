@@ -124,6 +124,8 @@ GLenum OverrideDrawBufferEnum(GLenum buffer) {
     return GL_DEPTH_ATTACHMENT;
   case GL_STENCIL:
     return GL_STENCIL_ATTACHMENT;
+  default:
+    return buffer;
   }
 }
 
