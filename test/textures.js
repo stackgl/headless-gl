@@ -5,9 +5,6 @@ const BLACKLIST = [
   'textures_tex-image-webgl',
   'textures_tex-image-and-uniform-binding-bugs',
 
-  // FIXME: This test is broken
-  'textures_tex-input-validation',
-
   // Broken.  Formats besides gl.RGBA don't work for fbos
   'textures_texture-attachment-formats',
   'textures_texture-fakeblack',
