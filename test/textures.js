@@ -1,19 +1,13 @@
 const BLACKLIST = [
   'textures_compressed-tex-image',
-  'textures_copy-tex-image-2d-formats',
-  'textures_copy-tex-image-and-sub-image-2d',
   'textures_tex-image-webgl',
-  'textures_tex-image-and-uniform-binding-bugs',
 
   // Broken.  Formats besides gl.RGBA don't work for fbos
   'textures_texture-attachment-formats',
   'textures_texture-fakeblack',
 
   // Don't have a mechanism to detect feedback yet
-  'textures_texture-copying-feedback-loops',
-
-  // Not sure what's happening here
-  'textures_texture-mips'
+  'textures_texture-copying-feedback-loops'
 ]
 
 require('./util/conformance')(function (str) {

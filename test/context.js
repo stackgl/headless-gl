@@ -1,6 +1,5 @@
 const BLACKLIST = [
-  'context_context-type-test',
-  'context_methods'
+  'context_context-type-test'
 ]
 
 require('./util/conformance')(function (str) {

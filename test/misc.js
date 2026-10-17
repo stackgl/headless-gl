@@ -1,6 +1,4 @@
 const BLACKLIST = [
-  // FIXME: Uninitialized data is broken
-  'misc_uninitialized-test',
   'misc_object-deletion-behaviour'
 ]
 
