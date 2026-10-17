@@ -4,10 +4,7 @@ const BLACKLIST = [
 
   // Broken.  Formats besides gl.RGBA don't work for fbos
   'textures_texture-attachment-formats',
-  'textures_texture-fakeblack',
-
-  // Don't have a mechanism to detect feedback yet
-  'textures_texture-copying-feedback-loops'
+  'textures_texture-fakeblack'
 ]
 
 require('./util/conformance')(function (str) {
