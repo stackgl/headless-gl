@@ -244,6 +244,11 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
     }
 
     auto getProcAddress = eglLibrary.getFunction<PFNEGLGETPROCADDRESSPROC>("eglGetProcAddress");
+    if (!getProcAddress) {
+      errorMessage = "Error loading eglGetProcAddress from ANGLE shared library.";
+      state = GLCONTEXT_STATE_ERROR;
+      return;
+    }
     ::LoadEGL(getProcAddress);
   }
 
