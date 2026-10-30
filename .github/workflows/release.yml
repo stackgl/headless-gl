@@ -67,7 +67,5 @@ jobs:
           else
             echo "TAG=latest" >> $GITHUB_ENV
           fi
-      - name: Publish to NPM
-        run: npm publish --tag "$TAG" --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Stage NPM publish
+        run: npm stage publish --tag "$TAG" --provenance --access public
