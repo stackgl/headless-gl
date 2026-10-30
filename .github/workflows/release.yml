@@ -59,7 +59,6 @@ jobs:
         with:
           node-version: '26.x'
           registry-url: 'https://registry.npmjs.org'
-          cache: 'npm'
       - id: release_tag
         run: |
           VERSION=$(node -p "require('./package.json').version")
