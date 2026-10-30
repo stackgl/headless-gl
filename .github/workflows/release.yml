@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         node-version: [26.x]
-        os: [ubuntu-24.04, ubuntu-24.04-arm, windows-2025]
+        os: [ubuntu-24.04, ubuntu-24.04-arm, windows-2025, macos-15]
         target: ["22.0.0", "24.0.0", "26.0.0"]
     runs-on: ${{ matrix.os }}
     permissions:
@@ -35,7 +35,11 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Prebuild and Publish
         shell: bash
-        run: node ./node_modules/prebuild/bin.js -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
+        run: node ./node_modules/prebuild/bin.js -t ${{ matrix.target }} ${{ runner.os == 'Linux' && '--strip' || '' }} --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
+      - name: Prebuild and Publish (macOS x64)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: node ./node_modules/prebuild/bin.js -t ${{ matrix.target }} --arch x64 --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
       - name: Prebuild and Publish (musl)
         if: runner.os == 'Linux'
         shell: bash
