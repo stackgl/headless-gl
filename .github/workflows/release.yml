@@ -31,24 +31,24 @@ jobs:
       - name: Prebuild and Publish
         if: runner.os != 'Linux'
         shell: bash
-        run: node ./node_modules/prebuild/bin.js -t ${{ matrix.target }} --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
+        run: node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
       - name: Prebuild and Publish (macOS x64)
         if: runner.os == 'macOS'
         shell: bash
-        run: node ./node_modules/prebuild/bin.js -t ${{ matrix.target }} --arch x64 --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
+        run: node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --arch x64 --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
       - name: Prebuild and Publish (glibc)
         if: runner.os == 'Linux'
         shell: bash
         run: >
-          docker run --rm -v "$PWD:/src" -w /src node:26-bookworm
-          node ./node_modules/prebuild/bin.js -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
+          docker run --rm -v "$PWD:/src" -w "/src" node:26-bookworm
+          node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
       - name: Prebuild and Publish (musl)
         if: runner.os == 'Linux'
         shell: bash
         run: >
-          docker run --rm -v "$PWD:/src" -w /src alpine:3.22 sh -c
+          docker run --rm -v "$PWD:/src" -w "/src" alpine:3.22 sh -c
           'apk add --no-cache build-base python3 nodejs &&
-          node ./node_modules/prebuild/bin.js -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose'
+          node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose'
       - name: Attest
         uses: actions/attest-build-provenance@v4
         with:
@@ -72,9 +72,9 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           if [[ "$VERSION" == *"-"* ]]; then
-            echo "TAG=next" >> $GITHUB_ENV
+            echo "TAG=next" >> "$GITHUB_ENV"
           else
-            echo "TAG=latest" >> $GITHUB_ENV
+            echo "TAG=latest" >> "$GITHUB_ENV"
           fi
       - name: Stage NPM publish
         run: npm stage publish --tag "$TAG" --provenance --access public

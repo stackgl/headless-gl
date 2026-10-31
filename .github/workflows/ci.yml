@@ -57,7 +57,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: >
-          docker run --rm --init -v "$PWD:/src" -w /src node:${{ matrix.node-version }}-alpine sh -c
+          docker run --rm --init -v "$PWD:/src" -w "/src" node:${{ matrix.node-version }}-alpine sh -c
           'apk add --no-cache build-base python3 libx11 libxext libxcb libdrm zlib mesa-gl mesa-dri-gallium xvfb-run &&
           npm run rebuild &&
           xvfb-run npm test'
