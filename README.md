@@ -152,16 +152,15 @@ In most cases installing `headless-gl` from npm should just work. However, if yo
 
 #### Ubuntu/Debian
 
-* [Python 3](https://www.python.org/)
-* A GNU C++ environment (available via the `build-essential` package on `apt`)
-* [libxi-dev](http://www.x.org/wiki/)
-* Working and up to date OpenGL drivers
-* [GLEW](http://glew.sourceforge.net/)
-* [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/)
+Prebuilt binaries for glibc 2.34 and later (x64 and arm64), such as Debian 12, Ubuntu 22.04, RHEL 9 and Amazon Linux 2023, need these libraries at runtime:
 
 ```
-$ sudo apt-get install -y build-essential libxi-dev libglu1-mesa-dev libglew-dev pkg-config
+$ sudo apt-get install -y libx11-6 libxext6 libxcb1
 ```
+
+On RHEL, Fedora and Amazon Linux, install `libX11 libXext libxcb` with `dnf`. If one is missing, `createGL` returns `null` and warns which library it couldn't load.
+
+To build from source, also install `build-essential` and `python3`. For headless use, see [below](#how-can-headless-gl-be-used-on-a-headless-linux-machine).
 
 #### Alpine Linux
 
