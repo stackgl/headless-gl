@@ -237,8 +237,16 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
 #endif
 
   if (!eglGetProcAddress) {
+    // libEGL loads libGLESv2 on first use and crashes if that fails, for example when a library that libGLESv2 needs isn't installed.
+    // Loading it here first turns that into an error.
+    if (!glesLibrary.open("libGLESv2")) {
+      errorMessage = "Error opening ANGLE shared library: " + glesLibrary.getError();
+      state = GLCONTEXT_STATE_ERROR;
+      return;
+    }
+
     if (!eglLibrary.open("libEGL")) {
-      errorMessage = "Error opening ANGLE shared library.";
+      errorMessage = "Error opening ANGLE shared library: " + eglLibrary.getError();
       state = GLCONTEXT_STATE_ERROR;
       return;
     }

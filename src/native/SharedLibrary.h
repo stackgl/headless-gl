@@ -33,11 +33,20 @@ public:
         GetModuleDirectory() + "/" + libraryPath + GetSharedLibraryExtension();
 #ifdef _WIN32
     handle = LoadLibraryA(libraryPathWithExt.c_str());
+    if (!handle) {
+      error = libraryPathWithExt + ": error " + std::to_string(GetLastError());
+    }
 #else
     handle = dlopen(libraryPathWithExt.c_str(), RTLD_LAZY);
+    if (!handle) {
+      const char *message = dlerror();
+      error = message ? message : libraryPathWithExt;
+    }
 #endif
     return handle != nullptr;
   }
+
+  const std::string &getError() const { return error; }
 
   ~SharedLibrary() {
     if (handle) {
@@ -61,4 +70,5 @@ public:
 
 private:
   void *handle = nullptr;
+  std::string error;
 };
