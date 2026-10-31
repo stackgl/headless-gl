@@ -1,9 +1,32 @@
 name: Prebuild, Create Release, Publish
+run-name: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && format('Release {0}', github.ref_name) || format('Dry run ({0})', github.ref_name) }}
 
+# Only a pushed version tag uploads prebuilds and publishes to npm.
+# Every other trigger is a dry run: it builds the same prebuilds but keeps them as workflow artifacts.
 on:
   push:
     tags:
       - 'v*'
+    branches:
+      - master
+    paths:
+      - 'binding.gyp'
+      - 'deps/**'
+      - 'src/native/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/release.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'binding.gyp'
+      - 'deps/**'
+      - 'src/native/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/release.yml'
+  workflow_dispatch:
 
 jobs:
   build:
@@ -18,6 +41,8 @@ jobs:
       contents: write
       attestations: write
       packages: read
+    env:
+      UPLOAD_TOKEN: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && secrets.GITHUB_TOKEN || '' }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -28,34 +53,44 @@ jobs:
       - run: npm ci --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Prebuild and Publish
+      - name: Prebuild
         if: runner.os != 'Linux'
         shell: bash
-        run: node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
-      - name: Prebuild and Publish (macOS x64)
+        run: node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --include-regex "\.(node|dylib|dll|so)$" ${UPLOAD_TOKEN:+-u "$UPLOAD_TOKEN"} --verbose
+      - name: Prebuild (macOS x64)
         if: runner.os == 'macOS'
         shell: bash
-        run: node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --arch x64 --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
-      - name: Prebuild and Publish (glibc)
+        run: node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --arch x64 --include-regex "\.(node|dylib|dll|so)$" ${UPLOAD_TOKEN:+-u "$UPLOAD_TOKEN"} --verbose
+      - name: Prebuild (glibc)
         if: runner.os == 'Linux'
         shell: bash
         run: >
           docker run --rm -v "$PWD:/src" -w "/src" node:26-bookworm
-          node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose
-      - name: Prebuild and Publish (musl)
+          node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" ${UPLOAD_TOKEN:+-u "$UPLOAD_TOKEN"} --verbose
+      - name: Prebuild (musl)
         if: runner.os == 'Linux'
         shell: bash
         run: >
-          docker run --rm -v "$PWD:/src" -w "/src" alpine:3.22 sh -c
+          docker run --rm -e UPLOAD_TOKEN -v "$PWD:/src" -w "/src" alpine:3.22 sh -c
           'apk add --no-cache build-base python3 nodejs &&
-          node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" -u ${{ secrets.GITHUB_TOKEN }} --verbose'
+          node "./node_modules/prebuild/bin.js" -t ${{ matrix.target }} --strip --include-regex "\.(node|dylib|dll|so)$" ${UPLOAD_TOKEN:+-u "$UPLOAD_TOKEN"} --verbose'
       - name: Attest
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: 'prebuilds/*.tar.gz'
+      - name: Keep dry-run prebuilds
+        if: github.event_name != 'push' || !startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v7
+        with:
+          name: prebuilds-${{ matrix.os }}-node-${{ matrix.target }}
+          path: 'prebuilds/*.tar.gz'
+          if-no-files-found: error
+          retention-days: 7
 
   publish:
     name: Publish to NPM
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs:
       - build
     runs-on: ubuntu-latest
