@@ -13,12 +13,20 @@ function flag (options, name, dflt) {
   return !!options[name]
 }
 
+function warnContextCreationFailed (message) {
+  process.emitWarning(message, {
+    type: 'HeadlessGLWarning',
+    code: 'HEADLESS_GL_CONTEXT_CREATION_FAILED'
+  })
+}
+
 function createContext (width, height, options) {
-  width = width | 0
-  height = height | 0
-  if (!(width > 0 && height > 0)) {
+  if (!((width | 0) > 0 && (height | 0) > 0)) {
+    warnContextCreationFailed(`Error creating WebGLContext: width and height must be at least 1, got ${width} and ${height}.`)
     return null
   }
+  width = width | 0
+  height = height | 0
 
   const contextAttributes = new WebGLContextAttributes(
     flag(options, 'alpha', true),
@@ -51,10 +59,7 @@ function createContext (width, height, options) {
       contextAttributes.failIfMajorPerformanceCaveat,
       contextAttributes.createWebGL2Context)
   } catch (e) {
-    process.emitWarning(e.message, {
-      type: 'HeadlessGLWarning',
-      code: 'HEADLESS_GL_CONTEXT_CREATION_FAILED'
-    })
+    warnContextCreationFailed(e.message)
   }
   if (!ctx) {
     return null
