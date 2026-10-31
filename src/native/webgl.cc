@@ -318,6 +318,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
                              EGL_NONE};
   context = eglCreateContext(DISPLAY, config, EGL_NO_CONTEXT, contextAttribs);
   if (context == EGL_NO_CONTEXT) {
+    errorMessage = "Error creating EGL context.";
     state = GLCONTEXT_STATE_ERROR;
     return;
   }
