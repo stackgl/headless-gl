@@ -72,7 +72,7 @@ const gl = createGL(width, height)
 * `height` is the height of the drawing buffer
 * `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2)
 
-**Returns** A new `WebGLRenderingContext` object
+**Returns** A new `WebGLRenderingContext` object, or `null` if the context can't be created. The reason is emitted as a Node.js [process warning](https://nodejs.org/api/process.html#event-warning) of type `HeadlessGLWarning` with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED`. To hide all of headless-gl's warnings, set `NODE_OPTIONS=--disable-warning=HeadlessGLWarning`. To hide only this one, use its code instead.
 
 ### Extensions
 

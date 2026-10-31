@@ -50,7 +50,12 @@ function createContext (width, height, options) {
       contextAttributes.preferLowPowerToHighPerformance,
       contextAttributes.failIfMajorPerformanceCaveat,
       contextAttributes.createWebGL2Context)
-  } catch (e) {}
+  } catch (e) {
+    process.emitWarning(e.message, {
+      type: 'HeadlessGLWarning',
+      code: 'HEADLESS_GL_CONTEXT_CREATION_FAILED'
+    })
+  }
   if (!ctx) {
     return null
   }
