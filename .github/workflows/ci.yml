@@ -37,3 +37,27 @@ jobs:
         run: xvfb-run npm test
       - if: runner.os != 'Linux'
         run: npm test
+  alpine:
+    runs-on: ${{ matrix.os }}
+    permissions:
+      packages: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24, 26]
+        os: [ubuntu-24.04, ubuntu-24.04-arm]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          registry-url: 'https://npm.pkg.github.com'
+      - run: npm ci --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: >
+          docker run --rm --init -v "$PWD:/src" -w /src node:${{ matrix.node-version }}-alpine sh -c
+          'apk add --no-cache build-base python3 libx11 libxext libxcb libdrm zlib mesa-gl mesa-dri-gallium xvfb-run &&
+          npm run rebuild &&
+          xvfb-run npm test'
