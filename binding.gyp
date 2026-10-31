@@ -54,46 +54,21 @@
               }
            ]
         }],
-        ['OS=="linux" and libc=="glibc" and target_arch=="arm64"', {
+        ['OS=="linux" and (target_arch=="x64" or target_arch=="arm64")', {
+            'variables': {
+              'angle_libc': '',
+              'angle_arch': '',
+              'conditions': [
+                ['libc=="musl"', {'angle_libc': 'musl'}],
+                ['target_arch=="arm64"', {'angle_arch': '-arm64'}],
+              ],
+            },
             "copies": [
               {
                 'destination': '<(PRODUCT_DIR)',
                 'files': [
-                  '<(module_root_dir)/deps/linux-arm64/so/libEGL.so',
-                  '<(module_root_dir)/deps/linux-arm64/so/libGLESv2.so',
-                ]
-              }
-           ]
-        }],
-        ['OS=="linux" and libc=="glibc" and target_arch=="x64"', {
-            "copies": [
-              {
-                'destination': '<(PRODUCT_DIR)',
-                'files': [
-                  '<(module_root_dir)/deps/linux/so/libEGL.so',
-                  '<(module_root_dir)/deps/linux/so/libGLESv2.so',
-                ]
-              }
-           ]
-        }],
-        ['OS=="linux" and libc=="musl" and target_arch=="arm64"', {
-            "copies": [
-              {
-                'destination': '<(PRODUCT_DIR)',
-                'files': [
-                  '<(module_root_dir)/deps/linuxmusl-arm64/so/libEGL.so',
-                  '<(module_root_dir)/deps/linuxmusl-arm64/so/libGLESv2.so',
-                ]
-              }
-           ]
-        }],
-        ['OS=="linux" and libc=="musl" and target_arch=="x64"', {
-            "copies": [
-              {
-                'destination': '<(PRODUCT_DIR)',
-                'files': [
-                  '<(module_root_dir)/deps/linuxmusl/so/libEGL.so',
-                  '<(module_root_dir)/deps/linuxmusl/so/libGLESv2.so',
+                  '<(module_root_dir)/deps/linux<(angle_libc)<(angle_arch)/so/libEGL.so',
+                  '<(module_root_dir)/deps/linux<(angle_libc)<(angle_arch)/so/libGLESv2.so',
                 ]
               }
            ]
