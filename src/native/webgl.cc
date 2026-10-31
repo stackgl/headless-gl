@@ -237,6 +237,10 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
 #endif
 
   if (!eglGetProcAddress) {
+    // The EGL and GLES function pointers loaded through these libraries are globals shared by every context, so the libraries are never closed, not even at exit.
+    static SharedLibrary &glesLibrary = *new SharedLibrary();
+    static SharedLibrary &eglLibrary = *new SharedLibrary();
+
     // libEGL loads libGLESv2 on first use and crashes if that fails, for example when a library that libGLESv2 needs isn't installed.
     // Loading it here first turns that into an error.
     if (!glesLibrary.open("libGLESv2")) {
@@ -327,6 +331,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   surface = eglCreatePbufferSurface(DISPLAY, config, surfaceAttribs);
   if (surface == EGL_NO_SURFACE) {
     errorMessage = "Error creating EGL surface.";
+    eglDestroyContext(DISPLAY, context);
     state = GLCONTEXT_STATE_ERROR;
     return;
   }
@@ -334,6 +339,8 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   // Set active
   if (!eglMakeCurrent(DISPLAY, surface, surface, context)) {
     errorMessage = "Error making context current.";
+    eglDestroySurface(DISPLAY, surface);
+    eglDestroyContext(DISPLAY, context);
     state = GLCONTEXT_STATE_ERROR;
     return;
   }
@@ -532,12 +539,12 @@ GL_METHOD(New) {
                                 createWebGL2Context);
 
   if (instance->state != GLCONTEXT_STATE_OK) {
+    std::string error = "Error creating WebGLContext";
     if (!instance->errorMessage.empty()) {
-      std::string error = std::string("Error creating WebGLContext: ") + instance->errorMessage;
-      return Nan::ThrowError(error.c_str());
-    } else {
-      return Nan::ThrowError("Error creating WebGLContext");
+      error += ": " + instance->errorMessage;
     }
+    delete instance;
+    return Nan::ThrowError(error.c_str());
   }
 
   instance->Wrap(info.This());

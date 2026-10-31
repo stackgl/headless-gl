@@ -47,8 +47,6 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static bool HAS_DISPLAY;
   static EGLDisplay DISPLAY;
 
-  SharedLibrary glesLibrary;
-  SharedLibrary eglLibrary;
   EGLContext context;
   EGLConfig config;
   EGLSurface surface;
