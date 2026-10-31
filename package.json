@@ -13,7 +13,7 @@
   "scripts": {
     "test": "standard | snazzy && tape test/*.js | faucet",
     "rebuild": "node-gyp rebuild --verbose",
-    "prebuild": "prebuild --all --strip",
+    "prebuild": "prebuild -t 22.0.0 -t 24.0.0 -t 26.0.0 --include-regex \"\\.(node|dylib|dll|so)$\"",
     "install": "prebuild-install || node-gyp rebuild"
   },
   "dependencies": {
