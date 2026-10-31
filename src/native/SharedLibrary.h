@@ -34,7 +34,8 @@ public:
 #ifdef _WIN32
     handle = LoadLibraryA(libraryPathWithExt.c_str());
     if (!handle) {
-      error = libraryPathWithExt + ": error " + std::to_string(GetLastError());
+      DWORD code = GetLastError();
+      error = libraryPathWithExt + ": error " + std::to_string(code);
     }
 #else
     handle = dlopen(libraryPathWithExt.c_str(), RTLD_LAZY);
