@@ -20,6 +20,18 @@ std::string Narrow(const std::wstring_view &utf16) {
   return utf8;
 }
 
+std::wstring Widen(const std::string_view &utf8) {
+  if (utf8.empty()) {
+    return {};
+  }
+  int requiredSize =
+      MultiByteToWideChar(CP_UTF8, 0, utf8.data(), static_cast<int>(utf8.size()), nullptr, 0);
+  std::wstring utf16(requiredSize, L'\0');
+  MultiByteToWideChar(CP_UTF8, 0, utf8.data(), static_cast<int>(utf8.size()), &utf16[0],
+                      requiredSize);
+  return utf16;
+}
+
 std::string GetPath(HMODULE module) {
   std::array<wchar_t, MAX_PATH> executableFileBuf;
   DWORD executablePathLen = GetModuleFileNameW(module, executableFileBuf.data(),

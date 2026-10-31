@@ -24,6 +24,10 @@ inline std::string GetSharedLibraryExtension() {
 
 std::string GetModuleDirectory();
 
+#ifdef _WIN32
+std::wstring Widen(const std::string_view &utf8);
+#endif
+
 class SharedLibrary {
 public:
   SharedLibrary() {}
@@ -32,7 +36,7 @@ public:
     const std::string libraryPathWithExt =
         GetModuleDirectory() + "/" + libraryPath + GetSharedLibraryExtension();
 #ifdef _WIN32
-    handle = LoadLibraryA(libraryPathWithExt.c_str());
+    handle = LoadLibraryW(Widen(libraryPathWithExt).c_str());
     if (!handle) {
       DWORD code = GetLastError();
       error = libraryPathWithExt + ": error " + std::to_string(code);
