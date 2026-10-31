@@ -29,7 +29,20 @@ on:
   workflow_dispatch:
 
 jobs:
+  # A release runs the tests first and builds nothing if they fail.
+  # Dry runs skip them, since pushes and pull requests already run ci.yml on their own.
+  test:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+      packages: read
+
   build:
+    needs:
+      - test
+    # Without this, a skipped test job would skip the builds too.
+    if: ${{ !failure() && !cancelled() }}
     strategy:
       matrix:
         node-version: [26.x]
