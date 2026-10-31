@@ -285,7 +285,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   }
 
   // Set up configuration
-  EGLint renderableTypeBit = createWebGL2Context ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_ES3_BIT;
+  EGLint renderableTypeBit = createWebGL2Context ? EGL_OPENGL_ES3_BIT : EGL_OPENGL_ES2_BIT;
   EGLint attrib_list[] = {EGL_SURFACE_TYPE,
                           EGL_PBUFFER_BIT,
                           EGL_RED_SIZE,
