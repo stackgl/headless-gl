@@ -47,7 +47,7 @@ Prebuilt binaries are generally available for LTS node versions (e.g. 22, 24, 26
 
 ## Supported platforms and Node.js versions
 
-gl runs on Linux, macOS, and Windows.
+gl runs on Linux (including Alpine), macOS, and Windows.
 
 Node.js versions 22 and up are tested and supported. Earlier versions may still function, however.
 
@@ -155,6 +155,16 @@ In most cases installing `headless-gl` from npm should just work. However, if yo
 ```
 $ sudo apt-get install -y build-essential libxi-dev libglu1-mesa-dev libglew-dev pkg-config
 ```
+
+#### Alpine Linux
+
+Prebuilt binaries for Alpine 3.22 and later (x64 and arm64) need these libraries at runtime:
+
+```
+$ apk add libx11 libxext libxcb libdrm zlib
+```
+
+To build from source, also install `build-base` and `python3`. For headless use (see [below](#how-can-headless-gl-be-used-on-a-headless-linux-machine)), install Xvfb and Mesa with `apk add xvfb-run mesa-gl mesa-dri-gallium`.
 
 #### Windows
 

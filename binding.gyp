@@ -2,10 +2,12 @@
   'variables': {
     'platform': '<(OS)',
     'openssl_fips' : '0',
+    'libc': '',
   },
   'conditions': [
     ['platform == "mac"', {'variables': {'platform': 'darwin'}}],
-    ['platform == "win"', {'variables': {'platform': 'win32'}}]
+    ['platform == "win"', {'variables': {'platform': 'win32'}}],
+    ['OS == "linux"', {'variables': {'libc': "<!(node -p \"process.report.getReport().header.glibcVersionRuntime ? 'glibc' : 'musl'\")"}}]
   ],
   'targets': [
     {
@@ -52,7 +54,7 @@
               }
            ]
         }],
-        ['OS=="linux" and target_arch=="arm64"', {
+        ['OS=="linux" and libc=="glibc" and target_arch=="arm64"', {
             "copies": [
               {
                 'destination': '<(PRODUCT_DIR)',
@@ -63,13 +65,35 @@
               }
            ]
         }],
-        ['OS=="linux" and target_arch=="x64"', {
+        ['OS=="linux" and libc=="glibc" and target_arch=="x64"', {
             "copies": [
               {
                 'destination': '<(PRODUCT_DIR)',
                 'files': [
                   '<(module_root_dir)/deps/linux/so/libEGL.so',
                   '<(module_root_dir)/deps/linux/so/libGLESv2.so',
+                ]
+              }
+           ]
+        }],
+        ['OS=="linux" and libc=="musl" and target_arch=="arm64"', {
+            "copies": [
+              {
+                'destination': '<(PRODUCT_DIR)',
+                'files': [
+                  '<(module_root_dir)/deps/linuxmusl-arm64/so/libEGL.so',
+                  '<(module_root_dir)/deps/linuxmusl-arm64/so/libGLESv2.so',
+                ]
+              }
+           ]
+        }],
+        ['OS=="linux" and libc=="musl" and target_arch=="x64"', {
+            "copies": [
+              {
+                'destination': '<(PRODUCT_DIR)',
+                'files': [
+                  '<(module_root_dir)/deps/linuxmusl/so/libEGL.so',
+                  '<(module_root_dir)/deps/linuxmusl/so/libGLESv2.so',
                 ]
               }
            ]
