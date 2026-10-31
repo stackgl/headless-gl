@@ -27,18 +27,18 @@ declare function createContext(
   width: number,
   height: number,
   options?: WebGLContextAttributes & { createWebGL2Context?: false },
-): WebGLRenderingContext & createContext.StackGLExtension;
+): (WebGLRenderingContext & createContext.StackGLExtension) | null;
 
 declare function createContext(
   width: number,
   height: number,
   options: WebGLContextAttributes & { createWebGL2Context: true }
-): WebGL2RenderingContext & createContext.StackGLExtension;
+): (WebGL2RenderingContext & createContext.StackGLExtension) | null;
 
 declare function createContext(
   width: number,
   height: number,
   options?: WebGLContextAttributes & { createWebGL2Context?: boolean }
-): (WebGLRenderingContext | WebGL2RenderingContext) & createContext.StackGLExtension;
+): ((WebGLRenderingContext | WebGL2RenderingContext) & createContext.StackGLExtension) | null;
 
 export = createContext;
