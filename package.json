@@ -22,7 +22,6 @@
     "detect-libc": "^2.1.2",
     "glsl-tokenizer": "^2.1.5",
     "nan": "^2.30.0",
-    "node-gyp": "^13.1.0",
     "prebuild-install": "^7.1.3"
   },
   "devDependencies": {
