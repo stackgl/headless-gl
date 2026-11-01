@@ -225,6 +225,8 @@ Interacting with `Xvfb` requires you to start it on the background and to execut
 
 Yes, with [browserify](http://browserify.org/). The `STACKGL_destroy_context` and `STACKGL_resize_drawingbuffer` extensions are emulated as well.
 
+In a browser, `createGL` creates a canvas and calls its `getContext`, and throws the same errors as in Node. The reason in the error message comes from the browser, which often gives little or no detail.
+
 ### How are `<image>` and `<video>` elements implemented?
 
 They aren't for now. If you want to upload data to a texture, you will need to unpack the pixels into a `Uint8Array` and feed it into `texImage2D`. To help reading and saving images, you should check out the following modules:
