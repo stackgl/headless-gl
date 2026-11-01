@@ -276,6 +276,7 @@ Once this is done, you should be good to go! A few more things
 
 * To run the test cases, use the command `npm test`, or execute specific tests by just running them using `node`.
 * On a Unix-like platform, you can do incremental rebuilds by going into the `build/` directory and running `make`. This is **way faster** running `npm build` each time you make a change.
+* When you replace the ANGLE libraries in `deps/`, run `node scripts/angle-assets.js <release tag> <folder>` with a new release tag, and commit the updated `src/angle.json` with the libraries. When the change reaches master, the ANGLE release workflow creates that release for source builds to download from.
 
 Note: the `gl-conformance` package is currently hosted on GitHub Package Registry. To install from there, you may need to add `//npm.pkg.github.com` to your user directory's `.npmrc` file
 

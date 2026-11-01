@@ -1,0 +1,74 @@
+name: ANGLE release
+
+# Source builds download the ANGLE libraries from the GitHub release named in src/angle.json, since the npm package leaves deps/ out.
+# This checks that src/angle.json matches deps/. On master and for version tags, it also creates that release if it doesn't exist yet, uploads any missing files, and checks that every library downloads with the right hash.
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'deps/**'
+      - 'src/angle.js'
+      - 'src/angle.json'
+      - 'scripts/angle-assets.js'
+      - '.github/workflows/angle-release.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'deps/**'
+      - 'src/angle.js'
+      - 'src/angle.json'
+      - 'scripts/angle-assets.js'
+      - '.github/workflows/angle-release.yml'
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  angle-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # A master push and a version tag pushed together would otherwise both try to create the release.
+    concurrency: angle-release
+    env:
+      PUBLISH: ${{ github.repository == 'stackgl/headless-gl' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')) }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '26.x'
+      - name: Check src/angle.json against deps/
+        run: |
+          TAG=$(node -p "require('./src/angle.json').release")
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          node "./scripts/angle-assets.js" "$TAG" "$RUNNER_TEMP/angle"
+          git diff --exit-code "src/angle.json" || { echo "::error::src/angle.json doesn't match deps/. Run node scripts/angle-assets.js with a new release tag and commit the result."; exit 1; }
+      - name: Create the release
+        if: env.PUBLISH == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --latest=false --notes "The ANGLE libraries that headless-gl downloads when it builds from source. src/angle.json lists their SHA-256 hashes."
+          fi
+          EXISTING=$(gh release view "$TAG" --json assets --jq '.assets[].name')
+          for FILE in "$RUNNER_TEMP"/angle/*.gz; do
+            if ! printf '%s\n' "$EXISTING" | grep -qxF "$(basename "$FILE")"; then
+              gh release upload "$TAG" "$FILE"
+            fi
+          done
+      - name: Check that every library downloads
+        if: env.PUBLISH == 'true'
+        run: |
+          mkdir -p "$RUNNER_TEMP/download/src"
+          cp "src/angle.js" "src/angle.json" "$RUNNER_TEMP/download/src/"
+          cd "$RUNNER_TEMP/download"
+          node "src/angle.js" mac x64 ""
+          node "src/angle.js" win x64 ""
+          for ARCH in x64 arm64; do
+            for LIBC in glibc musl; do
+              node "src/angle.js" linux "$ARCH" "$LIBC"
+            done
+          done

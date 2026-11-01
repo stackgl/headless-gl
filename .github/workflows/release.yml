@@ -101,11 +101,19 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  # Source builds of the published package download the ANGLE libraries from this release.
+  angle:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    uses: ./.github/workflows/angle-release.yml
+    permissions:
+      contents: write
+
   publish:
     name: Publish to NPM
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs:
       - build
+      - angle
     runs-on: ubuntu-latest
     permissions:
       contents: read

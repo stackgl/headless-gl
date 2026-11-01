@@ -1,7 +1,7 @@
 // Prepares the ANGLE libraries in deps/ for the GitHub release that source builds download them from, since the npm package leaves deps/ out.
 // Usage: node scripts/angle-assets.js <release tag> <output folder>
 // It writes each library gzipped as <folder>-<file>.gz to the output folder, and records the tag and each library's SHA-256 hash in src/angle.json.
-// Then create a GitHub release with that tag and upload the .gz files to it.
+// Use a new tag whenever the libraries change, and commit src/angle.json. The ANGLE release workflow then creates that release on master and uploads the .gz files to it.
 const crypto = require('crypto')
 const fs = require('fs')
 const path = require('path')
