@@ -1,6 +1,6 @@
 const bits = require('bit-twiddle')
 const { WebGLContextAttributes } = require('./webgl-context-attributes')
-const { WebGLRenderingContext, WebGL2RenderingContext, wrapContext } = require('./webgl-rendering-context')
+const { WebGLRenderingContextHelper, wrapContext } = require('./webgl-rendering-context')
 const { WebGLTextureUnit } = require('./webgl-texture-unit')
 const { WebGLVertexArrayObjectState, WebGLVertexArrayGlobalState } = require('./webgl-vertex-attribute')
 
@@ -35,10 +35,9 @@ function createContext (width, height, options) {
   contextAttributes.premultipliedAlpha =
     contextAttributes.premultipliedAlpha && contextAttributes.alpha
 
-  const WebGLContext = contextAttributes.createWebGL2Context ? WebGL2RenderingContext : WebGLRenderingContext
   let ctx
   try {
-    ctx = new WebGLContext(
+    ctx = new WebGLRenderingContextHelper(
       1,
       1,
       contextAttributes.alpha,

@@ -21,7 +21,7 @@ tape.skip('multiple-render-targets', function (t) {
     }
   }
   t.equals(notZero, 16, `Only ${notZero} are not 0, expected 16`)
-  gl.destroy()
+  gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 
   function writeTextures () {

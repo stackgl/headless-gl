@@ -31,7 +31,7 @@ tape('clear color', function (t) {
   t.ok(testColor(0, 255, 0, 255), 'green')
   t.ok(testColor(255, 0, 255, 0), 'magenta')
 
-  gl.destroy()
+  gl.getExtension('STACKGL_destroy_context').destroy()
 
   t.end()
 })

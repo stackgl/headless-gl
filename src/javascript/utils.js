@@ -2,25 +2,6 @@ const { gl } = require('./native-gl')
 
 const { WebGLUniformLocation } = require('./webgl-uniform-location')
 
-function bindPublics (props, wrapper, privateInstance, privateMethods) {
-  for (let i = 0; i < props.length; i++) {
-    const prop = props[i]
-    const value = privateInstance[prop]
-    if (typeof value === 'function') {
-      if (privateMethods.indexOf(prop) === -1) {
-        wrapper[prop] = value.bind(privateInstance)
-      }
-    } else {
-      if (prop[0] === '_' ||
-        prop[0] === '0' ||
-        prop[0] === '1') {
-        continue
-      }
-      wrapper[prop] = value
-    }
-  }
-}
-
 function checkObject (object) {
   return typeof object === 'object' ||
     (object === undefined)
@@ -228,7 +209,6 @@ function validCubeTarget (target) {
 }
 
 module.exports = {
-  bindPublics,
   checkObject,
   isTypedArray,
   isValidString,

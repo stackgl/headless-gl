@@ -122,7 +122,7 @@ tape('mapbox-ansis', function (t) {
   t.equals(pixels[2], 0)
   t.equals(pixels[3], 255)
 
-  gl.destroy()
+  gl.getExtension('STACKGL_destroy_context').destroy()
 
   t.end()
 })

@@ -9,7 +9,7 @@ tape('resize', function (t) {
   const gl = createContext(width, height)
 
   function testColor (width, height, r, g, b, a) {
-    gl.resize(width, height)
+    gl.getExtension('STACKGL_resize_drawingbuffer').resize(width, height)
 
     t.equals(gl.drawingBufferWidth, width, 'width updated')
     t.equals(gl.drawingBufferHeight, height, 'height updated')
@@ -42,7 +42,7 @@ tape('resize', function (t) {
   testColor(4, 4, 255, 0, 255, 0)
   testColor(1, 1, 0, 255, 255, 255)
 
-  gl.destroy()
+  gl.getExtension('STACKGL_destroy_context').destroy()
 
   t.end()
 })

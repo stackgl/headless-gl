@@ -12,8 +12,8 @@ const { getEXTBlendMinMax } = require('./extensions/ext-blend-minmax')
 const { getEXTTextureFilterAnisotropic } = require('./extensions/ext-texture-filter-anisotropic')
 const { getEXTShaderTextureLod } = require('./extensions/ext-shader-texture-lod')
 const { getOESVertexArrayObject } = require('./extensions/oes-vertex-array-object')
+const { webgl1Methods, webgl2OnlyMethods } = require('./webgl-methods')
 const {
-  bindPublics,
   checkObject,
   checkUniform,
   isValidString,
@@ -69,23 +69,25 @@ const availableExtensions = {
   ext_color_buffer_float: getEXTColorBufferFloat
 }
 
-const privateMethods = [
-  'constructor',
-  'resize',
-  'destroy'
-]
-
+// Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
 function wrapContext (ctx) {
-  const isWebGL2 = ctx.constructor.name === 'WebGL2RenderingContext'
-  const wrapper = isWebGL2 ? new WebGL2RenderingContext() : new WebGLRenderingContext()
+  const isWebGL2 = ctx._isWebGL2()
+  // Object.create skips the constructor, which throws.
+  const wrapper = Object.create(isWebGL2 ? WebGL2RenderingContext.prototype : WebGLRenderingContext.prototype)
 
-  let proto = ctx
-  while (proto && proto !== Object.prototype) {
-    bindPublics(Object.keys(proto), wrapper, ctx, privateMethods)
-    bindPublics(Object.keys(proto.constructor.prototype), wrapper, ctx, privateMethods)
-    bindPublics(Object.getOwnPropertyNames(proto), wrapper, ctx, privateMethods)
-    bindPublics(Object.getOwnPropertyNames(proto.constructor.prototype), wrapper, ctx, privateMethods)
-    proto = Object.getPrototypeOf(proto)
+  for (let proto = ctx; proto && proto !== Object.prototype; proto = Object.getPrototypeOf(proto)) {
+    for (const name of Object.getOwnPropertyNames(proto)) {
+      if (/^[A-Z]/.test(name) && typeof ctx[name] === 'number') {
+        wrapper[name] = ctx[name]
+      }
+    }
+  }
+
+  const methods = isWebGL2 ? webgl1Methods.concat(webgl2OnlyMethods) : webgl1Methods
+  for (const name of methods) {
+    if (typeof ctx[name] === 'function') {
+      wrapper[name] = ctx[name].bind(ctx)
+    }
   }
 
   Object.defineProperties(wrapper, {
@@ -3134,16 +3136,27 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 }
 
+// The classes of the contexts that createContext returns. They don't extend the native class, so wrapping a context doesn't create another native one.
+// Like the browser's, they can't be constructed directly.
+class WebGLRenderingContext {
+  constructor () {
+    throw new TypeError('Illegal constructor')
+  }
+}
+
+class WebGL2RenderingContext {
+  constructor () {
+    throw new TypeError('Illegal constructor')
+  }
+}
+
 // Make the gl consts available as static properties
 for (const [key, value] of Object.entries(gl)) {
   if (typeof value !== 'number') {
     continue
   }
-  Object.assign(WebGLRenderingContextHelper, { [key]: value })
+  Object.assign(WebGLRenderingContext, { [key]: value })
+  Object.assign(WebGL2RenderingContext, { [key]: value })
 }
 
-class WebGLRenderingContext extends WebGLRenderingContextHelper {}
-
-class WebGL2RenderingContext extends WebGLRenderingContextHelper {}
-
-module.exports = { WebGLRenderingContext, WebGL2RenderingContext, wrapContext }
+module.exports = { WebGLRenderingContext, WebGL2RenderingContext, WebGLRenderingContextHelper, wrapContext }

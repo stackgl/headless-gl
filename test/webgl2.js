@@ -30,7 +30,7 @@ tape('webgl2: create context', function (t) {
   t.ok(gl.getParameter(gl.VERSION).startsWith('WebGL 2.0 '), 'VERSION is WebGL 2.0')
   t.ok(gl.getParameter(gl.SHADING_LANGUAGE_VERSION).startsWith('WebGL GLSL ES 3.00 '), 'SHADING_LANGUAGE_VERSION is WebGL GLSL ES 3.00')
 
-  gl.destroy()
+  gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
 
@@ -43,7 +43,7 @@ tape('webgl2: clear color', function (t) {
   gl.clear(gl.COLOR_BUFFER_BIT)
   t.deepEqual(readColors(gl, width, height), ['255,0,0,255'], 'every pixel is red')
 
-  gl.destroy()
+  gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
 
@@ -87,6 +87,6 @@ void main() {
   t.deepEqual(readColors(gl, width, height), ['0,255,0,255'], 'every pixel is green')
   t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
 
-  gl.destroy()
+  gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
