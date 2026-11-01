@@ -9,10 +9,11 @@ function createContext (width, height, options) {
   canvas.width = width
   canvas.height = height
 
+  const contextType = options && options.createWebGL2Context ? 'webgl2' : 'webgl'
   /**
    * @type WebGLRenderingContext
    */
-  const gl = canvas.getContext('webgl', options)
+  const gl = canvas.getContext(contextType, options)
 
   const _getExtension = gl.getExtension
   const extDestroy = {
