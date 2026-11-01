@@ -52,6 +52,8 @@ npm rebuild gl
 
 Prebuilt binaries are generally available for LTS node versions (e.g. 22, 24, 26) until they reach EOL. If your system is not supported, then please see the [development](#system-dependencies) section on how to configure your build environment. Patches to improve support are always welcome!
 
+When `gl` builds from source, it downloads the ANGLE libraries for your platform from this repository's [GitHub releases](https://github.com/stackgl/headless-gl/releases), since the npm package doesn't include them. To build without access to GitHub, set `HEADLESS_GL_ANGLE_MIRROR` to a URL or a local folder with the same `.gz` files.
+
 ## Supported platforms and Node.js versions
 
 gl runs on Linux (including Alpine), macOS, and Windows.

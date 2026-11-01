@@ -1,0 +1,30 @@
+{
+  "release": "angle-electron-43.8.6",
+  "libraries": {
+    "darwin/dylib": {
+      "libEGL.dylib": "868183fa74b3528225ec69b23d153e25c626a47608a2c9074cef2b5e0597183c",
+      "libGLESv2.dylib": "14ed326531cf0258f2d5a91541fc9174fb2578af6e1e8adf3cf4f4f352c520be"
+    },
+    "linux/so": {
+      "libEGL.so": "04f401e115adbbaad0e8eb574ea95f9fb4c62a729cde6b396fd1f2eec203ef71",
+      "libGLESv2.so": "21ae2ed8514ce8319f0dbd57c9b4295793d178b402142b3541e641e1b743a283"
+    },
+    "linux-arm64/so": {
+      "libEGL.so": "c9281cc49e9f6e138055cda6ae731a2f532276dece85a759d3293e2cbf482987",
+      "libGLESv2.so": "6e23db491b603b886574190d9a4e48d4fabc557e142c2aa945a4f80deea55c7a"
+    },
+    "linuxmusl/so": {
+      "libEGL.so": "a64392346e4d964faa16b16ff0b5871f8e8c986c8f709f710d19467f87682ae4",
+      "libGLESv2.so": "b32a2de17c297a2954a2b0527cdc8576274d530bf5ea672922ac8942dfa3955b"
+    },
+    "linuxmusl-arm64/so": {
+      "libEGL.so": "5d134160d87cff3d43f58fbbe142fe72b507871df0f10e111e57c1dd0b43cea6",
+      "libGLESv2.so": "fe5ae310619c505e5e0561f950013c259a80bce9e3a8b66091c268aaa26d30d6"
+    },
+    "windows/dll": {
+      "d3dcompiler_47.dll": "a05f99734f7c4822fefc12b367af21fd0976ed6608752fb1e1e80b6ece7ecbbb",
+      "libEGL.dll": "c8d3089aabde9e9f080fe0ebbf7ab0dba50202e8003ad290fa809f2842841758",
+      "libGLESv2.dll": "91acdc0649325d52c3619f9376156f00adeca89114fadaf9c51595fe52cbd707"
+    }
+  }
+}

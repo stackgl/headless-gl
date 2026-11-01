@@ -12,6 +12,10 @@
   'targets': [
     {
       'target_name': 'webgl',
+      'variables': {
+        # The folder in deps/ with the ANGLE libraries for this target. src/angle.js downloads them first when they're missing, as they are in the npm package.
+        'angle_dir': '<!(node "src/angle.js" "<(OS)" "<(target_arch)" "<(libc)")',
+      },
       'defines': [
         'VERSION=1.0.0'
       ],
@@ -48,27 +52,19 @@
               {
                 'destination': '<(PRODUCT_DIR)',
                 'files': [
-                  '<(module_root_dir)/deps/darwin/dylib/libEGL.dylib',
-                  '<(module_root_dir)/deps/darwin/dylib/libGLESv2.dylib',
+                  '<(module_root_dir)/<(angle_dir)/libEGL.dylib',
+                  '<(module_root_dir)/<(angle_dir)/libGLESv2.dylib',
                 ]
               }
            ]
         }],
         ['OS=="linux" and (target_arch=="x64" or target_arch=="arm64")', {
-            'variables': {
-              'angle_libc': '',
-              'angle_arch': '',
-              'conditions': [
-                ['libc=="musl"', {'angle_libc': 'musl'}],
-                ['target_arch=="arm64"', {'angle_arch': '-arm64'}],
-              ],
-            },
             "copies": [
               {
                 'destination': '<(PRODUCT_DIR)',
                 'files': [
-                  '<(module_root_dir)/deps/linux<(angle_libc)<(angle_arch)/so/libEGL.so',
-                  '<(module_root_dir)/deps/linux<(angle_libc)<(angle_arch)/so/libGLESv2.so',
+                  '<(module_root_dir)/<(angle_dir)/libEGL.so',
+                  '<(module_root_dir)/<(angle_dir)/libGLESv2.so',
                 ]
               }
            ]
@@ -118,9 +114,9 @@
               {
                 'destination': '<(PRODUCT_DIR)',
                 'files': [
-                  '<(module_root_dir)/deps/windows/dll/libEGL.dll',
-                  '<(module_root_dir)/deps/windows/dll/libGLESv2.dll',
-                  '<(module_root_dir)/deps/windows/dll/d3dcompiler_47.dll'
+                  '<(module_root_dir)/<(angle_dir)/libEGL.dll',
+                  '<(module_root_dir)/<(angle_dir)/libGLESv2.dll',
+                  '<(module_root_dir)/<(angle_dir)/d3dcompiler_47.dll'
                 ]
               }
            ]
