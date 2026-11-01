@@ -1658,13 +1658,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       case this.TEXTURE_BINDING_CUBE_MAP:
         return this._getActiveTextureUnit()._bindCube
       case this.VERSION:
-        return 'WebGL 1.0 stack-gl ' + HEADLESS_VERSION
+        return (this._isWebGL2() ? 'WebGL 2.0 stack-gl ' : 'WebGL 1.0 stack-gl ') + HEADLESS_VERSION
       case this.VENDOR:
         return 'stack-gl'
       case this.RENDERER:
         return 'ANGLE'
       case this.SHADING_LANGUAGE_VERSION:
-        return 'WebGL GLSL ES 1.0 stack-gl'
+        return this._isWebGL2() ? 'WebGL GLSL ES 3.00 stack-gl' : 'WebGL GLSL ES 1.0 stack-gl'
 
       default:
         if (this._extensions) {
