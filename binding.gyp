@@ -7,7 +7,7 @@
   'conditions': [
     ['platform == "mac"', {'variables': {'platform': 'darwin'}}],
     ['platform == "win"', {'variables': {'platform': 'win32'}}],
-    ['OS == "linux"', {'variables': {'libc': "<!(node -p \"process.report.getReport().header.glibcVersionRuntime ? 'glibc' : 'musl'\")"}}]
+    ['OS == "linux"', {'variables': {'libc': '<!(node "src/libc.js")'}}]
   ],
   'targets': [
     {
