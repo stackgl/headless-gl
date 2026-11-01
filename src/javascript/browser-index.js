@@ -55,3 +55,5 @@ function createContext (width, height, options) {
 }
 
 module.exports = createContext
+module.exports.WebGLRenderingContext = globalThis.WebGLRenderingContext
+module.exports.WebGL2RenderingContext = globalThis.WebGL2RenderingContext
