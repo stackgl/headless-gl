@@ -13,17 +13,9 @@ function flag (options, name, dflt) {
   return !!options[name]
 }
 
-function warnContextCreationFailed (message) {
-  process.emitWarning(message, {
-    type: 'HeadlessGLWarning',
-    code: 'HEADLESS_GL_CONTEXT_CREATION_FAILED'
-  })
-}
-
 function createContext (width, height, options) {
   if (!((width | 0) > 0 && (height | 0) > 0)) {
-    warnContextCreationFailed(`Error creating WebGLContext: width and height must be at least 1, got ${width} and ${height}.`)
-    return null
+    throw new RangeError(`Error creating WebGLContext: width and height must be at least 1, got ${width} and ${height}.`)
   }
   width = width | 0
   height = height | 0
@@ -59,10 +51,8 @@ function createContext (width, height, options) {
       contextAttributes.failIfMajorPerformanceCaveat,
       contextAttributes.createWebGL2Context)
   } catch (e) {
-    warnContextCreationFailed(e.message)
-  }
-  if (!ctx) {
-    return null
+    e.code = 'HEADLESS_GL_CONTEXT_CREATION_FAILED'
+    throw e
   }
 
   ctx.drawingBufferWidth = width

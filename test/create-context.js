@@ -9,3 +9,10 @@ tape('create context', function (t) {
   createContext(width, height)
   t.end()
 })
+
+tape('create context with an invalid size', function (t) {
+  t.throws(() => createContext(0, 10), RangeError)
+  t.throws(() => createContext(10, -1), RangeError)
+  t.throws(() => createContext(NaN, 10), RangeError)
+  t.end()
+})

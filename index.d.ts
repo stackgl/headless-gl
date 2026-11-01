@@ -23,22 +23,34 @@ declare namespace createContext {
   };
 }
 
+/**
+ * @throws {Error} with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED` if the context can't be created, for example when the ANGLE libraries can't be loaded.
+ * @throws {RangeError} if `width` or `height` is less than 1.
+ */
 declare function createContext(
   width: number,
   height: number,
   options?: WebGLContextAttributes & { createWebGL2Context?: false },
-): (WebGLRenderingContext & createContext.StackGLExtension) | null;
+): WebGLRenderingContext & createContext.StackGLExtension;
 
+/**
+ * @throws {Error} with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED` if the context can't be created, for example when the ANGLE libraries can't be loaded.
+ * @throws {RangeError} if `width` or `height` is less than 1.
+ */
 declare function createContext(
   width: number,
   height: number,
   options: WebGLContextAttributes & { createWebGL2Context: true }
-): (WebGL2RenderingContext & createContext.StackGLExtension) | null;
+): WebGL2RenderingContext & createContext.StackGLExtension;
 
+/**
+ * @throws {Error} with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED` if the context can't be created, for example when the ANGLE libraries can't be loaded.
+ * @throws {RangeError} if `width` or `height` is less than 1.
+ */
 declare function createContext(
   width: number,
   height: number,
   options?: WebGLContextAttributes & { createWebGL2Context?: boolean }
-): ((WebGLRenderingContext | WebGL2RenderingContext) & createContext.StackGLExtension) | null;
+): (WebGLRenderingContext | WebGL2RenderingContext) & createContext.StackGLExtension;
 
 export = createContext;

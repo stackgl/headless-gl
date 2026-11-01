@@ -72,7 +72,9 @@ const gl = createGL(width, height)
 * `height` is the height of the drawing buffer
 * `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2)
 
-**Returns** A new `WebGLRenderingContext` object, or `null` if the context can't be created. The reason is emitted as a Node.js [process warning](https://nodejs.org/api/process.html#event-warning) of type `HeadlessGLWarning` with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED`. To hide all of headless-gl's warnings, set `NODE_OPTIONS=--disable-warning=HeadlessGLWarning`. To hide only this one, use its code instead.
+**Returns** A new `WebGLRenderingContext` object.
+
+**Throws** an `Error` with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED` if the context can't be created, for example when a library that ANGLE needs isn't installed. The error message gives the reason, such as the name of the missing library. Throws a `RangeError` if `width` or `height` is less than 1.
 
 ### Extensions
 
@@ -158,7 +160,7 @@ Prebuilt binaries for glibc 2.34 and later (x64 and arm64), such as Debian 12, U
 $ sudo apt-get install -y libx11-6 libxext6 libxcb1
 ```
 
-On RHEL, Fedora and Amazon Linux, install `libX11 libXext libxcb` with `dnf`. If one is missing, `createGL` returns `null` and warns which library it couldn't load.
+On RHEL, Fedora and Amazon Linux, install `libX11 libXext libxcb` with `dnf`. If one is missing, `createGL` throws an error naming the library it couldn't load.
 
 To build from source, also install `build-essential` and `python3`. For headless use, see [below](#how-can-headless-gl-be-used-on-a-headless-linux-machine).
 
