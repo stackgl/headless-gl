@@ -3150,6 +3150,11 @@ class WebGL2RenderingContext {
   }
 }
 
+// As in browsers, so Object.prototype.toString reports [object WebGLRenderingContext] and [object WebGL2RenderingContext].
+for (const Context of [WebGLRenderingContext, WebGL2RenderingContext]) {
+  Object.defineProperty(Context.prototype, Symbol.toStringTag, { value: Context.name, configurable: true })
+}
+
 // Make the gl consts available as static properties
 for (const [key, value] of Object.entries(gl)) {
   if (typeof value !== 'number') {
