@@ -30,6 +30,7 @@
     "bunny": "^1.0.1",
     "faucet": "^0.0.4",
     "node-abi": "^3.101.0",
+    "node-gyp": "^13.1.0",
     "prebuild": "^13.0.1",
     "snazzy": "^9.0.0",
     "standard": "^17.1.2",
@@ -50,5 +51,8 @@
   "types": "index.d.ts",
   "author": "Mikola Lysenko",
   "license": "BSD-2-Clause",
-  "gypfile": true
+  "gypfile": true,
+  "overrides": {
+    "node-gyp": "$node-gyp"
+  }
 }
