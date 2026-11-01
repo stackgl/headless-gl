@@ -6,26 +6,13 @@ function createContext (width, height, options) {
   }
 
   const canvas = document.createElement('canvas')
-  if (!canvas) {
-    return null
-  }
+  canvas.width = width
+  canvas.height = height
 
   /**
    * @type WebGLRenderingContext
    */
-  let gl
-  canvas.width = width
-  canvas.height = height
-
-  try {
-    gl = canvas.getContext('webgl', options)
-  } catch (e) {
-    try {
-      gl = canvas.getContext('experimental-webgl', options)
-    } catch (e) {
-      return null
-    }
-  }
+  const gl = canvas.getContext('webgl', options)
 
   const _getExtension = gl.getExtension
   const extDestroy = {
