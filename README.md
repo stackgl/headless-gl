@@ -62,7 +62,7 @@ Node.js versions 22 and up are tested and supported. Earlier versions may still 
 
 ## API
 
-`headless-gl` exports exactly one function which you can use to create a WebGL context with the given context attributes:
+`headless-gl` exports one function which you can use to create a WebGL context with the given context attributes:
 
 ```javascript
 const createGL = require('gl')
@@ -77,6 +77,17 @@ const gl = createGL(width, height)
 **Returns** A new `WebGLRenderingContext` object, or a `WebGL2RenderingContext` when `createWebGL2Context` is `true`.
 
 **Throws** an `Error` with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED` if the context can't be created, for example when a library that ANGLE needs isn't installed. The error message gives the reason, such as the name of the missing library. Throws a `RangeError` if `width` or `height` is less than 1.
+
+The function also has `WebGLRenderingContext` and `WebGL2RenderingContext` properties, the classes of the contexts it creates, which you can also import by name. Use them with `instanceof` to check a context's version:
+
+```javascript
+const { WebGL2RenderingContext } = require('gl')
+// or: import createGL, { WebGL2RenderingContext } from 'gl'
+
+gl instanceof WebGL2RenderingContext
+```
+
+They can't be constructed directly.
 
 ### Extensions
 
