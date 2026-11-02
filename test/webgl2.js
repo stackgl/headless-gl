@@ -2,6 +2,7 @@
 
 const tape = require('tape')
 const createContext = require('../index')
+const drawPixel = require('./util/draw-pixel')
 const compileShader = require('./util/make-shader')
 
 function readColors (gl, width, height) {
@@ -47,6 +48,45 @@ tape('webgl2: texImage3D without data', function (t) {
   t.doesNotThrow(() => gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE), 'accepts no data argument')
   t.equal(gl.getError(), gl.NO_ERROR, 'no GL error without a data argument')
 
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('webgl2: typed arrays that start partway into their buffer', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const pixel = new Uint8Array(4)
+
+  const texture = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_3D, texture)
+  gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([1, 2, 3, 4, 255, 0, 0, 255]).subarray(4))
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+  gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture, 0, 0)
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+  t.deepEqual([...pixel], [255, 0, 0, 255], 'texImage3D')
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+  gl.clearBufferfv(gl.COLOR, 0, new Float32Array([1, 1, 1, 1, 0, 1, 0, 1]).subarray(4))
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+  t.deepEqual([...pixel], [0, 255, 0, 255], 'clearBufferfv')
+
+  // getUniform doesn't return WebGL2's uniform types, so draw with each uniform and read the color instead.
+  t.deepEqual(drawPixel(gl, `#version 300 es
+precision highp float;
+uniform uvec4 value;
+out vec4 color;
+void main() {
+  color = vec4(value) / 255.0;
+}`, program => gl.uniform4uiv(gl.getUniformLocation(program, 'value'), new Uint32Array([9, 9, 9, 9, 10, 20, 30, 255]).subarray(4))), [10, 20, 30, 255], 'uniform4uiv')
+
+  t.deepEqual(drawPixel(gl, `#version 300 es
+precision highp float;
+uniform mat2x3 value;
+out vec4 color;
+void main() {
+  color = vec4(value[1], 1.0);
+}`, program => gl.uniformMatrix2x3fv(gl.getUniformLocation(program, 'value'), false, new Float32Array([9, 9, 9, 9, 9, 9, 0, 0, 0, 0.2, 0.4, 0.6]).subarray(6))), [51, 102, 153, 255], 'uniformMatrix2x3fv')
+
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
