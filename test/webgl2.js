@@ -2,6 +2,7 @@
 
 const tape = require('tape')
 const createContext = require('../index')
+const compileShader = require('./util/make-shader')
 
 function readColors (gl, width, height) {
   const pixels = new Uint8Array(width * height * 4)
@@ -11,16 +12,6 @@ function readColors (gl, width, height) {
     colors.add(pixels.slice(i, i + 4).join())
   }
   return [...colors]
-}
-
-function compileShader (gl, type, source) {
-  const shader = gl.createShader(type)
-  gl.shaderSource(shader, source)
-  gl.compileShader(shader)
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    throw new Error(gl.getShaderInfoLog(shader))
-  }
-  return shader
 }
 
 tape('webgl2: create context', function (t) {
