@@ -97,8 +97,7 @@ void EnableDebugCallback(const void *userParam) {
   glDebugMessageCallbackKHR(DebugMessageCallback, userParam);
 }
 
-// Massage format parameter for compatibility with ANGLE's desktop GL
-// restrictions.
+// Returns the sized 32-bit floating point format for an unsized format such as GL_RGBA.
 GLenum SizeFloatingPointFormat(GLenum format) {
   switch (format) {
   case GL_RGBA:
@@ -1086,16 +1085,13 @@ std::vector<uint8_t> WebGLRenderingContext::unpackPixels(GLenum type, GLenum for
 void CallTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width,
                     GLsizei height, GLint border, GLenum format, GLenum type, GLsizei bufSize,
                     const void *pixels) {
-  GLenum sizedInternalFormat = SizeFloatingPointFormat(internalformat);
-  if (type == GL_FLOAT && sizedInternalFormat != internalformat) {
-    glTexStorage2DEXT(target, 1, sizedInternalFormat, width, height);
-    if (pixels) {
-      glTexSubImage2DRobustANGLE(target, level, 0, 0, width, height, format, type, bufSize, pixels);
-    }
-  } else {
-    glTexImage2DRobustANGLE(target, level, internalformat, width, height, border, format, type,
-                            bufSize, pixels);
+  // WebGL1 float textures use an unsized format with GL_FLOAT, which ANGLE accepts but only makes color-renderable with the sized format.
+  // Uploading with the sized format keeps the texture mutable, unlike texture storage, so it can be resized, mipmapped and used for cube map faces.
+  if (type == GL_FLOAT) {
+    internalformat = SizeFloatingPointFormat(internalformat);
   }
+  glTexImage2DRobustANGLE(target, level, internalformat, width, height, border, format, type,
+                          bufSize, pixels);
 }
 
 GL_METHOD(TexImage2D) {
