@@ -74,7 +74,7 @@ const gl = createGL(width, height)
 * `height` is the height of the drawing buffer
 * `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2)
 
-**Returns** A new `WebGLRenderingContext` object.
+**Returns** A new `WebGLRenderingContext` object, or a `WebGL2RenderingContext` when `createWebGL2Context` is `true`.
 
 **Throws** an `Error` with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED` if the context can't be created, for example when a library that ANGLE needs isn't installed. The error message gives the reason, such as the name of the missing library. Throws a `RangeError` if `width` or `height` is less than 1.
 
