@@ -104,6 +104,34 @@ tape('webgl2: wrong argument types throw a TypeError', function (t) {
   t.end()
 })
 
+tape('webgl2: methods that take typed arrays also take arrays', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const pixel = new Uint8Array(4)
+
+  gl.clearBufferfv(gl.COLOR, 0, [0, 0, 1, 1])
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+  t.deepEqual([...pixel], [0, 0, 255, 255], 'clearBufferfv')
+
+  t.deepEqual(drawPixel(gl, `#version 300 es
+precision highp float;
+flat in ivec4 passed;
+out vec4 color;
+void main() {
+  color = vec4(passed) / 255.0;
+}`, () => gl.vertexAttribI4iv(1, [10, 20, 30, 255]), `#version 300 es
+layout(location = 0) in vec2 position;
+layout(location = 1) in ivec4 value;
+flat out ivec4 passed;
+void main() {
+  passed = value;
+  gl_Position = vec4(position, 0.0, 1.0);
+}`), [10, 20, 30, 255], 'vertexAttribI4iv')
+
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
 tape('webgl2: draw with a GLSL ES 3.00 shader and a vertex array object', function (t) {
   const width = 10
   const height = 10

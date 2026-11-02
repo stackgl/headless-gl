@@ -2608,6 +2608,37 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     super.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data)
   }
 
+  // WebGL2 takes arrays and other sequences of numbers wherever it takes a Float32List, Int32List or Uint32List, but the native methods need a typed array.
+  _toTypedArray (value, TypedArray, name) {
+    if (value instanceof TypedArray) {
+      return value
+    }
+    if (typeof value === 'object' && value !== null && typeof value[Symbol.iterator] === 'function') {
+      return new TypedArray(value)
+    }
+    throw new TypeError(`${name}: expected a ${TypedArray.name} or an array of numbers`)
+  }
+
+  vertexAttribI4iv (index, values) {
+    super.vertexAttribI4iv(index, this._toTypedArray(values, Int32Array, 'vertexAttribI4iv'))
+  }
+
+  vertexAttribI4uiv (index, values) {
+    super.vertexAttribI4uiv(index, this._toTypedArray(values, Uint32Array, 'vertexAttribI4uiv'))
+  }
+
+  clearBufferfv (buffer, drawbuffer, values) {
+    super.clearBufferfv(buffer, drawbuffer, this._toTypedArray(values, Float32Array, 'clearBufferfv'))
+  }
+
+  clearBufferiv (buffer, drawbuffer, values) {
+    super.clearBufferiv(buffer, drawbuffer, this._toTypedArray(values, Int32Array, 'clearBufferiv'))
+  }
+
+  clearBufferuiv (buffer, drawbuffer, values) {
+    super.clearBufferuiv(buffer, drawbuffer, this._toTypedArray(values, Uint32Array, 'clearBufferuiv'))
+  }
+
   texParameterf (target, pname, param) {
     target |= 0
     pname |= 0
