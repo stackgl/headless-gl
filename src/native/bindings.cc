@@ -19,7 +19,7 @@ Nan::Persistent<v8::FunctionTemplate> WEBGL_TEMPLATE;
 #define JS_GL_CONSTANT(name) JS_CONSTANT(name, GL_##name)
 
 #define JS_SET_CONSTANT(name, v)                                                                   \
-  Nan::Set(info.This(), Nan::New(#name).ToLocalChecked(), Nan::New(v))
+  Nan::Set(target, Nan::New(#name).ToLocalChecked(), Nan::New(v))
 
 #define JS_SET_GL_CONSTANT(name) JS_SET_CONSTANT(name, GL_##name)
 
@@ -564,9 +564,18 @@ NAN_MODULE_INIT(Init) {
   // Export helper methods for clean up and error handling
   Nan::Export(target, "cleanup", WebGLRenderingContext::DisposeAll);
   Nan::Export(target, "setError", WebGLRenderingContext::SetError);
+
+  // Export the WebGL 2 constants, which BindWebGL2 sets on each WebGL 2 context, so the JavaScript can also make them static properties of WebGL2RenderingContext.
+  v8::Local<v8::Object> webgl2Constants = Nan::New<v8::Object>();
+  SetWebGL2Constants(webgl2Constants);
+  Nan::Set(target, Nan::New("webgl2Constants").ToLocalChecked(), webgl2Constants);
 }
 
 void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info) {
+  SetWebGL2Constants(info.This());
+}
+
+void SetWebGL2Constants(v8::Local<v8::Object> target) {
   /* ES3 enums */
   JS_SET_GL_CONSTANT(READ_BUFFER);
   JS_SET_GL_CONSTANT(UNPACK_ROW_LENGTH);

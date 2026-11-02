@@ -3163,5 +3163,6 @@ for (const [key, value] of Object.entries(gl)) {
   Object.assign(WebGLRenderingContext, { [key]: value })
   Object.assign(WebGL2RenderingContext, { [key]: value })
 }
+Object.assign(WebGL2RenderingContext, NativeWebGL.webgl2Constants)
 
 module.exports = { WebGLRenderingContext, WebGL2RenderingContext, WebGLRenderingContextHelper, wrapContext }

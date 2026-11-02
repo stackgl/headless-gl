@@ -363,5 +363,6 @@ struct WebGLRenderingContext : public node::ObjectWrap {
 };
 
 void BindWebGL2(const Nan::FunctionCallbackInfo<v8::Value> &info);
+void SetWebGL2Constants(v8::Local<v8::Object> target);
 
 #endif
