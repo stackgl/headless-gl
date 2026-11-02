@@ -127,7 +127,55 @@ void main() {
   gl_Position = vec4(position, 0.0, 1.0);
 }`), [10, 20, 30, 255], 'vertexAttribI4iv')
 
+  t.deepEqual(drawPixel(gl, `#version 300 es
+precision highp float;
+uniform uvec4 value;
+out vec4 color;
+void main() {
+  color = vec4(value) / 255.0;
+}`, program => gl.uniform4uiv(gl.getUniformLocation(program, 'value'), [10, 20, 30, 255])), [10, 20, 30, 255], 'uniform4uiv')
+
+  t.deepEqual(drawPixel(gl, `#version 300 es
+precision highp float;
+uniform mat2x3 value;
+out vec4 color;
+void main() {
+  color = vec4(value[1], 1.0);
+}`, program => gl.uniformMatrix2x3fv(gl.getUniformLocation(program, 'value'), false, [0, 0, 0, 0.2, 0.4, 0.6])), [51, 102, 153, 255], 'uniformMatrix2x3fv')
+
   t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('webgl2: uniform methods set the uniform at its location', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  // Each shader subtracts first from second, so a value set on second that lands on first comes out black.
+  function twoUniforms (type, expression) {
+    return `#version 300 es
+precision highp float;
+uniform ${type} first;
+uniform ${type} second;
+out vec4 color;
+void main() {
+  color = ${expression};
+}`
+  }
+  const integers = twoUniforms('uvec4', '(vec4(second) - vec4(first)) / 255.0')
+  t.deepEqual(drawPixel(gl, integers, program => gl.uniform4ui(gl.getUniformLocation(program, 'second'), 10, 20, 30, 255)), [10, 20, 30, 255], 'uniform4ui')
+  t.deepEqual(drawPixel(gl, integers, program => gl.uniform4uiv(gl.getUniformLocation(program, 'second'), new Uint32Array([10, 20, 30, 255]))), [10, 20, 30, 255], 'uniform4uiv')
+  const matrices = twoUniforms('mat2x3', 'vec4(second[1] - first[1], 1.0)')
+  t.deepEqual(drawPixel(gl, matrices, program => gl.uniformMatrix2x3fv(gl.getUniformLocation(program, 'second'), false, new Float32Array([0, 0, 0, 0.2, 0.4, 0.6]))), [51, 102, 153, 255], 'uniformMatrix2x3fv')
+
+  gl.uniform4uiv(null, new Uint32Array([1, 2, 3, 4]))
+  t.equal(gl.getError(), gl.NO_ERROR, 'a null location is ignored')
+
+  let otherProgramLocation
+  drawPixel(gl, integers, program => { otherProgramLocation = gl.getUniformLocation(program, 'second') })
+  drawPixel(gl, integers, () => gl.uniform4ui(otherProgramLocation, 1, 2, 3, 4))
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'a location from another program sets INVALID_OPERATION')
+
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })

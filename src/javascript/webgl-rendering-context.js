@@ -2608,6 +2608,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     super.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data)
   }
 
+  // Returns the index that the native uniform methods take for a location, or -1 to skip the call, as WebGL does for a null location.
+  _getUniformLocationIndex (location) {
+    if (location === null || location === undefined) {
+      return -1
+    }
+    return this._checkLocationActive(location) ? location._ : -1
+  }
+
   // WebGL2 takes arrays and other sequences of numbers wherever it takes a Float32List, Int32List or Uint32List, but the native methods need a typed array.
   _toTypedArray (value, TypedArray, name) {
     if (value instanceof TypedArray) {
@@ -2617,6 +2625,86 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return new TypedArray(value)
     }
     throw new TypeError(`${name}: expected a ${TypedArray.name} or an array of numbers`)
+  }
+
+  uniform1ui (location, v0) {
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniform1ui(index, v0)
+  }
+
+  uniform2ui (location, v0, v1) {
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniform2ui(index, v0, v1)
+  }
+
+  uniform3ui (location, v0, v1, v2) {
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniform3ui(index, v0, v1, v2)
+  }
+
+  uniform4ui (location, v0, v1, v2, v3) {
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniform4ui(index, v0, v1, v2, v3)
+  }
+
+  uniform1uiv (location, data) {
+    data = this._toTypedArray(data, Uint32Array, 'uniform1uiv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniform1uiv(index, data)
+  }
+
+  uniform2uiv (location, data) {
+    data = this._toTypedArray(data, Uint32Array, 'uniform2uiv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniform2uiv(index, data)
+  }
+
+  uniform3uiv (location, data) {
+    data = this._toTypedArray(data, Uint32Array, 'uniform3uiv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniform3uiv(index, data)
+  }
+
+  uniform4uiv (location, data) {
+    data = this._toTypedArray(data, Uint32Array, 'uniform4uiv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniform4uiv(index, data)
+  }
+
+  uniformMatrix2x3fv (location, transpose, data) {
+    data = this._toTypedArray(data, Float32Array, 'uniformMatrix2x3fv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniformMatrix2x3fv(index, !!transpose, data)
+  }
+
+  uniformMatrix3x2fv (location, transpose, data) {
+    data = this._toTypedArray(data, Float32Array, 'uniformMatrix3x2fv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniformMatrix3x2fv(index, !!transpose, data)
+  }
+
+  uniformMatrix2x4fv (location, transpose, data) {
+    data = this._toTypedArray(data, Float32Array, 'uniformMatrix2x4fv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniformMatrix2x4fv(index, !!transpose, data)
+  }
+
+  uniformMatrix4x2fv (location, transpose, data) {
+    data = this._toTypedArray(data, Float32Array, 'uniformMatrix4x2fv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniformMatrix4x2fv(index, !!transpose, data)
+  }
+
+  uniformMatrix3x4fv (location, transpose, data) {
+    data = this._toTypedArray(data, Float32Array, 'uniformMatrix3x4fv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniformMatrix3x4fv(index, !!transpose, data)
+  }
+
+  uniformMatrix4x3fv (location, transpose, data) {
+    data = this._toTypedArray(data, Float32Array, 'uniformMatrix4x3fv')
+    const index = this._getUniformLocationIndex(location)
+    if (index >= 0) super.uniformMatrix4x3fv(index, !!transpose, data)
   }
 
   vertexAttribI4iv (index, values) {
