@@ -47,6 +47,19 @@ tape('webgl2: clear color', function (t) {
   t.end()
 })
 
+tape('webgl2: texImage3D without data', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  gl.bindTexture(gl.TEXTURE_3D, gl.createTexture())
+
+  t.doesNotThrow(() => gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, null), 'accepts null')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL error with null')
+  t.doesNotThrow(() => gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE), 'accepts no data argument')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL error without a data argument')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
 tape('webgl2: draw with a GLSL ES 3.00 shader and a vertex array object', function (t) {
   const width = 10
   const height = 10

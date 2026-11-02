@@ -2525,7 +2525,7 @@ GL_METHOD(TexImage3D) {
   GLenum format = Nan::To<int32_t>(info[7]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[8]).ToChecked();
 
-  if (info[9]->IsUndefined()) {
+  if (info[9]->IsNullOrUndefined()) {
     glTexImage3D(target, level, internalformat, width, height, depth, border, format, type,
                  nullptr);
   } else if (info[9]->IsArrayBufferView()) {
