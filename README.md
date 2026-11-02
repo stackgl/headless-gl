@@ -72,7 +72,7 @@ const gl = createGL(width, height)
 
 * `width` is the width of the drawing buffer
 * `height` is the height of the drawing buffer
-* `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2)
+* `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2). Only `alpha`, `depth`, `stencil`, `premultipliedAlpha` and `preserveDrawingBuffer` have an effect, and `antialias` is always off.
 
 **Returns** A new `WebGLRenderingContext` object, or a `WebGL2RenderingContext` when `createWebGL2Context` is `true`.
 
@@ -88,6 +88,23 @@ gl instanceof WebGL2RenderingContext
 ```
 
 They can't be constructed directly.
+
+### TypeScript
+
+headless-gl includes TypeScript types for its contexts, so projects don't need TypeScript's DOM types. They follow the DOM's WebGL types, except that the contexts have no `canvas` or color space members, and texture uploads take an object with pixel data, like `ImageData`, or with a 2D context, like a node-canvas `Canvas`, instead of DOM elements.
+
+To pass a context to code that expects the DOM's `WebGLRenderingContext`, such as three.js, cast it with `gl as WebGLRenderingContext`. To type every context as the DOM's, add this to your project:
+
+```ts
+declare module 'gl' {
+  interface CustomContextTypes {
+    WebGLRenderingContext: globalThis.WebGLRenderingContext
+    WebGL2RenderingContext: globalThis.WebGL2RenderingContext
+  }
+}
+```
+
+Both need the DOM types in your project.
 
 ### Extensions
 
@@ -287,6 +304,7 @@ Once this is done, you should be good to go! A few more things
 
 * To run the test cases, use the command `npm test`, or execute specific tests by just running them using `node`.
 * On a Unix-like platform, you can do incremental rebuilds by going into the `build/` directory and running `make`. This is **way faster** running `npm build` each time you make a change.
+* The WebGL declarations in `index.d.ts` are copied from TypeScript's DOM types. After updating the `typescript` dev dependency, run `node scripts/webgl-types.js` to copy them again.
 * When you replace the ANGLE libraries in `deps/`, run `node scripts/angle-assets.js <release tag> <folder>` with a new release tag, and commit the updated `src/angle.json` with the libraries. When the change reaches master, the ANGLE release workflow creates that release for source builds to download from.
 
 Note: the `gl-conformance` package is currently hosted on GitHub Package Registry. To install from there, you may need to add `//npm.pkg.github.com` to your user directory's `.npmrc` file

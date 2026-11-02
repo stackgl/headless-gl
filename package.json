@@ -34,7 +34,8 @@
     "prebuild": "^13.0.1",
     "snazzy": "^9.0.0",
     "standard": "^17.1.2",
-    "tape": "^5.9.0"
+    "tape": "^5.9.0",
+    "typescript": "^6.0.3"
   },
   "repository": {
     "type": "git",
