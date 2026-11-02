@@ -91,6 +91,19 @@ void main() {
   t.end()
 })
 
+tape('webgl2: wrong argument types throw a TypeError', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  t.throws(() => gl.clearBufferfv(gl.COLOR, 0, 1), TypeError, 'clearBufferfv with a number')
+  t.throws(() => gl.uniform4uiv(null, 'abcd'), TypeError, 'uniform4uiv with a string')
+  t.throws(() => gl.vertexAttribI4uiv(1, {}), TypeError, 'vertexAttribI4uiv with an object that is not a sequence')
+  t.throws(() => gl.getBufferSubData(gl.ARRAY_BUFFER, 0, [0, 0]), TypeError, 'getBufferSubData with an array')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
 tape('webgl2: draw with a GLSL ES 3.00 shader and a vertex array object', function (t) {
   const width = 10
   const height = 10
