@@ -42,6 +42,7 @@ const { getEXTColorBufferFloat } = require('./extensions/ext-color-buffer-float'
 const { getEXTFloatBlend } = require('./extensions/ext-float-blend')
 const { getWebGLColorBufferFloat } = require('./extensions/webgl-color-buffer-float')
 const { getWebGLDebugRendererInfo } = require('./extensions/webgl-debug-renderer-info')
+const { getEXTFragDepth } = require('./extensions/ext-frag-depth')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -72,7 +73,8 @@ const availableExtensions = {
   ext_color_buffer_float: getEXTColorBufferFloat,
   ext_float_blend: getEXTFloatBlend,
   webgl_color_buffer_float: getWebGLColorBufferFloat,
-  webgl_debug_renderer_info: getWebGLDebugRendererInfo
+  webgl_debug_renderer_info: getWebGLDebugRendererInfo,
+  ext_frag_depth: getEXTFragDepth
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
