@@ -133,3 +133,45 @@ tape('WEBGL_depth_texture: rendering depth to a texture and sampling it', functi
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('WEBGL_depth_texture: rendering depth and stencil to a DEPTH_STENCIL texture', function (t) {
+  const gl = createContext(1, 1)
+  gl.getExtension('WEBGL_depth_texture')
+  const texture = createTexture(gl)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_STENCIL, 4, 4, 0, gl.DEPTH_STENCIL, UNSIGNED_INT_24_8_WEBGL, null)
+  const color = createTexture(gl)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 4, 4, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, color, 0)
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.TEXTURE_2D, texture, 0)
+  t.equal(gl.checkFramebufferStatus(gl.FRAMEBUFFER), gl.FRAMEBUFFER_COMPLETE, 'as the depth-stencil attachment, the framebuffer is complete')
+
+  gl.clearDepth(0.4)
+  gl.clearStencil(1)
+  gl.clear(gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+  gl.enable(gl.STENCIL_TEST)
+  const red = `precision mediump float;
+void main() {
+  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}`
+  gl.stencilFunc(gl.EQUAL, 1, 0xFF)
+  t.deepEqual(drawPixel(gl, red), [255, 0, 0, 255], 'drawing passes a stencil test for the value it was cleared to')
+  gl.clear(gl.COLOR_BUFFER_BIT)
+  gl.stencilFunc(gl.EQUAL, 0, 0xFF)
+  t.deepEqual(drawPixel(gl, red), [0, 0, 0, 0], 'and fails one for another value')
+  gl.disable(gl.STENCIL_TEST)
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+  t.equal(sampleRed(gl), 102, 'sampling it gives the depth it was cleared to in red')
+
+  // A DEPTH_STENCIL texture can only be the depth-stencil attachment.
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, texture, 0)
+  t.notEqual(gl.checkFramebufferStatus(gl.FRAMEBUFFER), gl.FRAMEBUFFER_COMPLETE, 'as the depth attachment, the framebuffer is incomplete')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

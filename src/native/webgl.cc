@@ -1462,13 +1462,7 @@ GL_METHOD(FramebufferTexture2D) {
   GLint texture = Nan::To<int32_t>(info[3]).ToChecked();
   GLint level = Nan::To<int32_t>(info[4]).ToChecked();
 
-  // Handle depth stencil case separately
-  if (attachment == 0x821A) {
-    glFramebufferTexture2D(target, GL_DEPTH_ATTACHMENT, textarget, texture, level);
-    glFramebufferTexture2D(target, GL_STENCIL_ATTACHMENT, textarget, texture, level);
-  } else {
-    glFramebufferTexture2D(target, attachment, textarget, texture, level);
-  }
+  glFramebufferTexture2D(target, attachment, textarget, texture, level);
 }
 
 GL_METHOD(BufferData) {
