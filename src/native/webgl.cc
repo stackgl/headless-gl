@@ -3313,7 +3313,15 @@ GL_METHOD(GetSamplerParameter) {
   GL_BOILERPLATE;
   GLuint sampler = Nan::To<uint32_t>(info[0]).ToChecked();
   GLenum pname = Nan::To<int32_t>(info[1]).ToChecked();
-  GLint result;
+  // The level of detail limits and anisotropy are floats, which the integer query would round.
+  if (pname == GL_TEXTURE_MIN_LOD || pname == GL_TEXTURE_MAX_LOD ||
+      pname == GL_TEXTURE_MAX_ANISOTROPY_EXT) {
+    GLfloat result = 0;
+    glGetSamplerParameterfv(sampler, pname, &result);
+    info.GetReturnValue().Set(Nan::New<v8::Number>(result));
+    return;
+  }
+  GLint result = 0;
   glGetSamplerParameteriv(sampler, pname, &result);
   info.GetReturnValue().Set(Nan::New(result));
 }

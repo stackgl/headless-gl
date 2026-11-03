@@ -453,3 +453,19 @@ tape('webgl2: getInternalformatParameter returns every sample count', function (
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('webgl2: getSamplerParameter returns float parameters as floats', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const sampler = gl.createSampler()
+
+  gl.samplerParameterf(sampler, gl.TEXTURE_MIN_LOD, 1.5)
+  gl.samplerParameterf(sampler, gl.TEXTURE_MAX_LOD, 2.25)
+  gl.samplerParameteri(sampler, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  t.equal(gl.getSamplerParameter(sampler, gl.TEXTURE_MIN_LOD), 1.5, 'TEXTURE_MIN_LOD')
+  t.equal(gl.getSamplerParameter(sampler, gl.TEXTURE_MAX_LOD), 2.25, 'TEXTURE_MAX_LOD')
+  t.equal(gl.getSamplerParameter(sampler, gl.TEXTURE_MIN_FILTER), gl.NEAREST, 'and the others still as integers')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
