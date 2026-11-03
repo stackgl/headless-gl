@@ -357,3 +357,17 @@ tape('webgl2: clearBuffer methods with too few values', function (t) {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('webgl2: vertexAttribI4iv and vertexAttribI4uiv with too few values', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  gl.vertexAttribI4iv(0, [7])
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'vertexAttribI4iv sets INVALID_VALUE with 1 value')
+  gl.vertexAttribI4uiv(0, new Uint32Array(3))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'vertexAttribI4uiv sets INVALID_VALUE with 3 values')
+  gl.vertexAttribI4uiv(0, new Uint32Array(4))
+  t.equal(gl.getError(), gl.NO_ERROR, 'and takes 4')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

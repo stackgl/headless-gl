@@ -2906,11 +2906,21 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   vertexAttribI4iv (index, values) {
-    super.vertexAttribI4iv(index, this._toTypedArray(values, Int32Array, 'vertexAttribI4iv'))
+    values = this._toTypedArray(values, Int32Array, 'vertexAttribI4iv')
+    if (values.length < 4) {
+      this.setError(this.INVALID_VALUE)
+      return
+    }
+    super.vertexAttribI4iv(index, values)
   }
 
   vertexAttribI4uiv (index, values) {
-    super.vertexAttribI4uiv(index, this._toTypedArray(values, Uint32Array, 'vertexAttribI4uiv'))
+    values = this._toTypedArray(values, Uint32Array, 'vertexAttribI4uiv')
+    if (values.length < 4) {
+      this.setError(this.INVALID_VALUE)
+      return
+    }
+    super.vertexAttribI4uiv(index, values)
   }
 
   // clearBufferfv, clearBufferiv and clearBufferuiv read 4 values to clear COLOR with, and 1 for DEPTH or STENCIL, starting srcOffset elements in.
