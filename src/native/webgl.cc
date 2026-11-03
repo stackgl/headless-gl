@@ -1291,6 +1291,22 @@ void CallTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei w
                           bufSize, pixels);
 }
 
+// WebGL2 uploads from the pixel unpack buffer with a byte offset into it in place of the pixels.
+// Returns false after setting INVALID_OPERATION when no pixel unpack buffer is bound, so an offset is never read as a pointer.
+// It does the same when UNPACK_FLIP_Y_WEBGL or UNPACK_PREMULTIPLY_ALPHA_WEBGL is set, since pixels in the buffer can't be flipped or premultiplied first.
+bool GetUnpackBufferOffset(WebGLRenderingContext *inst, v8::Local<v8::Value> value,
+                           const void **offset) {
+  GLint unpackBuffer = 0;
+  glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &unpackBuffer);
+  if (unpackBuffer == 0 || inst->unpack_flip_y || inst->unpack_premultiply_alpha) {
+    inst->setError(GL_INVALID_OPERATION);
+    return false;
+  }
+  *offset =
+      reinterpret_cast<const void *>(static_cast<intptr_t>(Nan::To<int64_t>(value).ToChecked()));
+  return true;
+}
+
 GL_METHOD(TexImage2D) {
   GL_BOILERPLATE;
 
@@ -1302,8 +1318,16 @@ GL_METHOD(TexImage2D) {
   GLint border = Nan::To<int32_t>(info[5]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[6]).ToChecked();
   GLint type = Nan::To<int32_t>(info[7]).ToChecked();
-  Nan::TypedArrayContents<unsigned char> pixels(info[8]);
 
+  if (info[8]->IsNumber()) {
+    const void *offset;
+    if (GetUnpackBufferOffset(inst, info[8], &offset)) {
+      CallTexImage2D(target, level, internalformat, width, height, border, format, type, 0, offset);
+    }
+    return;
+  }
+
+  Nan::TypedArrayContents<unsigned char> pixels(info[8]);
   if (*pixels && (inst->unpack_flip_y || inst->unpack_premultiply_alpha)) {
     std::vector<uint8_t> unpacked =
         inst->unpackPixels(type, format, width, height, *pixels, pixels.length());
@@ -1328,8 +1352,17 @@ GL_METHOD(TexSubImage2D) {
   GLsizei height = Nan::To<int32_t>(info[5]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[6]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[7]).ToChecked();
-  Nan::TypedArrayContents<unsigned char> pixels(info[8]);
 
+  if (info[8]->IsNumber()) {
+    const void *offset;
+    if (GetUnpackBufferOffset(inst, info[8], &offset)) {
+      glTexSubImage2DRobustANGLE(target, level, xoffset, yoffset, width, height, format, type, 0,
+                                 offset);
+    }
+    return;
+  }
+
+  Nan::TypedArrayContents<unsigned char> pixels(info[8]);
   if (inst->unpack_flip_y || inst->unpack_premultiply_alpha) {
     if (!*pixels) {
       inst->setError(GL_INVALID_OPERATION);
@@ -2740,6 +2773,12 @@ GL_METHOD(TexImage3D) {
   if (info[9]->IsNullOrUndefined()) {
     glTexImage3D(target, level, internalformat, width, height, depth, border, format, type,
                  nullptr);
+  } else if (info[9]->IsNumber()) {
+    const void *offset;
+    if (GetUnpackBufferOffset(inst, info[9], &offset)) {
+      glTexImage3DRobustANGLE(target, level, internalformat, width, height, depth, border, format,
+                              type, 0, offset);
+    }
   } else if (info[9]->IsArrayBufferView()) {
     auto buffer = info[9].As<v8::ArrayBufferView>();
     void *bufferPtr = GetArrayBufferViewData(buffer);
@@ -2762,8 +2801,17 @@ GL_METHOD(TexSubImage3D) {
   GLsizei depth = Nan::To<int32_t>(info[7]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[8]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[9]).ToChecked();
-  Nan::TypedArrayContents<unsigned char> pixels(info[10]);
 
+  if (info[10]->IsNumber()) {
+    const void *offset;
+    if (GetUnpackBufferOffset(inst, info[10], &offset)) {
+      glTexSubImage3DRobustANGLE(target, level, xoffset, yoffset, zoffset, width, height, depth,
+                                 format, type, 0, offset);
+    }
+    return;
+  }
+
+  Nan::TypedArrayContents<unsigned char> pixels(info[10]);
   glTexSubImage3DRobustANGLE(target, level, xoffset, yoffset, zoffset, width, height, depth, format,
                              type, pixels.length(), *pixels);
 }

@@ -2612,7 +2612,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    if (typeof pixels !== 'object' && pixels !== undefined) {
+    if (!this._checkUnpackSource(pixels)) {
+      return
+    }
+
+    const unpackOffset = this._isWebGL2() && typeof pixels === 'number'
+    if (typeof pixels !== 'object' && pixels !== undefined && !unpackOffset) {
       throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
     }
 
@@ -2631,7 +2636,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       }
     }
 
-    const data = convertPixels(pixels)
+    const data = unpackOffset ? pixels : convertPixels(pixels)
 
     // Need to check for out of memory error
     this._saveError()
@@ -2684,7 +2689,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    if (typeof pixels !== 'object') {
+    if (!this._checkUnpackSource(pixels)) {
+      return
+    }
+
+    const unpackOffset = this._isWebGL2() && typeof pixels === 'number'
+    if (typeof pixels !== 'object' && !unpackOffset) {
       throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
     }
 
@@ -2695,7 +2705,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       }
     }
 
-    const data = convertPixels(pixels)
+    const data = unpackOffset ? pixels : convertPixels(pixels)
 
     super.texSubImage2D(
       target,
@@ -2707,6 +2717,24 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       format,
       type,
       data)
+  }
+
+  // While a pixel unpack buffer is bound, WebGL2 texture uploads take a byte offset into it in place of pixels, and only then.
+  // Returns false after setting an error if pixels don't match the binding.
+  _checkUnpackSource (pixels) {
+    if (!this._isWebGL2()) {
+      return true
+    }
+    const isOffset = typeof pixels === 'number'
+    if (isOffset !== (this._getActiveBuffer(this.PIXEL_UNPACK_BUFFER) !== null)) {
+      this.setError(this.INVALID_OPERATION)
+      return false
+    }
+    if (isOffset && pixels < 0) {
+      this.setError(this.INVALID_VALUE)
+      return false
+    }
+    return true
   }
 
   // WebGL2's texture uploads and readPixels can start offset elements into a typed array or DataView, where a DataView's elements are bytes.
@@ -2736,6 +2764,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   texImage3D (target, level, internalFormat, width, height, depth, border, format, type, pixels, srcOffset) {
+    if (!this._checkUnpackSource(pixels)) {
+      return
+    }
     if (!this._check3DUnpackFlags(pixels)) {
       return
     }
@@ -2749,6 +2780,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   texSubImage3D (target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels, srcOffset) {
+    if (!this._checkUnpackSource(pixels)) {
+      return
+    }
+
     if (pixels === null || pixels === undefined) {
       return
     }
@@ -2757,7 +2792,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    if (typeof pixels !== 'object') {
+    const unpackOffset = typeof pixels === 'number'
+    if (typeof pixels !== 'object' && !unpackOffset) {
       throw new TypeError('texSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
     }
 
@@ -2779,7 +2815,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       }
     }
 
-    const data = convertPixels(pixels)
+    const data = unpackOffset ? pixels : convertPixels(pixels)
 
     super.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data)
   }
