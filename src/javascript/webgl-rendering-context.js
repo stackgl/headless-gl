@@ -20,7 +20,8 @@ const {
   typeSize,
   uniformTypeSize,
   extractImageData,
-  convertPixelFormats,
+  convertImagePixels,
+  isInstanceOfType,
   isTypedArray,
   unpackTypedArray,
   convertPixels,
@@ -2519,6 +2520,43 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return true
   }
 
+  // Uploads an image's pixels with upload(data), converted to the format and type as browsers do.
+  // The converted pixels are tightly packed, and already flipped and premultiplied as UNPACK_FLIP_Y_WEBGL and UNPACK_PREMULTIPLY_ALPHA_WEBGL say, so the unpack parameters that would change them again are reset during the upload.
+  _uploadImage (image, format, type, upload) {
+    // Pixels with more than 8 bits per channel are taken to be in the upload's type already, so they're uploaded as they are.
+    const { data } = image
+    if (!Array.isArray(data) && !isInstanceOfType(data, 'Uint8Array') && !isInstanceOfType(data, 'Uint8ClampedArray')) {
+      return upload(data)
+    }
+
+    const converted = convertImagePixels(
+      data,
+      image.width,
+      image.height,
+      format | 0,
+      type | 0,
+      super.getParameter(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL),
+      super.getParameter(this.UNPACK_FLIP_Y_WEBGL))
+    if (!converted) {
+      this.setError(this.INVALID_ENUM)
+      return
+    }
+
+    const pnames = [this.UNPACK_FLIP_Y_WEBGL, this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.UNPACK_ALIGNMENT]
+    if (this._isWebGL2()) {
+      pnames.push(this.UNPACK_ROW_LENGTH, this.UNPACK_SKIP_PIXELS, this.UNPACK_SKIP_ROWS, this.UNPACK_IMAGE_HEIGHT, this.UNPACK_SKIP_IMAGES)
+    }
+    const saved = pnames.map(pname => super.getParameter(pname))
+    for (const pname of pnames) {
+      super.pixelStorei(pname, pname === this.UNPACK_ALIGNMENT ? 1 : 0)
+    }
+    try {
+      return upload(converted)
+    } finally {
+      pnames.forEach((pname, i) => super.pixelStorei(pname, saved[i] | 0))
+    }
+  }
+
   texImage2D (
     target,
     level,
@@ -2540,11 +2578,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
       }
 
-      width = pixels.width
-      height = pixels.height
-      pixels = pixels.data
-
-      pixels = convertPixelFormats(this, pixels, this.RGBA, format)
+      const image = pixels
+      return this._uploadImage(image, format, type, data => this.texImage2D(target, level, internalFormat, image.width, image.height, 0, format, type, data))
     }
 
     target |= 0
@@ -2616,11 +2651,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
       }
 
-      width = pixels.width
-      height = pixels.height
-      pixels = pixels.data
-
-      pixels = convertPixelFormats(this, pixels, this.RGBA, format)
+      const image = pixels
+      return this._uploadImage(image, format, type, data => this.texSubImage2D(target, level, xoffset, yoffset, image.width, image.height, format, type, data))
     }
 
     if (!this._checkTextureType(type)) {
@@ -2679,8 +2711,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       typeof pixels.width !== 'undefined' &&
       typeof pixels.height !== 'undefined'
     ) {
-      pixels = extractImageData(pixels).data
-      pixels = convertPixelFormats(this, pixels, this.RGBA, format)
+      const image = extractImageData(pixels)
+      if (image == null) {
+        throw new TypeError('texSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
+      }
+      return this._uploadImage(image, format, type, data => this.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data))
     }
     const data = convertPixels(pixels)
 

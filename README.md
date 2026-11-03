@@ -259,7 +259,7 @@ In a browser, `createGL` creates a canvas and calls its `getContext`, and throws
 
 ### How are `<image>` and `<video>` elements implemented?
 
-They aren't for now. If you want to upload data to a texture, you will need to unpack the pixels into a `Uint8Array` and feed it into `texImage2D`. To help reading and saving images, you should check out the following modules:
+They aren't. Texture uploads take a typed array, an object with pixel data like `ImageData`, or an object with a 2D context like a node-canvas `Canvas`. The RGBA pixels of the last two are converted to the upload's format and type, as browsers convert images. To help reading and saving images, you should check out the following modules:
 
 * [`get-pixels`](https://www.npmjs.com/package/get-pixels)
 * [`save-pixels`](https://www.npmjs.com/package/save-pixels)

@@ -82,6 +82,7 @@ declare namespace createContext {
 
   /**
    * What texImage2D, texSubImage2D and texSubImage3D accept in place of a typed array: an object with pixel data, like ImageData, or an object with a 2D context, like a node-canvas Canvas.
+   * Pixel data in a Uint8Array or Uint8ClampedArray is taken to be RGBA with 8 bits per channel, and converted to the upload's format and type as browsers convert images. Pixel data in other typed arrays is uploaded as it is.
    */
   type TexImageSource = TexImageData | TexImageCanvas;
 
