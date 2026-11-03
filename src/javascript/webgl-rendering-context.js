@@ -1000,7 +1000,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       super.bufferData(target, u8Data, usage)
       const error = this.getError()
       this._restoreError(error)
-      if (error !== this.NO_ERROR) return
+      if (error !== this.NO_ERROR) {
+        return
+      }
 
       active._size = u8Data.length
       if (target === this.ELEMENT_ARRAY_BUFFER) {
@@ -1017,7 +1019,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       super.bufferData(target, size, usage)
       const error = this.getError()
       this._restoreError(error)
-      if (error !== this.NO_ERROR) return
+      if (error !== this.NO_ERROR) {
+        return
+      }
 
       active._size = size
       if (target === this.ELEMENT_ARRAY_BUFFER) {
