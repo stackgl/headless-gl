@@ -1056,7 +1056,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       dstAlpha)
   }
 
-  // WebGL2's bufferData, bufferSubData and getBufferSubData can use length elements of a typed array or DataView from offset elements in, where a DataView's elements are bytes, or every element from there when length is 0.
+  // WebGL2's bufferData, bufferSubData, getBufferSubData and compressed texture uploads can use length elements of a typed array or DataView from offset elements in, where a DataView's elements are bytes, or every element from there when length is 0.
   // Returns those bytes, or null after setting INVALID_VALUE if they run past the end of the data.
   _getElementBytes (data, offset, length) {
     const bytes = unpackTypedArray(data)
@@ -1922,7 +1922,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     pname |= 0
     switch (pname) {
       case this.COMPRESSED_TEXTURE_FORMATS:
-        return new Uint32Array(0)
+        return new Uint32Array(super.getParameter(pname))
       // WebGL returns these as typed arrays, which the native method doesn't make.
       case this.ALIASED_LINE_WIDTH_RANGE:
       case this.ALIASED_POINT_SIZE_RANGE:
@@ -3382,12 +3382,32 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return false
   }
 
-  compressedTexImage2D () {
-    // TODO not yet implemented
+  compressedTexImage2D (target, level, internalFormat, width, height, border, data, srcOffset, srcLengthOverride) {
+    if (!ArrayBuffer.isView(data)) {
+      throw new TypeError('compressedTexImage2D(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, ArrayBufferView)')
+    }
+    if (!this._checkUnpackSource(data)) {
+      return
+    }
+    const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
+    if (!bytes) {
+      return
+    }
+    super.compressedTexImage2D(target | 0, level | 0, internalFormat | 0, width | 0, height | 0, border | 0, bytes)
   }
 
-  compressedTexSubImage2D () {
-    // TODO not yet implemented
+  compressedTexSubImage2D (target, level, xoffset, yoffset, width, height, format, data, srcOffset, srcLengthOverride) {
+    if (!ArrayBuffer.isView(data)) {
+      throw new TypeError('compressedTexSubImage2D(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, ArrayBufferView)')
+    }
+    if (!this._checkUnpackSource(data)) {
+      return
+    }
+    const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
+    if (!bytes) {
+      return
+    }
+    super.compressedTexSubImage2D(target | 0, level | 0, xoffset | 0, yoffset | 0, width | 0, height | 0, format | 0, bytes)
   }
 
   _checkUniformValid (location, v0, name, count, type) {

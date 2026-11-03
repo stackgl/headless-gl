@@ -249,6 +249,8 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static NAN_METHOD(ValidateProgram);
 
   static NAN_METHOD(TexSubImage2D);
+  static NAN_METHOD(CompressedTexImage2D);
+  static NAN_METHOD(CompressedTexSubImage2D);
   static NAN_METHOD(ReadPixels);
   static NAN_METHOD(GetTexParameter);
   static NAN_METHOD(GetActiveAttrib);

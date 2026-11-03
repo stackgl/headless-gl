@@ -138,6 +138,8 @@ NAN_MODULE_INIT(Init) {
   JS_GL_METHOD("getShaderSource", GetShaderSource);
   JS_GL_METHOD("validateProgram", ValidateProgram);
   JS_GL_METHOD("texSubImage2D", TexSubImage2D);
+  JS_GL_METHOD("compressedTexImage2D", CompressedTexImage2D);
+  JS_GL_METHOD("compressedTexSubImage2D", CompressedTexSubImage2D);
   JS_GL_METHOD("readPixels", ReadPixels);
   JS_GL_METHOD("getTexParameter", GetTexParameter);
   JS_GL_METHOD("getActiveAttrib", GetActiveAttrib);

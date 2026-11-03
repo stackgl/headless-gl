@@ -1383,6 +1383,42 @@ GL_METHOD(TexSubImage2D) {
                              pixels.length(), *pixels);
 }
 
+GL_METHOD(CompressedTexImage2D) {
+  GL_BOILERPLATE;
+
+  GLenum target = Nan::To<int32_t>(info[0]).ToChecked();
+  GLint level = Nan::To<int32_t>(info[1]).ToChecked();
+  GLenum internalformat = Nan::To<int32_t>(info[2]).ToChecked();
+  GLsizei width = Nan::To<int32_t>(info[3]).ToChecked();
+  GLsizei height = Nan::To<int32_t>(info[4]).ToChecked();
+  GLint border = Nan::To<int32_t>(info[5]).ToChecked();
+  if (!IsArrayBufferViewOrThrow(info[6], "CompressedTexImage2D")) {
+    return;
+  }
+  auto data = info[6].As<v8::ArrayBufferView>();
+  // GL reads imageSize bytes, which is the data's length, and checks it against the format and dimensions. ANGLE exports no robust version of these entry points.
+  glCompressedTexImage2D(target, level, internalformat, width, height, border, data->ByteLength(),
+                         GetArrayBufferViewData(data));
+}
+
+GL_METHOD(CompressedTexSubImage2D) {
+  GL_BOILERPLATE;
+
+  GLenum target = Nan::To<int32_t>(info[0]).ToChecked();
+  GLint level = Nan::To<int32_t>(info[1]).ToChecked();
+  GLint xoffset = Nan::To<int32_t>(info[2]).ToChecked();
+  GLint yoffset = Nan::To<int32_t>(info[3]).ToChecked();
+  GLsizei width = Nan::To<int32_t>(info[4]).ToChecked();
+  GLsizei height = Nan::To<int32_t>(info[5]).ToChecked();
+  GLenum format = Nan::To<int32_t>(info[6]).ToChecked();
+  if (!IsArrayBufferViewOrThrow(info[7], "CompressedTexSubImage2D")) {
+    return;
+  }
+  auto data = info[7].As<v8::ArrayBufferView>();
+  glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format,
+                            data->ByteLength(), GetArrayBufferViewData(data));
+}
+
 GL_METHOD(TexParameteri) {
   GL_BOILERPLATE;
 
@@ -2215,6 +2251,22 @@ GL_METHOD(GetParameter) {
     if (params) {
       info.GetReturnValue().Set(Nan::New<v8::String>(params).ToLocalChecked());
     }
+    return;
+  }
+
+  case GL_COMPRESSED_TEXTURE_FORMATS: {
+    // A value for each format of the enabled compressed texture extensions.
+    GLint count = 0;
+    glGetIntegerv(GL_NUM_COMPRESSED_TEXTURE_FORMATS, &count);
+    std::vector<GLint> formats(count > 0 ? count : 0);
+    if (!formats.empty()) {
+      glGetIntegervRobustANGLE(name, formats.size(), &bytesWritten, formats.data());
+    }
+    v8::Local<v8::Array> arr = Nan::New<v8::Array>(formats.size());
+    for (size_t i = 0; i < formats.size(); i++) {
+      Nan::Set(arr, i, Nan::New<v8::Integer>(formats[i]));
+    }
+    info.GetReturnValue().Set(arr);
     return;
   }
 
