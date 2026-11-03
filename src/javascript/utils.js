@@ -179,7 +179,7 @@ const IMAGE_FORMATS = new Map([
 const floatBits = new Float32Array(1)
 const uintBits = new Uint32Array(floatBits.buffer)
 
-// Rounds to the nearest half float, with ties to even.
+// Rounds to the nearest half float, with ties to even, as Float16Array does. It stands in for Float16Array on Node 22, which doesn't have it, and can go when Node 22 support ends.
 function toHalfFloat (value) {
   floatBits[0] = value
   const bits = uintBits[0]
@@ -267,12 +267,16 @@ function toFloat10 (value) {
   return ((abs + 0x1FFFF + ((abs >>> 18) & 1)) >>> 18) & 0x3FF
 }
 
+const HALF_FLOAT_IMAGE_TYPE = globalThis.Float16Array
+  ? { TypedArray: globalThis.Float16Array, float: true, packChannel: value => value }
+  : { TypedArray: Uint16Array, float: true, packChannel: toHalfFloat }
+
 // How images are converted to each type, either a channel at a time or a pixel at a time. Float types take channels from 0 to 1, and the others from 0 to 255.
 const IMAGE_TYPES = new Map([
   [gl.UNSIGNED_BYTE, { TypedArray: Uint8Array, packChannel: value => value }],
   [gl.FLOAT, { TypedArray: Float32Array, float: true, packChannel: value => value }],
-  [HALF_FLOAT, { TypedArray: Uint16Array, float: true, packChannel: toHalfFloat }],
-  [HALF_FLOAT_OES, { TypedArray: Uint16Array, float: true, packChannel: toHalfFloat }],
+  [HALF_FLOAT, HALF_FLOAT_IMAGE_TYPE],
+  [HALF_FLOAT_OES, HALF_FLOAT_IMAGE_TYPE],
   [gl.UNSIGNED_SHORT_5_6_5, { TypedArray: Uint16Array, packPixel: ([r, g, b]) => ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3) }],
   [gl.UNSIGNED_SHORT_4_4_4_4, { TypedArray: Uint16Array, packPixel: ([r, g, b, a]) => ((r & 0xF0) << 8) | ((g & 0xF0) << 4) | (b & 0xF0) | (a >> 4) }],
   [gl.UNSIGNED_SHORT_5_5_5_1, { TypedArray: Uint16Array, packPixel: ([r, g, b, a]) => ((r & 0xF8) << 8) | ((g & 0xF8) << 3) | ((b & 0xF8) >> 2) | (a >> 7) }],
