@@ -2822,6 +2822,15 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     throw new TypeError(`${name}: expected a ${TypedArray.name} or an array of numbers`)
   }
 
+  // WebGL2's uniform*uiv and non-square uniformMatrix*fv methods set INVALID_VALUE unless their data is a whole number of the uniform's values, at least one.
+  _checkUniformLength (data, size) {
+    if (data.length === 0 || data.length % size !== 0) {
+      this.setError(this.INVALID_VALUE)
+      return false
+    }
+    return true
+  }
+
   uniform1ui (location, v0) {
     const index = this._getUniformLocationIndex(location)
     if (index >= 0) super.uniform1ui(index, v0)
@@ -2846,70 +2855,70 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     data = this._getUniformData(this._toTypedArray(data, Uint32Array, 'uniform1uiv'), srcOffset, srcLength, 'uniform1uiv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniform1uiv(index, data)
+    if (index >= 0 && this._checkUniformLength(data, 1)) super.uniform1uiv(index, data)
   }
 
   uniform2uiv (location, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Uint32Array, 'uniform2uiv'), srcOffset, srcLength, 'uniform2uiv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniform2uiv(index, data)
+    if (index >= 0 && this._checkUniformLength(data, 2)) super.uniform2uiv(index, data)
   }
 
   uniform3uiv (location, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Uint32Array, 'uniform3uiv'), srcOffset, srcLength, 'uniform3uiv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniform3uiv(index, data)
+    if (index >= 0 && this._checkUniformLength(data, 3)) super.uniform3uiv(index, data)
   }
 
   uniform4uiv (location, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Uint32Array, 'uniform4uiv'), srcOffset, srcLength, 'uniform4uiv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniform4uiv(index, data)
+    if (index >= 0 && this._checkUniformLength(data, 4)) super.uniform4uiv(index, data)
   }
 
   uniformMatrix2x3fv (location, transpose, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Float32Array, 'uniformMatrix2x3fv'), srcOffset, srcLength, 'uniformMatrix2x3fv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniformMatrix2x3fv(index, !!transpose, data)
+    if (index >= 0 && this._checkUniformLength(data, 6)) super.uniformMatrix2x3fv(index, !!transpose, data)
   }
 
   uniformMatrix3x2fv (location, transpose, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Float32Array, 'uniformMatrix3x2fv'), srcOffset, srcLength, 'uniformMatrix3x2fv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniformMatrix3x2fv(index, !!transpose, data)
+    if (index >= 0 && this._checkUniformLength(data, 6)) super.uniformMatrix3x2fv(index, !!transpose, data)
   }
 
   uniformMatrix2x4fv (location, transpose, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Float32Array, 'uniformMatrix2x4fv'), srcOffset, srcLength, 'uniformMatrix2x4fv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniformMatrix2x4fv(index, !!transpose, data)
+    if (index >= 0 && this._checkUniformLength(data, 8)) super.uniformMatrix2x4fv(index, !!transpose, data)
   }
 
   uniformMatrix4x2fv (location, transpose, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Float32Array, 'uniformMatrix4x2fv'), srcOffset, srcLength, 'uniformMatrix4x2fv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniformMatrix4x2fv(index, !!transpose, data)
+    if (index >= 0 && this._checkUniformLength(data, 8)) super.uniformMatrix4x2fv(index, !!transpose, data)
   }
 
   uniformMatrix3x4fv (location, transpose, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Float32Array, 'uniformMatrix3x4fv'), srcOffset, srcLength, 'uniformMatrix3x4fv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniformMatrix3x4fv(index, !!transpose, data)
+    if (index >= 0 && this._checkUniformLength(data, 12)) super.uniformMatrix3x4fv(index, !!transpose, data)
   }
 
   uniformMatrix4x3fv (location, transpose, data, srcOffset, srcLength) {
     data = this._getUniformData(this._toTypedArray(data, Float32Array, 'uniformMatrix4x3fv'), srcOffset, srcLength, 'uniformMatrix4x3fv')
     if (!data) return
     const index = this._getUniformLocationIndex(location)
-    if (index >= 0) super.uniformMatrix4x3fv(index, !!transpose, data)
+    if (index >= 0 && this._checkUniformLength(data, 12)) super.uniformMatrix4x3fv(index, !!transpose, data)
   }
 
   // getVertexAttrib returns an attribute's value as the type it was set with, so the integer setters keep it as an Int32Array or Uint32Array.

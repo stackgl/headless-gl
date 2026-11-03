@@ -4,6 +4,7 @@ const tape = require('tape')
 const createContext = require('../index')
 const drawPixel = require('./util/draw-pixel')
 const compileShader = require('./util/make-shader')
+const makeProgram = require('./util/make-program')
 
 function readColors (gl, width, height) {
   const pixels = new Uint8Array(width * height * 4)
@@ -393,6 +394,38 @@ tape('webgl2: getVertexAttrib returns the values of integer attributes', functio
 
   gl.vertexAttribI4i(gl.getParameter(gl.MAX_VERTEX_ATTRIBS), 1, 2, 3, 4)
   t.equal(gl.getError(), gl.INVALID_VALUE, 'vertexAttribI4i sets INVALID_VALUE with an index out of range')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('webgl2: uniform*uiv and non-square uniformMatrix*fv with data of the wrong length', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const program = makeProgram(gl, `#version 300 es
+in vec4 position;
+void main() {
+  gl_Position = position;
+}`, `#version 300 es
+precision mediump float;
+uniform uvec4 u;
+uniform mat2x3 m;
+out vec4 color;
+void main() {
+  color = vec4(u) + vec4(m[0], m[1].x);
+}`)
+  gl.useProgram(program)
+  const u = gl.getUniformLocation(program, 'u')
+  const m = gl.getUniformLocation(program, 'm')
+
+  gl.uniform4uiv(u, new Uint32Array(3))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'uniform4uiv sets INVALID_VALUE with 3 values')
+  gl.uniform4uiv(u, new Uint32Array(5))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and with 5')
+  gl.uniformMatrix2x3fv(m, false, new Float32Array(5))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'uniformMatrix2x3fv sets INVALID_VALUE with 5 values')
+  gl.uniform4uiv(u, new Uint32Array(4))
+  gl.uniformMatrix2x3fv(m, false, new Float32Array(6))
+  t.equal(gl.getError(), gl.NO_ERROR, 'both take a whole number of values')
 
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
