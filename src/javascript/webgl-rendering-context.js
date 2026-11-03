@@ -1769,6 +1769,50 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return null
   }
 
+  getActiveUniformBlockParameter (program, uniformBlockIndex, pname) {
+    if (!checkObject(program)) {
+      throw new TypeError('getActiveUniformBlockParameter(WebGLProgram, GLuint, GLenum)')
+    }
+    pname |= 0
+    if (!program) {
+      this.setError(this.INVALID_VALUE)
+      return null
+    } else if (!this._checkWrapper(program, WebGLProgram)) {
+      return null
+    }
+
+    // WebGL leaves out UNIFORM_BLOCK_NAME_LENGTH, which OpenGL ES has.
+    switch (pname) {
+      case this.UNIFORM_BLOCK_BINDING:
+      case this.UNIFORM_BLOCK_DATA_SIZE:
+      case this.UNIFORM_BLOCK_ACTIVE_UNIFORMS:
+      case this.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES:
+      case this.UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
+      case this.UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER:
+        break
+      default:
+        this.setError(this.INVALID_ENUM)
+        return null
+    }
+
+    this._saveError()
+    const value = super.getActiveUniformBlockParameter(program._ | 0, uniformBlockIndex | 0, pname)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error !== this.NO_ERROR || value === null) {
+      return null
+    }
+    switch (pname) {
+      case this.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES:
+        return new Uint32Array(value)
+      case this.UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:
+      case this.UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER:
+        return !!value
+      default:
+        return value
+    }
+  }
+
   getActiveUniformBlockName (program, uniformBlockIndex) {
     if (!checkObject(program)) {
       throw new TypeError('getActiveUniformBlockName(WebGLProgram, GLuint)')

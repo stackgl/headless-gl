@@ -3515,8 +3515,29 @@ GL_METHOD(GetActiveUniformBlockParameter) {
   GLuint program = Nan::To<uint32_t>(info[0]).ToChecked();
   GLuint uniformBlockIndex = Nan::To<uint32_t>(info[1]).ToChecked();
   GLenum pname = Nan::To<int32_t>(info[2]).ToChecked();
-  GLint result;
-  glGetActiveUniformBlockiv(program, uniformBlockIndex, pname, &result);
+
+  // UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES gives an index for each of the block's uniforms, and every other parameter one value. The robust query keeps GL from writing past either.
+  if (pname == GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES) {
+    GLint count = 0;
+    glGetActiveUniformBlockiv(program, uniformBlockIndex, GL_UNIFORM_BLOCK_ACTIVE_UNIFORMS, &count);
+    // A count of 0 means GL has set an error, and asking again would set another.
+    if (count <= 0) {
+      info.GetReturnValue().SetNull();
+      return;
+    }
+    std::vector<GLint> indices(count);
+    glGetActiveUniformBlockivRobustANGLE(program, uniformBlockIndex, pname, count, nullptr,
+                                         indices.data());
+    v8::Local<v8::Array> result = Nan::New<v8::Array>(count);
+    for (GLint i = 0; i < count; i++) {
+      Nan::Set(result, i, Nan::New(indices[i]));
+    }
+    info.GetReturnValue().Set(result);
+    return;
+  }
+
+  GLint result = 0;
+  glGetActiveUniformBlockivRobustANGLE(program, uniformBlockIndex, pname, 1, nullptr, &result);
   info.GetReturnValue().Set(Nan::New(result));
 }
 

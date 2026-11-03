@@ -128,3 +128,31 @@ tape('uniform blocks: getActiveUniforms', function (t) {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('uniform blocks: getActiveUniformBlockParameter', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const program = createProgram(gl)
+  const block = gl.getUniformBlockIndex(program, 'Colors')
+
+  t.equal(gl.getActiveUniformBlockParameter(program, block, gl.UNIFORM_BLOCK_BINDING), 0, 'UNIFORM_BLOCK_BINDING starts at 0')
+  gl.uniformBlockBinding(program, block, 2)
+  t.equal(gl.getActiveUniformBlockParameter(program, block, gl.UNIFORM_BLOCK_BINDING), 2, 'and follows uniformBlockBinding')
+  t.equal(gl.getActiveUniformBlockParameter(program, block, gl.UNIFORM_BLOCK_DATA_SIZE), 96, 'UNIFORM_BLOCK_DATA_SIZE')
+  t.equal(gl.getActiveUniformBlockParameter(program, block, gl.UNIFORM_BLOCK_ACTIVE_UNIFORMS), 3, 'UNIFORM_BLOCK_ACTIVE_UNIFORMS')
+  const indices = gl.getActiveUniformBlockParameter(program, block, gl.UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES)
+  t.ok(indices instanceof Uint32Array, 'UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES is a Uint32Array')
+  t.deepEqual([...indices].sort(), gl.getUniformIndices(program, ['base', 'weights[0]', 'transform']).sort(), 'of the indices of the block\'s uniforms')
+  t.equal(gl.getActiveUniformBlockParameter(program, block, gl.UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER), false, 'UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER')
+  t.equal(gl.getActiveUniformBlockParameter(program, block, gl.UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER), true, 'UNIFORM_BLOCK_REFERENCED_BY_FRAGMENT_SHADER')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  t.equal(gl.getActiveUniformBlockParameter(program, block, gl.UNIFORM_BLOCK_NAME_LENGTH), null, 'returns null for UNIFORM_BLOCK_NAME_LENGTH, which WebGL leaves out')
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and sets INVALID_ENUM')
+  t.equal(gl.getActiveUniformBlockParameter(program, 1, gl.UNIFORM_BLOCK_DATA_SIZE), null, 'returns null for an index past the last block')
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and sets INVALID_VALUE')
+  t.equal(gl.getActiveUniformBlockParameter(null, block, gl.UNIFORM_BLOCK_DATA_SIZE), null, 'returns null for a null program')
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and sets INVALID_VALUE')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
