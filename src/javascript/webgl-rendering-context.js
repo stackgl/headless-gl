@@ -40,6 +40,7 @@ const { WebGLUniformLocation } = require('./webgl-uniform-location')
 const { WebGLVertexArrayObject } = require('./webgl-vertex-array-object')
 const { getEXTColorBufferFloat } = require('./extensions/ext-color-buffer-float')
 const { getEXTFloatBlend } = require('./extensions/ext-float-blend')
+const { getWebGLColorBufferFloat } = require('./extensions/webgl-color-buffer-float')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -68,7 +69,8 @@ const availableExtensions = {
   ext_texture_filter_anisotropic: getEXTTextureFilterAnisotropic,
   ext_shader_texture_lod: getEXTShaderTextureLod,
   ext_color_buffer_float: getEXTColorBufferFloat,
-  ext_float_blend: getEXTFloatBlend
+  ext_float_blend: getEXTFloatBlend,
+  webgl_color_buffer_float: getWebGLColorBufferFloat
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
@@ -2471,6 +2473,15 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return super.stencilOpSeparate(face | 0, fail | 0, zfail | 0, zpass | 0)
   }
 
+  // WebGL1 only takes float textures once OES_texture_float is enabled. ANGLE takes them whenever its own OES_texture_float is on, which WEBGL_color_buffer_float also turns on so floats can be read back.
+  _checkTextureType (type) {
+    if ((type | 0) === this.FLOAT && !this._isWebGL2() && !this._extensions.oes_texture_float) {
+      this.setError(this.INVALID_ENUM)
+      return false
+    }
+    return true
+  }
+
   texImage2D (
     target,
     level,
@@ -2507,6 +2518,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     border |= 0
     format |= 0
     type |= 0
+
+    if (!this._checkTextureType(type)) {
+      return
+    }
 
     if (typeof pixels !== 'object' && pixels !== undefined) {
       throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
@@ -2569,6 +2584,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       pixels = pixels.data
 
       pixels = convertPixelFormats(this, pixels, this.RGBA, format)
+    }
+
+    if (!this._checkTextureType(type)) {
+      return
     }
 
     if (typeof pixels !== 'object') {

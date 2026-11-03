@@ -414,14 +414,21 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
                                    {"GL_OES_texture_float", "GL_CHROMIUM_color_buffer_float_rgba",
                                     "GL_CHROMIUM_color_buffer_float_rgb"}});
     webGLToANGLEExtensions.insert({"WEBGL_draw_buffers", {"GL_EXT_draw_buffers"}});
+    // Reading floats back with readPixels needs ANGLE's OES_texture_float too. The JavaScript still rejects float textures until WebGL's OES_texture_float is enabled.
+    webGLToANGLEExtensions.insert(
+        {"WEBGL_color_buffer_float",
+         {"GL_CHROMIUM_color_buffer_float_rgba", "GL_OES_texture_float"}});
     webGLToANGLEExtensions.insert({"OES_vertex_array_object", {"GL_OES_vertex_array_object"}});
     webGLToANGLEExtensions.insert({"EXT_shader_texture_lod", {"GL_EXT_shader_texture_lod"}});
   }
 
   // The float color buffer extensions also enable EXT_float_blend where ANGLE supports it, as the EXT_float_blend spec requires.
-  const char *floatColorBufferExtension =
-      createWebGL2Context ? "EXT_color_buffer_float" : "OES_texture_float";
-  webGLToOptionalANGLEExtensions.insert({floatColorBufferExtension, {"GL_EXT_float_blend"}});
+  if (createWebGL2Context) {
+    webGLToOptionalANGLEExtensions.insert({"EXT_color_buffer_float", {"GL_EXT_float_blend"}});
+  } else {
+    webGLToOptionalANGLEExtensions.insert({"OES_texture_float", {"GL_EXT_float_blend"}});
+    webGLToOptionalANGLEExtensions.insert({"WEBGL_color_buffer_float", {"GL_EXT_float_blend"}});
+  }
 
   for (const auto &iter : webGLToANGLEExtensions) {
     const std::string &webGLExtension = iter.first;
