@@ -256,6 +256,7 @@ PFNGLUNIFORMMATRIX4X2FVPROC l_glUniformMatrix4x2fv;
 PFNGLUNIFORMMATRIX3X4FVPROC l_glUniformMatrix3x4fv;
 PFNGLUNIFORMMATRIX4X3FVPROC l_glUniformMatrix4x3fv;
 PFNGLBLITFRAMEBUFFERPROC l_glBlitFramebuffer;
+PFNGLGETBUFFERSUBDATAPROC l_glGetBufferSubData;
 PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC l_glRenderbufferStorageMultisample;
 PFNGLFRAMEBUFFERTEXTURELAYERPROC l_glFramebufferTextureLayer;
 PFNGLMAPBUFFERRANGEPROC l_glMapBufferRange;
@@ -1181,6 +1182,7 @@ void LoadGLES(LoadProc loadProc)
     l_glUniformMatrix4x3fv =
         reinterpret_cast<PFNGLUNIFORMMATRIX4X3FVPROC>(loadProc("glUniformMatrix4x3fv"));
     l_glBlitFramebuffer = reinterpret_cast<PFNGLBLITFRAMEBUFFERPROC>(loadProc("glBlitFramebuffer"));
+    l_glGetBufferSubData = reinterpret_cast<PFNGLGETBUFFERSUBDATAPROC>(loadProc("glGetBufferSubData"));
     l_glRenderbufferStorageMultisample = reinterpret_cast<PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC>(
         loadProc("glRenderbufferStorageMultisample"));
     l_glFramebufferTextureLayer =
