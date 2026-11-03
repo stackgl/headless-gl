@@ -2566,7 +2566,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     border,
     format,
     type,
-    pixels) {
+    pixels,
+    srcOffset) {
     if (arguments.length === 6) {
       pixels = border
       type = height
@@ -2607,6 +2608,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       }
     }
 
+    if (srcOffset !== undefined && this._isWebGL2() && ArrayBuffer.isView(pixels)) {
+      pixels = this._skipElements(pixels, srcOffset)
+      if (!pixels) {
+        return
+      }
+    }
+
     const data = convertPixels(pixels)
 
     // Need to check for out of memory error
@@ -2639,7 +2647,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     height,
     format,
     type,
-    pixels) {
+    pixels,
+    srcOffset) {
     if (arguments.length === 7) {
       pixels = format
       type = height
@@ -2663,6 +2672,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
     }
 
+    if (srcOffset !== undefined && this._isWebGL2() && ArrayBuffer.isView(pixels)) {
+      pixels = this._skipElements(pixels, srcOffset)
+      if (!pixels) {
+        return
+      }
+    }
+
     const data = convertPixels(pixels)
 
     super.texSubImage2D(
@@ -2677,6 +2693,22 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       data)
   }
 
+  // WebGL2's texture uploads can start offset elements into a typed array or DataView, where a DataView's elements are bytes.
+  // Returns the pixels from there on, or null after setting INVALID_OPERATION if offset is past the end.
+  _skipElements (pixels, offset) {
+    offset = Math.trunc(offset) || 0
+    const isDataView = isInstanceOfType(pixels, 'DataView')
+    const length = isDataView ? pixels.byteLength : pixels.length
+    if (offset < 0 || offset > length) {
+      this.setError(this.INVALID_OPERATION)
+      return null
+    }
+    if (isDataView) {
+      return new DataView(pixels.buffer, pixels.byteOffset + offset, pixels.byteLength - offset)
+    }
+    return pixels.subarray(offset)
+  }
+
   // WebGL2 doesn't flip or premultiply 3D uploads from typed arrays, and sets INVALID_OPERATION instead.
   _check3DUnpackFlags (pixels) {
     if (ArrayBuffer.isView(pixels) &&
@@ -2687,14 +2719,20 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return true
   }
 
-  texImage3D (target, level, internalFormat, width, height, depth, border, format, type, pixels) {
+  texImage3D (target, level, internalFormat, width, height, depth, border, format, type, pixels, srcOffset) {
     if (!this._check3DUnpackFlags(pixels)) {
       return
     }
-    return super.texImage3D(...arguments)
+    if (srcOffset !== undefined && ArrayBuffer.isView(pixels)) {
+      pixels = this._skipElements(pixels, srcOffset)
+      if (!pixels) {
+        return
+      }
+    }
+    return super.texImage3D(target, level, internalFormat, width, height, depth, border, format, type, pixels)
   }
 
-  texSubImage3D (target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels) {
+  texSubImage3D (target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels, srcOffset) {
     if (pixels === null || pixels === undefined) {
       return
     }
@@ -2717,6 +2755,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       }
       return this._uploadImage(image, format, type, data => this.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data))
     }
+
+    if (srcOffset !== undefined && ArrayBuffer.isView(pixels)) {
+      pixels = this._skipElements(pixels, srcOffset)
+      if (!pixels) {
+        return
+      }
+    }
+
     const data = convertPixels(pixels)
 
     super.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data)
