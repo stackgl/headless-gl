@@ -50,6 +50,17 @@ tape('buffer targets: WebGL2 binds, fills and reports buffers at every target', 
   const uniforms = gl.createBuffer()
   gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, uniforms)
   t.equal(gl.getParameter(gl.UNIFORM_BUFFER_BINDING), uniforms, 'bindBufferBase also binds the buffer to the target')
+  t.equal(gl.getIndexedParameter(gl.UNIFORM_BUFFER_BINDING, 0), uniforms, 'getIndexedParameter(UNIFORM_BUFFER_BINDING) returns the buffer')
+  t.equal(gl.getIndexedParameter(gl.UNIFORM_BUFFER_BINDING, 1), null, 'or null where none is bound')
+
+  const feedback = gl.createBuffer()
+  gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, feedback)
+  gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, 16, gl.STATIC_DRAW)
+  gl.bindBufferRange(gl.TRANSFORM_FEEDBACK_BUFFER, 0, feedback, 4, 8)
+  t.equal(gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0), feedback, 'getIndexedParameter(TRANSFORM_FEEDBACK_BUFFER_BINDING) returns the buffer')
+  t.equal(gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_START, 0), 4, 'and the range\'s start')
+  t.equal(gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_SIZE, 0), 8, 'and size')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
 
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()

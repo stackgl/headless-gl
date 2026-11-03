@@ -753,6 +753,16 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
+  getIndexedParameter (target, index) {
+    target |= 0
+    index |= 0
+    const value = super.getIndexedParameter(target, index)
+    if (target === this.TRANSFORM_FEEDBACK_BUFFER_BINDING || target === this.UNIFORM_BUFFER_BINDING) {
+      return this._buffers[value] || null
+    }
+    return value
+  }
+
   bindRenderbuffer (target, object) {
     if (!checkObject(object)) {
       throw new TypeError('bindRenderbuffer(GLenum, WebGLRenderbuffer)')
