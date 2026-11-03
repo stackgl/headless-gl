@@ -51,6 +51,7 @@ const { getEXTsRGB } = require('./extensions/ext-srgb')
 const { getEXTColorBufferHalfFloat } = require('./extensions/ext-color-buffer-half-float')
 const { getOESTextureHalfFloat } = require('./extensions/oes-texture-half-float')
 const { getOESTextureHalfFloatLinear } = require('./extensions/oes-texture-half-float-linear')
+const { getWebGLDepthTexture } = require('./extensions/webgl-depth-texture')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -58,6 +59,8 @@ const MAX_ATTRIBUTE_LENGTH = 256
 
 // OES_texture_half_float's texture type, which differs from WebGL2's HALF_FLOAT.
 const HALF_FLOAT_OES = 0x8D61
+// WEBGL_depth_texture's type for DEPTH_STENCIL textures, the same as WebGL2's UNSIGNED_INT_24_8.
+const UNSIGNED_INT_24_8_WEBGL = 0x84FA
 
 const DEFAULT_ATTACHMENTS = [
   gl.COLOR_ATTACHMENT0,
@@ -92,7 +95,8 @@ const availableExtensions = {
   ext_srgb: getEXTsRGB,
   ext_color_buffer_half_float: getEXTColorBufferHalfFloat,
   oes_texture_half_float: getOESTextureHalfFloat,
-  oes_texture_half_float_linear: getOESTextureHalfFloatLinear
+  oes_texture_half_float_linear: getOESTextureHalfFloatLinear,
+  webgl_depth_texture: getWebGLDepthTexture
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
@@ -2540,13 +2544,35 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return super.stencilOpSeparate(face | 0, fail | 0, zfail | 0, zpass | 0)
   }
 
-  // WebGL1 only takes float textures once OES_texture_float is enabled, and half-float textures once OES_texture_half_float is. ANGLE takes them whenever its own extensions of the same names are on, which WEBGL_color_buffer_float and EXT_color_buffer_half_float also turn on.
+  // WebGL1 only takes float textures once OES_texture_float is enabled, half-float textures once OES_texture_half_float is, and depth textures once WEBGL_depth_texture is. ANGLE takes them whenever its own extensions of the same names are on, which WEBGL_color_buffer_float and EXT_color_buffer_half_float also turn on, and its depth texture extensions are on in every context.
   _checkTextureType (type) {
     type |= 0
     if (!this._isWebGL2() &&
       ((type === this.FLOAT && !this._extensions.oes_texture_float) ||
-        (type === HALF_FLOAT_OES && !this._extensions.oes_texture_half_float))) {
+        (type === HALF_FLOAT_OES && !this._extensions.oes_texture_half_float) ||
+        ((type === this.UNSIGNED_SHORT || type === this.UNSIGNED_INT || type === UNSIGNED_INT_24_8_WEBGL) && !this._extensions.webgl_depth_texture))) {
       this.setError(this.INVALID_ENUM)
+      return false
+    }
+    return true
+  }
+
+  _isDepthFormat (format) {
+    return format === this.DEPTH_COMPONENT || format === this.DEPTH_STENCIL
+  }
+
+  // WebGL1 takes depth textures only once WEBGL_depth_texture is enabled, and then only as level 0 of a TEXTURE_2D without data, which texSubImage2D can't change. ANGLE allows more, so these limits are checked here.
+  // Returns false after setting an error if a texImage2D or texSubImage2D upload breaks them.
+  _checkDepthTexture (target, level, internalFormat, format, pixels, isSubImage) {
+    if (this._isWebGL2() || !(this._isDepthFormat(internalFormat) || this._isDepthFormat(format))) {
+      return true
+    }
+    if (!this._extensions.webgl_depth_texture) {
+      this.setError(this.INVALID_ENUM)
+      return false
+    }
+    if (isSubImage || target !== this.TEXTURE_2D || level !== 0 || (pixels !== null && pixels !== undefined)) {
+      this.setError(this.INVALID_OPERATION)
       return false
     }
     return true
@@ -2628,6 +2654,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
+    if (!this._checkDepthTexture(target, level, internalFormat, format, pixels, false)) {
+      return
+    }
+
     if (!this._checkUnpackSource(pixels)) {
       return
     }
@@ -2702,6 +2732,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     if (!this._checkTextureType(type)) {
+      return
+    }
+
+    if (!this._checkDepthTexture(target, level, format | 0, format | 0, pixels, true)) {
       return
     }
 

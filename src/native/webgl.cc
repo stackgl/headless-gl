@@ -438,6 +438,9 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
     webGLToANGLEExtensions.insert({"EXT_sRGB", {"GL_EXT_sRGB"}});
     webGLToANGLEExtensions.insert({"OES_fbo_render_mipmap", {"GL_OES_fbo_render_mipmap"}});
     webGLToANGLEExtensions.insert({"EXT_frag_depth", {"GL_EXT_frag_depth"}});
+    // ANGLE enables these, and OES_depth_texture, in every context. The JavaScript rejects depth textures until WEBGL_depth_texture is enabled, and then applies its limits, which OES_depth_texture doesn't have.
+    webGLToANGLEExtensions.insert(
+        {"WEBGL_depth_texture", {"GL_ANGLE_depth_texture", "GL_OES_packed_depth_stencil"}});
   }
 
   // The float color buffer extensions also enable EXT_float_blend where ANGLE supports it, as the EXT_float_blend spec requires.
