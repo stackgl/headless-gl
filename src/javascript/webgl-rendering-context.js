@@ -648,7 +648,6 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
-
   bindBufferBase (target, index, buffer) {
     target |= 0
     index |= 0
