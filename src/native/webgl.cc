@@ -409,6 +409,10 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   webGLToANGLEExtensions.insert(
       {"EXT_texture_mirror_clamp_to_edge", {"GL_EXT_texture_mirror_clamp_to_edge"}});
   webGLToANGLEExtensions.insert({"EXT_depth_clamp", {"GL_EXT_depth_clamp"}});
+  webGLToANGLEExtensions.insert(
+      {"WEBGL_compressed_texture_s3tc",
+       {"GL_EXT_texture_compression_dxt1", "GL_ANGLE_texture_compression_dxt3",
+        "GL_ANGLE_texture_compression_dxt5"}});
   if (createWebGL2Context) {
     webGLToANGLEExtensions.insert({"EXT_color_buffer_float", {"GL_EXT_color_buffer_float"}});
     webGLToANGLEExtensions.insert(

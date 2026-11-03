@@ -52,6 +52,7 @@ const { getEXTColorBufferHalfFloat } = require('./extensions/ext-color-buffer-ha
 const { getOESTextureHalfFloat } = require('./extensions/oes-texture-half-float')
 const { getOESTextureHalfFloatLinear } = require('./extensions/oes-texture-half-float-linear')
 const { getWebGLDepthTexture } = require('./extensions/webgl-depth-texture')
+const { getWebGLCompressedTextureS3TC } = require('./extensions/webgl-compressed-texture-s3tc')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -96,7 +97,8 @@ const availableExtensions = {
   ext_color_buffer_half_float: getEXTColorBufferHalfFloat,
   oes_texture_half_float: getOESTextureHalfFloat,
   oes_texture_half_float_linear: getOESTextureHalfFloatLinear,
-  webgl_depth_texture: getWebGLDepthTexture
+  webgl_depth_texture: getWebGLDepthTexture,
+  webgl_compressed_texture_s3tc: getWebGLCompressedTextureS3TC
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
@@ -3382,11 +3384,23 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return false
   }
 
+  // ANGLE's WebGL compatibility mode takes compressed uploads with no texture bound, where WebGL sets INVALID_OPERATION.
+  // Returns false after setting it if no texture is bound to a TEXTURE_2D or cube map face target.
+  _checkCompressedTextureBound (target) {
+    const unit = this._getActiveTextureUnit()
+    const texture = target === this.TEXTURE_2D ? unit._bind2D : validCubeTarget(target) ? unit._bindCube : undefined
+    if (texture === null) {
+      this.setError(this.INVALID_OPERATION)
+      return false
+    }
+    return true
+  }
+
   compressedTexImage2D (target, level, internalFormat, width, height, border, data, srcOffset, srcLengthOverride) {
     if (!ArrayBuffer.isView(data)) {
       throw new TypeError('compressedTexImage2D(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, ArrayBufferView)')
     }
-    if (!this._checkUnpackSource(data)) {
+    if (!this._checkCompressedTextureBound(target | 0) || !this._checkUnpackSource(data)) {
       return
     }
     const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
@@ -3400,7 +3414,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!ArrayBuffer.isView(data)) {
       throw new TypeError('compressedTexSubImage2D(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, ArrayBufferView)')
     }
-    if (!this._checkUnpackSource(data)) {
+    if (!this._checkCompressedTextureBound(target | 0) || !this._checkUnpackSource(data)) {
       return
     }
     const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
