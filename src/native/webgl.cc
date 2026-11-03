@@ -1798,16 +1798,17 @@ GL_METHOD(ReadPixels) {
   GLenum format = Nan::To<int32_t>(info[4]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[5]).ToChecked();
 
-  GLint pbo_binding = 0;
-  glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &pbo_binding);
-
-  if (pbo_binding > 0) {
+  if (info[6]->IsNumber()) {
     intptr_t offset = static_cast<intptr_t>(Nan::To<int64_t>(info[6]).ToChecked());
     glReadPixels(x, y, width, height, format, type, reinterpret_cast<void*>(offset));
-  } else {
-    Nan::TypedArrayContents<char> pixels(info[6]);
-    if (!*pixels) return Nan::ThrowTypeError("Invalid pixel data buffer");
+    return;
+  }
+
+  Nan::TypedArrayContents<char> pixels(info[6]);
+  if (*pixels) {
     glReadPixels(x, y, width, height, format, type, *pixels);
+  } else {
+    inst->setError(GL_INVALID_OPERATION);
   }
 }
 
