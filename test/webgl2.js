@@ -297,3 +297,37 @@ void main() {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('webgl2: drawBuffers and readBuffer take every color attachment', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+  for (let i = 0; i < 2; i++) {
+    const texture = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, texture)
+    gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8, 1, 1)
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, texture, 0)
+  }
+
+  gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1])
+  t.equal(gl.getError(), gl.NO_ERROR, 'drawBuffers has no GL error')
+  t.deepEqual(drawPixel(gl, `#version 300 es
+precision mediump float;
+layout(location = 0) out vec4 color0;
+layout(location = 1) out vec4 color1;
+void main() {
+  color0 = vec4(1.0, 0.0, 0.0, 1.0);
+  color1 = vec4(0.0, 1.0, 0.0, 1.0);
+}`), [255, 0, 0, 255], 'the first output is drawn to COLOR_ATTACHMENT0')
+
+  gl.readBuffer(gl.COLOR_ATTACHMENT1)
+  const pixel = new Uint8Array(4)
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+  t.deepEqual([...pixel], [0, 255, 0, 255], 'and the second to COLOR_ATTACHMENT1, which readBuffer reads from')
+
+  gl.drawBuffers([gl.NONE, gl.COLOR_ATTACHMENT1])
+  t.equal(gl.getParameter(gl.DRAW_BUFFER0), gl.NONE, 'drawBuffers takes NONE')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
