@@ -280,6 +280,7 @@ Only the following for now:
 * [`EXT_blend_minmax`](https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/)
 * [`EXT_texture_filter_anisotropic`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/)
 * [`EXT_shader_texture_lod`](https://www.khronos.org/registry/webgl/extensions/EXT_shader_texture_lod/)
+* [`EXT_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/)
 * [`EXT_float_blend`](https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/)
 
 ### Why use this thing instead of `node-webgl`?
