@@ -2913,30 +2913,31 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     super.vertexAttribI4uiv(index, this._toTypedArray(values, Uint32Array, 'vertexAttribI4uiv'))
   }
 
-  // clearBufferfv, clearBufferiv and clearBufferuiv read 4 values to clear COLOR with, and 1 for DEPTH or STENCIL.
-  // Returns them as a typed array, or null after setting INVALID_VALUE if there are too few.
-  _getClearBufferValues (buffer, values, TypedArray, name) {
+  // clearBufferfv, clearBufferiv and clearBufferuiv read 4 values to clear COLOR with, and 1 for DEPTH or STENCIL, starting srcOffset elements in.
+  // Returns them as a typed array, or null after setting INVALID_VALUE if there are too few from srcOffset.
+  _getClearBufferValues (buffer, values, srcOffset, TypedArray, name) {
     values = this._toTypedArray(values, TypedArray, name)
+    srcOffset = Math.trunc(srcOffset) || 0
     const count = (buffer | 0) === this.COLOR ? 4 : 1
-    if (values.length < count) {
+    if (srcOffset < 0 || values.length - srcOffset < count) {
       this.setError(this.INVALID_VALUE)
       return null
     }
-    return values
+    return values.subarray(srcOffset)
   }
 
-  clearBufferfv (buffer, drawbuffer, values) {
-    values = this._getClearBufferValues(buffer, values, Float32Array, 'clearBufferfv')
+  clearBufferfv (buffer, drawbuffer, values, srcOffset) {
+    values = this._getClearBufferValues(buffer, values, srcOffset, Float32Array, 'clearBufferfv')
     if (values) super.clearBufferfv(buffer, drawbuffer, values)
   }
 
-  clearBufferiv (buffer, drawbuffer, values) {
-    values = this._getClearBufferValues(buffer, values, Int32Array, 'clearBufferiv')
+  clearBufferiv (buffer, drawbuffer, values, srcOffset) {
+    values = this._getClearBufferValues(buffer, values, srcOffset, Int32Array, 'clearBufferiv')
     if (values) super.clearBufferiv(buffer, drawbuffer, values)
   }
 
-  clearBufferuiv (buffer, drawbuffer, values) {
-    values = this._getClearBufferValues(buffer, values, Uint32Array, 'clearBufferuiv')
+  clearBufferuiv (buffer, drawbuffer, values, srcOffset) {
+    values = this._getClearBufferValues(buffer, values, srcOffset, Uint32Array, 'clearBufferuiv')
     if (values) super.clearBufferuiv(buffer, drawbuffer, values)
   }
 

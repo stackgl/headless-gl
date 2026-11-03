@@ -165,3 +165,29 @@ tape('srcOffset: uniform methods take srcLength elements from srcOffset', functi
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('srcOffset: clearBuffer methods read their values from srcOffset', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const pixel = new Uint8Array(4)
+
+  gl.clearBufferfv(gl.COLOR, 0, new Float32Array([0, 0, 0, 0, 1, 0.4, 0, 1]), 4)
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+  t.deepEqual([...pixel], [255, 102, 0, 255], 'clearBufferfv')
+
+  const texture = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+  gl.texStorage2D(gl.TEXTURE_2D, 1, gl.RGBA8UI, 1, 1)
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
+  gl.clearBufferuiv(gl.COLOR, 0, [9, 255, 102, 0, 255], 1)
+  const integers = new Uint32Array(4)
+  gl.readPixels(0, 0, 1, 1, gl.RGBA_INTEGER, gl.UNSIGNED_INT, integers)
+  t.deepEqual([...integers], [255, 102, 0, 255], 'clearBufferuiv')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.clearBufferuiv(gl.COLOR, 0, [9, 255, 102, 0, 255], 2)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'clearBufferuiv sets INVALID_VALUE with too few values from srcOffset')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
