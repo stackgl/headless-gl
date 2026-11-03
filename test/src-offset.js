@@ -132,3 +132,36 @@ tape('srcOffset: bufferData and bufferSubData copy length elements from srcOffse
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+// Draws with the uniform u, which setUniform sets, as the color.
+function drawUniform (gl, declaration, color, setUniform) {
+  return drawPixel(gl, `#version 300 es
+precision mediump float;
+uniform ${declaration} u;
+out vec4 color;
+void main() {
+  color = ${color};
+}`, program => setUniform(gl.getUniformLocation(program, 'u')))
+}
+
+tape('srcOffset: uniform methods take srcLength elements from srcOffset', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const orange = [255, 102, 0, 255]
+
+  t.deepEqual(drawUniform(gl, 'vec4', 'u', location => gl.uniform4fv(location, new Float32Array([0, 0, 0, 0, 1, 0.4, 0, 1]), 4)), orange, 'uniform4fv with srcOffset')
+  t.deepEqual(drawUniform(gl, 'vec4', 'u', location => gl.uniform4fv(location, [9, 1, 0.4, 0, 1, 9], 1, 4)), orange, 'uniform4fv with an array, srcOffset and srcLength')
+  t.deepEqual(drawUniform(gl, 'uvec4', 'vec4(u) / 255.0', location => gl.uniform4uiv(location, new Uint32Array([0, 255, 102, 0, 255]), 1)), orange, 'uniform4uiv with srcOffset')
+  t.deepEqual(drawUniform(gl, 'mat2', 'vec4(u[0], u[1])', location => gl.uniformMatrix2fv(location, false, new Float32Array([9, 1, 0.4, 0, 1]), 1)), orange, 'uniformMatrix2fv with srcOffset')
+  t.deepEqual(drawUniform(gl, 'mat2x4', 'u[1]', location => gl.uniformMatrix2x4fv(location, false, new Float32Array([9, 0, 0, 0, 0, 1, 0.4, 0, 1, 9]), 1, 8)), orange, 'uniformMatrix2x4fv with srcOffset and srcLength')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  drawUniform(gl, 'vec4', 'u', location => gl.uniform4fv(location, new Float32Array(8), 9))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'uniform4fv sets INVALID_VALUE with srcOffset past the end')
+  drawUniform(gl, 'vec4', 'u', location => gl.uniform4fv(location, new Float32Array(8), 4, 8))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and with srcLength past the end')
+  drawUniform(gl, 'uvec4', 'vec4(u)', location => gl.uniform4uiv(location, new Uint32Array(8), 4, 8))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'uniform4uiv sets INVALID_VALUE with srcLength past the end')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
