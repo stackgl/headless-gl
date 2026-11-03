@@ -87,3 +87,24 @@ tape('buffer targets: WebGL1 has none of the WebGL2 targets', function (t) {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('buffer targets: bufferData takes the WebGL2 usages only in WebGL2', function (t) {
+  const usages = ['STREAM_READ', 'STREAM_COPY', 'STATIC_READ', 'STATIC_COPY', 'DYNAMIC_READ', 'DYNAMIC_COPY']
+
+  const gl2 = createContext(1, 1, { createWebGL2Context: true })
+  gl2.bindBuffer(gl2.ARRAY_BUFFER, gl2.createBuffer())
+  for (const usage of usages) {
+    gl2.bufferData(gl2.ARRAY_BUFFER, 4, gl2[usage])
+    t.equal(gl2.getBufferParameter(gl2.ARRAY_BUFFER, gl2.BUFFER_USAGE), gl2[usage], `WebGL2 takes ${usage}`)
+  }
+  t.equal(gl2.getError(), gl2.NO_ERROR, 'and sets no error')
+  gl2.getExtension('STACKGL_destroy_context').destroy()
+
+  const gl = createContext(1, 1)
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer())
+  gl.bufferData(gl.ARRAY_BUFFER, 4, 0x88E1) // STREAM_READ
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'WebGL1 sets INVALID_ENUM for STREAM_READ')
+  gl.getExtension('STACKGL_destroy_context').destroy()
+
+  t.end()
+})

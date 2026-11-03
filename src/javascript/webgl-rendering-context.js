@@ -1007,16 +1007,17 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     target |= 0
     usage |= 0
 
-    const isPBOUsage = this._isWebGL2() && (
+    const isWebGL2Usage = this._isWebGL2() && (
       usage === this.STREAM_READ ||
+      usage === this.STREAM_COPY ||
       usage === this.STATIC_READ ||
-      usage === this.DYNAMIC_READ
-    )
-
+      usage === this.STATIC_COPY ||
+      usage === this.DYNAMIC_READ ||
+      usage === this.DYNAMIC_COPY)
     if (usage !== this.STREAM_DRAW &&
       usage !== this.STATIC_DRAW &&
       usage !== this.DYNAMIC_DRAW &&
-      !isPBOUsage) {
+      !isWebGL2Usage) {
       this.setError(this.INVALID_ENUM)
       return
     }
