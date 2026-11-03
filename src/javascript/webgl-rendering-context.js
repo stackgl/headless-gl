@@ -1904,6 +1904,21 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     switch (pname) {
       case this.COMPRESSED_TEXTURE_FORMATS:
         return new Uint32Array(0)
+      // WebGL returns these as typed arrays, which the native method doesn't make.
+      case this.ALIASED_LINE_WIDTH_RANGE:
+      case this.ALIASED_POINT_SIZE_RANGE:
+      case this.BLEND_COLOR:
+      case this.COLOR_CLEAR_VALUE:
+      case this.DEPTH_RANGE: {
+        const value = super.getParameter(pname)
+        return value && new Float32Array(value)
+      }
+      case this.MAX_VIEWPORT_DIMS:
+      case this.SCISSOR_BOX:
+      case this.VIEWPORT: {
+        const value = super.getParameter(pname)
+        return value && new Int32Array(value)
+      }
       case this.ARRAY_BUFFER_BINDING:
         return this._vertexGlobalState._arrayBufferBinding
       case this.ELEMENT_ARRAY_BUFFER_BINDING:
