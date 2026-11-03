@@ -2742,8 +2742,8 @@ GL_METHOD(TexImage3D) {
   } else if (info[9]->IsArrayBufferView()) {
     auto buffer = info[9].As<v8::ArrayBufferView>();
     void *bufferPtr = GetArrayBufferViewData(buffer);
-    glTexImage3D(target, level, internalformat, width, height, depth, border, format, type,
-                 bufferPtr);
+    glTexImage3DRobustANGLE(target, level, internalformat, width, height, depth, border, format,
+                            type, buffer->ByteLength(), bufferPtr);
   } else {
     Nan::ThrowTypeError("Invalid data type for TexImage3D");
   }

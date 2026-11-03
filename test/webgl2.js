@@ -52,6 +52,18 @@ tape('webgl2: texImage3D without data', function (t) {
   t.end()
 })
 
+tape('webgl2: texImage3D with data that is too short', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  gl.bindTexture(gl.TEXTURE_3D, gl.createTexture())
+
+  // 2 by 2 by 2 RGBA8 pixels take 32 bytes.
+  gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 2, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4))
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'texImage3D sets INVALID_OPERATION')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
 tape('webgl2: 3D uploads from typed arrays with UNPACK_FLIP_Y_WEBGL or UNPACK_PREMULTIPLY_ALPHA_WEBGL', function (t) {
   const gl = createContext(1, 1, { createWebGL2Context: true })
   gl.bindTexture(gl.TEXTURE_3D, gl.createTexture())
