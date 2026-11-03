@@ -55,6 +55,9 @@ const { getOESTextureHalfFloatLinear } = require('./extensions/oes-texture-half-
 const MAX_UNIFORM_LENGTH = 256
 const MAX_ATTRIBUTE_LENGTH = 256
 
+// OES_texture_half_float's texture type, which differs from WebGL2's HALF_FLOAT.
+const HALF_FLOAT_OES = 0x8D61
+
 const DEFAULT_ATTACHMENTS = [
   gl.COLOR_ATTACHMENT0,
   gl.DEPTH_ATTACHMENT,
@@ -2504,9 +2507,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return super.stencilOpSeparate(face | 0, fail | 0, zfail | 0, zpass | 0)
   }
 
-  // WebGL1 only takes float textures once OES_texture_float is enabled. ANGLE takes them whenever its own OES_texture_float is on, which WEBGL_color_buffer_float also turns on so floats can be read back.
+  // WebGL1 only takes float textures once OES_texture_float is enabled, and half-float textures once OES_texture_half_float is. ANGLE takes them whenever its own extensions of the same names are on, which WEBGL_color_buffer_float and EXT_color_buffer_half_float also turn on.
   _checkTextureType (type) {
-    if ((type | 0) === this.FLOAT && !this._isWebGL2() && !this._extensions.oes_texture_float) {
+    type |= 0
+    if (!this._isWebGL2() &&
+      ((type === this.FLOAT && !this._extensions.oes_texture_float) ||
+        (type === HALF_FLOAT_OES && !this._extensions.oes_texture_half_float))) {
       this.setError(this.INVALID_ENUM)
       return false
     }

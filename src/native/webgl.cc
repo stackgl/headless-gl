@@ -412,6 +412,10 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
     webGLToANGLEExtensions.insert(
         {"EXT_color_buffer_half_float", {"GL_EXT_color_buffer_half_float"}});
   } else {
+    // ANGLE only makes 16-bit float color buffers renderable on WebGL1 with its OES_texture_half_float too. The JavaScript still rejects half-float textures until WebGL's OES_texture_half_float is enabled.
+    webGLToANGLEExtensions.insert(
+        {"EXT_color_buffer_half_float",
+         {"GL_EXT_color_buffer_half_float", "GL_OES_texture_half_float"}});
     webGLToANGLEExtensions.insert({"ANGLE_instanced_arrays", {"GL_ANGLE_instanced_arrays"}});
     webGLToANGLEExtensions.insert({"OES_element_index_uint", {"GL_OES_element_index_uint"}});
     webGLToANGLEExtensions.insert({"EXT_blend_minmax", {"GL_EXT_blend_minmax"}});
@@ -440,6 +444,9 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   } else {
     webGLToOptionalANGLEExtensions.insert({"OES_texture_float", {"GL_EXT_float_blend"}});
     webGLToOptionalANGLEExtensions.insert({"WEBGL_color_buffer_float", {"GL_EXT_float_blend"}});
+    // As the OES_texture_half_float spec requires, it also enables EXT_color_buffer_half_float where ANGLE supports it.
+    webGLToOptionalANGLEExtensions.insert(
+        {"OES_texture_half_float", {"GL_EXT_color_buffer_half_float"}});
   }
 
   for (const auto &iter : webGLToANGLEExtensions) {

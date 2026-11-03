@@ -272,6 +272,7 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | --- | --- | --- |
 | [`STACKGL_destroy_context`](https://github.com/stackgl/headless-gl#stackgl_destroy_context) | Yes | Yes |
 | [`STACKGL_resize_drawingbuffer`](https://github.com/stackgl/headless-gl#stackgl_resize_drawingbuffer) | Yes | Yes |
+| [`EXT_color_buffer_half_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/) | Yes | Yes |
 | [`EXT_depth_clamp`](https://www.khronos.org/registry/webgl/extensions/EXT_depth_clamp/) | Yes | Yes |
 | [`EXT_float_blend`](https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/) | Yes | Yes |
 | [`EXT_texture_filter_anisotropic`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/) | Yes | Yes |
@@ -279,7 +280,6 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`OES_texture_float_linear`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/) | Yes | Yes |
 | [`WEBGL_debug_renderer_info`](https://www.khronos.org/registry/webgl/extensions/WEBGL_debug_renderer_info/) | Yes | Yes |
 | [`EXT_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/) | No | Yes |
-| [`EXT_color_buffer_half_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/) | Not yet | Yes |
 | [`WEBGL_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/) | Yes | Use `EXT_color_buffer_float` |
 | [`ANGLE_instanced_arrays`](https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays/) | Yes | Built in |
 | [`EXT_blend_minmax`](https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/) | Yes | Built in |
@@ -295,7 +295,7 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`OES_vertex_array_object`](https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/) | Yes | Built in |
 | [`WEBGL_draw_buffers`](https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/) | Yes | Built in |
 
-Float textures are built into WebGL2, but rendering to them still needs `EXT_color_buffer_float`.
+Float textures are built into WebGL2, but rendering to them still needs `EXT_color_buffer_float`, or `EXT_color_buffer_half_float` for 16-bit float textures.
 
 ### Why use this thing instead of `node-webgl`?
 
