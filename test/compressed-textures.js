@@ -96,3 +96,33 @@ for (const webgl2 of [false, true]) {
     t.end()
   })
 }
+
+for (const webgl2 of [false, true]) {
+  tape(`compressed textures: WebGL${webgl2 ? 2 : 1} WEBGL_compressed_texture_s3tc_srgb`, function (t) {
+    const gl = createContext(1, 1, { createWebGL2Context: webgl2 })
+    const ext = gl.getExtension('WEBGL_compressed_texture_s3tc_srgb')
+    t.ok(ext, 'is available')
+    t.deepEqual([...gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS)].sort(), [0x8C4C, 0x8C4D, 0x8C4E, 0x8C4F], 'COMPRESSED_TEXTURE_FORMATS lists its formats')
+
+    // RGB565 (16, 32, 16), about 130 of 255 in each channel, which sampling turns from sRGB into about 57 to 59 in linear terms.
+    const gray = [0x10, 0x84, 0x00, 0x00, 0, 0, 0, 0]
+    createTexture(gl)
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, ext.COMPRESSED_SRGB_S3TC_DXT1_EXT, 4, 4, 0, new Uint8Array(gray))
+    const [r, g, b, a] = sample(gl)
+    t.ok([r, g, b].every(value => Math.abs(value - 58) <= 3) && a === 255, `COMPRESSED_SRGB_S3TC_DXT1_EXT is decoded from sRGB (got ${[r, g, b, a]})`)
+
+    const formats = [
+      ['COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT', DXT1_RED],
+      ['COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT', DXT3_RED],
+      ['COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT', DXT5_RED]
+    ]
+    for (const [format, block] of formats) {
+      createTexture(gl)
+      gl.compressedTexImage2D(gl.TEXTURE_2D, 0, ext[format], 4, 4, 0, new Uint8Array(block))
+    }
+    t.equal(gl.getError(), gl.NO_ERROR, 'the alpha formats take uploads too')
+
+    gl.getExtension('STACKGL_destroy_context').destroy()
+    t.end()
+  })
+}

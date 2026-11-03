@@ -413,6 +413,8 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
       {"WEBGL_compressed_texture_s3tc",
        {"GL_EXT_texture_compression_dxt1", "GL_ANGLE_texture_compression_dxt3",
         "GL_ANGLE_texture_compression_dxt5"}});
+  webGLToANGLEExtensions.insert(
+      {"WEBGL_compressed_texture_s3tc_srgb", {"GL_EXT_texture_compression_s3tc_srgb"}});
   if (createWebGL2Context) {
     webGLToANGLEExtensions.insert({"EXT_color_buffer_float", {"GL_EXT_color_buffer_float"}});
     webGLToANGLEExtensions.insert(

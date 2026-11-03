@@ -53,6 +53,7 @@ const { getOESTextureHalfFloat } = require('./extensions/oes-texture-half-float'
 const { getOESTextureHalfFloatLinear } = require('./extensions/oes-texture-half-float-linear')
 const { getWebGLDepthTexture } = require('./extensions/webgl-depth-texture')
 const { getWebGLCompressedTextureS3TC } = require('./extensions/webgl-compressed-texture-s3tc')
+const { getWebGLCompressedTextureS3TCsRGB } = require('./extensions/webgl-compressed-texture-s3tc-srgb')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -98,7 +99,8 @@ const availableExtensions = {
   oes_texture_half_float: getOESTextureHalfFloat,
   oes_texture_half_float_linear: getOESTextureHalfFloatLinear,
   webgl_depth_texture: getWebGLDepthTexture,
-  webgl_compressed_texture_s3tc: getWebGLCompressedTextureS3TC
+  webgl_compressed_texture_s3tc: getWebGLCompressedTextureS3TC,
+  webgl_compressed_texture_s3tc_srgb: getWebGLCompressedTextureS3TCsRGB
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
