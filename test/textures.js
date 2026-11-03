@@ -1,10 +1,5 @@
 const BLACKLIST = [
-  'textures_compressed-tex-image',
-  'textures_tex-image-webgl',
-
-  // Broken.  Formats besides gl.RGBA don't work for fbos
-  'textures_texture-attachment-formats',
-  'textures_texture-fakeblack'
+  'textures_compressed-tex-image'
 ]
 
 require('./util/conformance')(function (str) {

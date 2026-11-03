@@ -1,5 +1,4 @@
 const BLACKLIST = {
-  more_functions_texSubImage2DHTMLBadArgs: true,
   more_functions_copyTexSubImage2D: true
 }
 
