@@ -49,6 +49,7 @@ const { getEXTDepthClamp } = require('./extensions/ext-depth-clamp')
 const { getEXTsRGB } = require('./extensions/ext-srgb')
 const { getEXTColorBufferHalfFloat } = require('./extensions/ext-color-buffer-half-float')
 const { getOESTextureHalfFloat } = require('./extensions/oes-texture-half-float')
+const { getOESTextureHalfFloatLinear } = require('./extensions/oes-texture-half-float-linear')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -86,7 +87,8 @@ const availableExtensions = {
   ext_depth_clamp: getEXTDepthClamp,
   ext_srgb: getEXTsRGB,
   ext_color_buffer_half_float: getEXTColorBufferHalfFloat,
-  oes_texture_half_float: getOESTextureHalfFloat
+  oes_texture_half_float: getOESTextureHalfFloat,
+  oes_texture_half_float_linear: getOESTextureHalfFloatLinear
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.

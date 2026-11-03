@@ -291,6 +291,7 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`OES_standard_derivatives`](https://www.khronos.org/registry/webgl/extensions/OES_standard_derivatives/) | Yes | Built in |
 | [`OES_texture_float`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float/) | Yes | Built in |
 | [`OES_texture_half_float`](https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float/) | Yes | Built in |
+| [`OES_texture_half_float_linear`](https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float_linear/) | Yes | Built in |
 | [`OES_vertex_array_object`](https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/) | Yes | Built in |
 | [`WEBGL_draw_buffers`](https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/) | Yes | Built in |
 
