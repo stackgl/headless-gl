@@ -1,4 +1,6 @@
 #include <array>
+#include <bit>
+#include <cmath>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -1105,35 +1107,127 @@ GLint GetPixelSize(GLenum format, GLenum type) {
   return 0;
 }
 
-// Multiplies the color of a pixel by its alpha, for UNPACK_PREMULTIPLY_ALPHA_WEBGL.
+template <typename T> T ReadValue(const uint8_t *data) {
+  T value;
+  memcpy(&value, data, sizeof(T));
+  return value;
+}
+
+template <typename T> void WriteValue(uint8_t *data, T value) { memcpy(data, &value, sizeof(T)); }
+
+float HalfToFloat(uint16_t half) {
+  int exponent = (half >> 10) & 0x1f;
+  int mantissa = half & 0x3ff;
+  float value;
+  if (exponent == 0) {
+    value = std::ldexp(static_cast<float>(mantissa), -24);
+  } else if (exponent == 31) {
+    value = mantissa == 0 ? INFINITY : NAN;
+  } else {
+    value = std::ldexp(static_cast<float>(mantissa | 0x400), exponent - 25);
+  }
+  return (half & 0x8000) ? -value : value;
+}
+
+// Rounds to the nearest half float, with ties to even.
+uint16_t FloatToHalf(float value) {
+  uint32_t bits = std::bit_cast<uint32_t>(value);
+  uint16_t sign = (bits >> 16) & 0x8000;
+  int exponent = static_cast<int>((bits >> 23) & 0xff) - 127 + 15;
+  uint32_t mantissa = bits & 0x7fffff;
+  if (((bits >> 23) & 0xff) == 0xff) {
+    return sign | 0x7c00 | (mantissa != 0 ? 0x200 : 0);
+  }
+  if (exponent >= 31) {
+    return sign | 0x7c00;
+  }
+  if (exponent < -10) {
+    return sign;
+  }
+
+  // Normal half floats drop 13 bits of the mantissa. Subnormal ones also shift in the implicit leading 1.
+  int shift = 13;
+  uint32_t half = (static_cast<uint32_t>(exponent) << 10) | (mantissa >> 13);
+  if (exponent <= 0) {
+    mantissa |= 0x800000;
+    shift = 14 - exponent;
+    half = mantissa >> shift;
+  }
+  uint32_t remainder = mantissa & ((1u << shift) - 1);
+  uint32_t halfway = 1u << (shift - 1);
+  if (remainder > halfway || (remainder == halfway && (half & 1))) {
+    ++half;
+  }
+  return sign | static_cast<uint16_t>(half);
+}
+
+// Multiplies the color channels of a pixel by its alpha, for UNPACK_PREMULTIPLY_ALPHA_WEBGL. Formats without alpha, and integer formats, are left as they are.
 void PremultiplyPixel(GLenum format, GLenum type, uint8_t *pixel) {
-  if (format == GL_LUMINANCE_ALPHA) {
-    pixel[0] *= pixel[1] / 255.0;
-  } else if (format != GL_RGBA && format != GL_SRGB_ALPHA_EXT) {
+  // These types pack all four channels of an RGBA pixel into one value.
+  switch (type) {
+  case GL_UNSIGNED_SHORT_4_4_4_4: {
+    uint16_t value = ReadValue<uint16_t>(pixel);
+    uint16_t alpha = value & 0xf;
+    uint16_t r = (value >> 12) * alpha / 15;
+    uint16_t g = ((value >> 8) & 0xf) * alpha / 15;
+    uint16_t b = ((value >> 4) & 0xf) * alpha / 15;
+    WriteValue<uint16_t>(pixel, (r << 12) | (g << 8) | (b << 4) | alpha);
     return;
-  } else if (type == GL_UNSIGNED_BYTE) {
-    float scale = pixel[3] / 255.0;
-    pixel[0] *= scale;
-    pixel[1] *= scale;
-    pixel[2] *= scale;
-  } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
-    int r = pixel[0] & 0x0f;
-    int g = pixel[0] >> 4;
-    int b = pixel[1] & 0x0f;
-    int a = pixel[1] >> 4;
-
-    float scale = a / 15.0;
-    r *= scale;
-    g *= scale;
-    b *= scale;
-
-    pixel[0] = r + (g << 4);
-    pixel[1] = b + (a << 4);
-  } else if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
-    if ((pixel[0] & 1) == 0) {
-      pixel[0] = 1; // why does this get set to 1?!?!?!
-      pixel[1] = 0;
+  }
+  case GL_UNSIGNED_SHORT_5_5_5_1:
+    // Alpha is 0 or 1, so the color is either cleared or kept.
+    if ((ReadValue<uint16_t>(pixel) & 1) == 0) {
+      WriteValue<uint16_t>(pixel, 0);
     }
+    return;
+  case GL_UNSIGNED_INT_2_10_10_10_REV: {
+    uint32_t value = ReadValue<uint32_t>(pixel);
+    uint32_t alpha = value >> 30;
+    uint32_t r = (value & 0x3ff) * alpha / 3;
+    uint32_t g = ((value >> 10) & 0x3ff) * alpha / 3;
+    uint32_t b = ((value >> 20) & 0x3ff) * alpha / 3;
+    WriteValue<uint32_t>(pixel, (alpha << 30) | (b << 20) | (g << 10) | r);
+    return;
+  }
+  }
+
+  int alphaIndex;
+  switch (format) {
+  case GL_LUMINANCE_ALPHA:
+    alphaIndex = 1;
+    break;
+  case GL_RGBA:
+  case GL_SRGB_ALPHA_EXT:
+    alphaIndex = 3;
+    break;
+  default:
+    return;
+  }
+
+  switch (type) {
+  case GL_UNSIGNED_BYTE: {
+    float scale = pixel[alphaIndex] / 255.0;
+    for (int i = 0; i < alphaIndex; ++i) {
+      pixel[i] *= scale;
+    }
+    break;
+  }
+  case GL_FLOAT: {
+    float alpha = ReadValue<float>(pixel + alphaIndex * 4);
+    for (int i = 0; i < alphaIndex; ++i) {
+      WriteValue<float>(pixel + i * 4, ReadValue<float>(pixel + i * 4) * alpha);
+    }
+    break;
+  }
+  case GL_HALF_FLOAT:
+  case GL_HALF_FLOAT_OES: {
+    float alpha = HalfToFloat(ReadValue<uint16_t>(pixel + alphaIndex * 2));
+    for (int i = 0; i < alphaIndex; ++i) {
+      float color = HalfToFloat(ReadValue<uint16_t>(pixel + i * 2));
+      WriteValue<uint16_t>(pixel + i * 2, FloatToHalf(color * alpha));
+    }
+    break;
+  }
   }
 }
 
