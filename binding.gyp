@@ -19,6 +19,10 @@
       'defines': [
         'VERSION=1.0.0'
       ],
+      # A function that can end without returning its value is an error, not a warning, since compilers may treat the missing return as unreachable.
+      'cflags_cc': [
+        '-Werror=return-type'
+      ],
       'sources': [
           'src/native/bindings.cc',
           'src/native/webgl.cc',
@@ -46,7 +50,10 @@
               'MACOSX_DEPLOYMENT_TARGET':'10.8',
               'CLANG_CXX_LIBRARY': 'libc++',
               'CLANG_CXX_LANGUAGE_STANDARD':'c++20',
-              'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0'
+              'GCC_VERSION': 'com.apple.compilers.llvm.clang.1_0',
+              'WARNING_CFLAGS': [
+                '-Werror=return-type'
+              ]
             },
             "copies": [
               {
@@ -79,6 +86,13 @@
               'VC_EXTRALEAN',
               'NOMINMAX',
             ],
+            'msvs_settings': {
+              'VCCLCompilerTool': {
+                'AdditionalOptions': [
+                  '/we4715', # not all control paths return a value
+                ]
+              }
+            },
             'configurations': {
               'Release': {
                 'msvs_settings': {
