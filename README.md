@@ -266,23 +266,27 @@ They aren't for now. If you want to upload data to a texture, you will need to u
 
 ### What extensions are supported?
 
-Only the following for now:
+Supported extensions by WebGL version. "Built in" means WebGL2 has the feature itself, so `getExtension` returns `null` for that extension on a WebGL2 context.
 
-* [`STACKGL_resize_drawingbuffer`](https://github.com/stackgl/headless-gl#stackgl_resize_drawingbuffer)
-* [`STACKGL_destroy_context`](https://github.com/stackgl/headless-gl#stackgl_destroy_context)
-* [`ANGLE_instanced_arrays`](https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays/)
-* [`OES_element_index_uint`](https://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/)
-* [`OES_texture_float`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float/)
-* [`OES_texture_float_linear`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/)
-* [`OES_vertex_array_object`](https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/)
-* [`OES_standard_derivatives`](https://www.khronos.org/registry/webgl/extensions/OES_standard_derivatives/)
-* [`WEBGL_draw_buffers`](https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/)
-* [`WEBGL_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/)
-* [`EXT_blend_minmax`](https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/)
-* [`EXT_texture_filter_anisotropic`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/)
-* [`EXT_shader_texture_lod`](https://www.khronos.org/registry/webgl/extensions/EXT_shader_texture_lod/)
-* [`EXT_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/)
-* [`EXT_float_blend`](https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/)
+| Extension | WebGL1 | WebGL2 |
+| --- | --- | --- |
+| [`STACKGL_destroy_context`](https://github.com/stackgl/headless-gl#stackgl_destroy_context) | Yes | Yes |
+| [`STACKGL_resize_drawingbuffer`](https://github.com/stackgl/headless-gl#stackgl_resize_drawingbuffer) | Yes | Yes |
+| [`EXT_float_blend`](https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/) | Yes | Yes |
+| [`EXT_texture_filter_anisotropic`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/) | Yes | Yes |
+| [`OES_texture_float_linear`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/) | Yes | Yes |
+| [`EXT_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/) | No | Yes |
+| [`WEBGL_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/) | Yes | Use `EXT_color_buffer_float` |
+| [`ANGLE_instanced_arrays`](https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays/) | Yes | Built in |
+| [`EXT_blend_minmax`](https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/) | Yes | Built in |
+| [`EXT_shader_texture_lod`](https://www.khronos.org/registry/webgl/extensions/EXT_shader_texture_lod/) | Yes | Built in |
+| [`OES_element_index_uint`](https://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/) | Yes | Built in |
+| [`OES_standard_derivatives`](https://www.khronos.org/registry/webgl/extensions/OES_standard_derivatives/) | Yes | Built in |
+| [`OES_texture_float`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float/) | Yes | Built in |
+| [`OES_vertex_array_object`](https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/) | Yes | Built in |
+| [`WEBGL_draw_buffers`](https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/) | Yes | Built in |
+
+Float textures are built into WebGL2, but rendering to them still needs `EXT_color_buffer_float`.
 
 ### Why use this thing instead of `node-webgl`?
 
