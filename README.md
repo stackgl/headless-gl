@@ -259,7 +259,7 @@ In a browser, `createGL` creates a canvas and calls its `getContext`, and throws
 
 ### How are `<image>` and `<video>` elements implemented?
 
-They aren't. Texture uploads take a typed array, an object with pixel data like `ImageData`, or an object with a 2D context like a node-canvas `Canvas`. The RGBA pixels of the last two are converted to the upload's format and type, as browsers convert images. To help reading and saving images, you should check out the following modules:
+They aren't. Texture uploads take a typed array, an object with pixel data like `ImageData`, or an object with a 2D context like a node-canvas `Canvas`. The RGBA pixels of the last two are converted to the upload's format and type, as browsers convert images. In WebGL2 contexts, an upload's width and height, with `UNPACK_SKIP_PIXELS` and `UNPACK_SKIP_ROWS`, select a rectangle of the image, and 3D uploads take slices of it, as in browsers. To help reading and saving images, you should check out the following modules:
 
 * [`get-pixels`](https://www.npmjs.com/package/get-pixels)
 * [`save-pixels`](https://www.npmjs.com/package/save-pixels)

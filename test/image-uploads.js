@@ -173,20 +173,133 @@ tape('image uploads: unpack parameters', function (t) {
   // Images ignore these, and keep them for later uploads.
   gl.pixelStorei(gl.UNPACK_ALIGNMENT, 8)
   gl.pixelStorei(gl.UNPACK_ROW_LENGTH, 5)
-  gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 1)
-  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 1)
   gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, gl.RGB, gl.UNSIGNED_BYTE, image([102, 51, 0, 204]))
   t.equal(gl.getError(), gl.NO_ERROR, 'texImage2D has no GL error')
   t.deepEqual(sample3(gl), [102, 51, 0, 255], 'the image is uploaded')
   t.equal(gl.getParameter(gl.UNPACK_ALIGNMENT), 8, 'UNPACK_ALIGNMENT is kept')
   t.equal(gl.getParameter(gl.UNPACK_ROW_LENGTH), 5, 'UNPACK_ROW_LENGTH is kept')
-  t.equal(gl.getParameter(gl.UNPACK_SKIP_PIXELS), 1, 'UNPACK_SKIP_PIXELS is kept')
-  t.equal(gl.getParameter(gl.UNPACK_SKIP_ROWS), 1, 'UNPACK_SKIP_ROWS is kept')
   t.equal(gl.getParameter(gl.UNPACK_FLIP_Y_WEBGL), true, 'UNPACK_FLIP_Y_WEBGL is kept')
 
+  // Without a width and height, the whole image is uploaded, so skipping any of it leaves too little, as in Chrome and Firefox.
+  gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 1)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB8, gl.RGB, gl.UNSIGNED_BYTE, image([102, 51, 0, 204]))
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'UNPACK_SKIP_PIXELS sets INVALID_OPERATION for texImage2D without a width and height')
+  gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 0)
+  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 1)
+  gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGB, gl.UNSIGNED_BYTE, image([102, 51, 0, 204]))
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'and UNPACK_SKIP_ROWS for texSubImage2D without them')
+  t.equal(gl.getParameter(gl.UNPACK_SKIP_ROWS), 1, 'UNPACK_SKIP_ROWS is kept')
+
+  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0)
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_SHORT, image([0, 0, 0, 0]))
   t.equal(gl.getError(), gl.INVALID_ENUM, 'a type images can\'t be uploaded as sets INVALID_ENUM')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+const RED = [255, 0, 0, 255]
+const GREEN = [0, 255, 0, 255]
+const BLUE = [0, 0, 255, 255]
+const CYAN = [0, 255, 255, 255]
+
+// A 2x2 image with red and green on its top row and blue and cyan on its bottom row.
+function quadrants () {
+  return { width: 2, height: 2, data: new Uint8ClampedArray([...RED, ...GREEN, ...BLUE, ...CYAN]) }
+}
+
+// Draws the color at layer of the bound 2D array texture.
+function sampleLayer (gl, layer) {
+  return drawPixel(gl, `#version 300 es
+precision mediump float;
+precision mediump sampler2DArray;
+uniform sampler2DArray sampler;
+uniform float layer;
+out vec4 color;
+void main() {
+  color = texture(sampler, vec3(0.5, 0.5, layer));
+}`, program => gl.uniform1f(gl.getUniformLocation(program, 'layer'), layer))
+}
+
+tape('image uploads: WebGL2 sub-rectangles of images', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  // UNPACK_SKIP_PIXELS and UNPACK_SKIP_ROWS place a width by height rectangle in the image.
+  const cases = [
+    [0, 0, false, RED],
+    [1, 0, false, GREEN],
+    [0, 1, false, BLUE],
+    [1, 1, false, CYAN],
+    // A flipped image's rows are skipped from the bottom.
+    [0, 1, true, RED],
+    [1, 0, true, CYAN]
+  ]
+  for (const [skipPixels, skipRows, flipY, expected] of cases) {
+    gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, skipPixels)
+    gl.pixelStorei(gl.UNPACK_SKIP_ROWS, skipRows)
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY)
+    createTexture(gl)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, quadrants())
+    t.deepEqual(sample3(gl), expected, `texImage2D skipping ${skipPixels} pixels and ${skipRows} rows${flipY ? ' of a flipped image' : ''}`)
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, quadrants())
+    t.deepEqual(sample3(gl), expected, 'and texSubImage2D')
+  }
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+
+  // A format conversion applies to the rectangle too.
+  gl.pixelStorei(gl.UNPACK_SKIP_PIXELS, 1)
+  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 1)
+  createTexture(gl)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RG16F, 1, 1, 0, gl.RG, gl.HALF_FLOAT, quadrants())
+  t.deepEqual(sample3(gl), [0, 255, 0, 255], 'texImage2D converting to RG16F')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 2, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, quadrants())
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'a rectangle past the right of the image sets INVALID_OPERATION')
+  gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 2, gl.RGBA, gl.UNSIGNED_BYTE, quadrants())
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'and past the bottom')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('image uploads: WebGL2 slices of images in 3D textures', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  // An image 1 pixel wide, whose four rows are red, green, blue and cyan from the top.
+  const column = { width: 1, height: 4, data: new Uint8ClampedArray([...RED, ...GREEN, ...BLUE, ...CYAN]) }
+
+  // Slices are height rows apart, or UNPACK_IMAGE_HEIGHT rows when it's set, from UNPACK_SKIP_IMAGES slices in.
+  const cases = [
+    [0, 0, 0, false, [RED, GREEN]],
+    [2, 0, 0, false, [RED, BLUE]],
+    [2, 1, 0, false, [GREEN, CYAN]],
+    [0, 0, 1, false, [GREEN, BLUE]],
+    // A flipped image's slices start from the bottom.
+    [2, 0, 0, true, [CYAN, GREEN]]
+  ]
+  for (const [imageHeight, skipRows, skipImages, flipY, expected] of cases) {
+    gl.pixelStorei(gl.UNPACK_IMAGE_HEIGHT, imageHeight)
+    gl.pixelStorei(gl.UNPACK_SKIP_ROWS, skipRows)
+    gl.pixelStorei(gl.UNPACK_SKIP_IMAGES, skipImages)
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY)
+    const description = `UNPACK_IMAGE_HEIGHT ${imageHeight}, UNPACK_SKIP_ROWS ${skipRows}, UNPACK_SKIP_IMAGES ${skipImages}${flipY ? ', flipped' : ''}`
+    createTexture(gl, gl.TEXTURE_2D_ARRAY)
+    gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, 1, 1, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, column)
+    t.deepEqual([sampleLayer(gl, 0), sampleLayer(gl, 1)], expected, `texImage3D with ${description}`)
+    gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, 1, 1, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+    gl.texSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 0, 1, 1, 2, gl.RGBA, gl.UNSIGNED_BYTE, column)
+    t.deepEqual([sampleLayer(gl, 0), sampleLayer(gl, 1)], expected, 'and texSubImage3D')
+  }
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false)
+  gl.pixelStorei(gl.UNPACK_IMAGE_HEIGHT, 4)
+  gl.pixelStorei(gl.UNPACK_SKIP_ROWS, 0)
+  gl.pixelStorei(gl.UNPACK_SKIP_IMAGES, 0)
+  gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA8, 1, 1, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, column)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'slices past the bottom of the image set INVALID_OPERATION')
 
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()

@@ -143,6 +143,12 @@ function wrapContext (ctx) {
 }
 
 // We need to wrap some of the native WebGL functions to handle certain error codes and check input values
+// An ImageData-like object or a canvas, which uploads take as an image rather than as typed data.
+function isImageSource (pixels) {
+  return typeof pixels === 'object' && pixels !== null && !ArrayBuffer.isView(pixels) &&
+    pixels.width !== undefined && pixels.height !== undefined
+}
+
 class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   _checkLocation (location) {
     if (!(location instanceof WebGLUniformLocation)) {
@@ -2755,12 +2761,25 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   // Uploads an image's pixels with upload(data), converted to the format and type as browsers do.
-  // The converted pixels are tightly packed, and already flipped and premultiplied as UNPACK_FLIP_Y_WEBGL and UNPACK_PREMULTIPLY_ALPHA_WEBGL say, so the unpack parameters that would change them again are reset during the upload.
-  _uploadImage (image, format, type, upload) {
+  // In WebGL2, size is the width and height of the rectangle to take from the image from UNPACK_SKIP_PIXELS and UNPACK_SKIP_ROWS, and for 3D uploads the depth of slices to take UNPACK_IMAGE_HEIGHT rows apart, or height rows when it's 0, from UNPACK_SKIP_IMAGES slices in. It sets INVALID_OPERATION if they don't fit in the image. Without a size, it's the whole image, as Chrome and Firefox take it, so any skip sets the error.
+  // The converted pixels are the whole image, tightly packed, and already flipped and premultiplied as UNPACK_FLIP_Y_WEBGL and UNPACK_PREMULTIPLY_ALPHA_WEBGL say. So those are reset during the upload, as is UNPACK_ALIGNMENT, and UNPACK_ROW_LENGTH is the image's width, so GL takes the rectangle from it with the skips, counting rows from the bottom of a flipped image.
+  _uploadImage (image, format, type, upload, size = { width: image.width, height: image.height }) {
     // Pixels with more than 8 bits per channel are taken to be in the upload's type already, so they're uploaded as they are.
     const { data } = image
     if (!Array.isArray(data) && !isInstanceOfType(data, 'Uint8Array') && !isInstanceOfType(data, 'Uint8ClampedArray')) {
       return upload(data)
+    }
+
+    if (this._isWebGL2()) {
+      let rows = super.getParameter(this.UNPACK_SKIP_ROWS) + size.height
+      if (size.depth !== undefined) {
+        const sliceRows = super.getParameter(this.UNPACK_IMAGE_HEIGHT) || size.height
+        rows += (super.getParameter(this.UNPACK_SKIP_IMAGES) + size.depth - 1) * sliceRows
+      }
+      if (super.getParameter(this.UNPACK_SKIP_PIXELS) + size.width > image.width || rows > image.height) {
+        this.setError(this.INVALID_OPERATION)
+        return
+      }
     }
 
     const converted = convertImagePixels(
@@ -2776,13 +2795,18 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    const pnames = [this.UNPACK_FLIP_Y_WEBGL, this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.UNPACK_ALIGNMENT]
+    const values = new Map([
+      [this.UNPACK_FLIP_Y_WEBGL, 0],
+      [this.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 0],
+      [this.UNPACK_ALIGNMENT, 1]
+    ])
     if (this._isWebGL2()) {
-      pnames.push(this.UNPACK_ROW_LENGTH, this.UNPACK_SKIP_PIXELS, this.UNPACK_SKIP_ROWS, this.UNPACK_IMAGE_HEIGHT, this.UNPACK_SKIP_IMAGES)
+      values.set(this.UNPACK_ROW_LENGTH, image.width)
     }
+    const pnames = [...values.keys()]
     const saved = pnames.map(pname => super.getParameter(pname))
-    for (const pname of pnames) {
-      super.pixelStorei(pname, pname === this.UNPACK_ALIGNMENT ? 1 : 0)
+    for (const [pname, value] of values) {
+      super.pixelStorei(pname, value)
     }
     try {
       return upload(converted)
@@ -2841,6 +2865,15 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     const unpackOffset = this._isWebGL2() && typeof pixels === 'number'
     if (typeof pixels !== 'object' && pixels !== undefined && !unpackOffset) {
       throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
+    }
+
+    // WebGL2 can upload a width by height rectangle of an image.
+    if (this._isWebGL2() && isImageSource(pixels)) {
+      const image = extractImageData(pixels)
+      if (image == null) {
+        throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
+      }
+      return this._uploadImage(image, format, type, data => this.texImage2D(target, level, internalFormat, width, height, border, format, type, data), { width, height })
     }
 
     // Note: there's an ANGLE bug where it doesn't check for setting texImage2D on texture zero in WebGL compat.
@@ -2924,6 +2957,15 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
     }
 
+    // WebGL2 can upload a width by height rectangle of an image.
+    if (this._isWebGL2() && isImageSource(pixels)) {
+      const image = extractImageData(pixels)
+      if (image == null) {
+        throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
+      }
+      return this._uploadImage(image, format, type, data => this.texSubImage2D(target, level, xoffset, yoffset, width | 0, height | 0, format, type, data), { width: width | 0, height: height | 0 })
+    }
+
     if (srcOffset !== undefined && this._isWebGL2() && ArrayBuffer.isView(pixels)) {
       pixels = this._skipElements(pixels, srcOffset)
       if (!pixels) {
@@ -2993,6 +3035,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!this._checkUnpackSource(pixels)) {
       return
     }
+    if (isImageSource(pixels)) {
+      const image = extractImageData(pixels)
+      if (image == null) {
+        throw new TypeError('texImage3D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
+      }
+      return this._uploadImage(image, format, type, data => this.texImage3D(target, level, internalFormat, width, height, depth, border, format, type, data), { width: width | 0, height: height | 0, depth: depth | 0 })
+    }
     if (!this._check3DUnpackFlags(pixels)) {
       return
     }
@@ -3031,7 +3080,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       if (image == null) {
         throw new TypeError('texSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
       }
-      return this._uploadImage(image, format, type, data => this.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data))
+      return this._uploadImage(image, format, type, data => this.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data), { width: width | 0, height: height | 0, depth: depth | 0 })
     }
 
     if (srcOffset !== undefined && ArrayBuffer.isView(pixels)) {
