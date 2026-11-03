@@ -39,6 +39,7 @@ const { WebGLTexture } = require('./webgl-texture')
 const { WebGLUniformLocation } = require('./webgl-uniform-location')
 const { WebGLVertexArrayObject } = require('./webgl-vertex-array-object')
 const { getEXTColorBufferFloat } = require('./extensions/ext-color-buffer-float')
+const { getEXTFloatBlend } = require('./extensions/ext-float-blend')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -66,7 +67,8 @@ const availableExtensions = {
   ext_blend_minmax: getEXTBlendMinMax,
   ext_texture_filter_anisotropic: getEXTTextureFilterAnisotropic,
   ext_shader_texture_lod: getEXTShaderTextureLod,
-  ext_color_buffer_float: getEXTColorBufferFloat
+  ext_color_buffer_float: getEXTColorBufferFloat,
+  ext_float_blend: getEXTFloatBlend
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.

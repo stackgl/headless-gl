@@ -232,7 +232,8 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
                                              bool createWebGL2Context)
     : state(GLCONTEXT_STATE_INIT), unpack_flip_y(false), unpack_premultiply_alpha(false),
       unpack_colorspace_conversion(0x9244), unpack_alignment(4),
-      webGLToANGLEExtensions(&CaseInsensitiveCompare), next(NULL), prev(NULL) {
+      webGLToANGLEExtensions(&CaseInsensitiveCompare),
+      webGLToOptionalANGLEExtensions(&CaseInsensitiveCompare), next(NULL), prev(NULL) {
 
   // Uncomment on Windows to attach debugger
   // MessageBoxA(NULL, "Hello", "Hello", MB_OK);
@@ -401,6 +402,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   webGLToANGLEExtensions.insert(
       {"EXT_texture_filter_anisotropic", {"GL_EXT_texture_filter_anisotropic"}});
   webGLToANGLEExtensions.insert({"OES_texture_float_linear", {"GL_OES_texture_float_linear"}});
+  webGLToANGLEExtensions.insert({"EXT_float_blend", {"GL_EXT_float_blend"}});
   if (createWebGL2Context) {
     webGLToANGLEExtensions.insert({"EXT_color_buffer_float", {"GL_EXT_color_buffer_float"}});
   } else {
@@ -415,6 +417,11 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
     webGLToANGLEExtensions.insert({"OES_vertex_array_object", {"GL_OES_vertex_array_object"}});
     webGLToANGLEExtensions.insert({"EXT_shader_texture_lod", {"GL_EXT_shader_texture_lod"}});
   }
+
+  // The float color buffer extensions also enable EXT_float_blend where ANGLE supports it, as the EXT_float_blend spec requires.
+  const char *floatColorBufferExtension =
+      createWebGL2Context ? "EXT_color_buffer_float" : "OES_texture_float";
+  webGLToOptionalANGLEExtensions.insert({floatColorBufferExtension, {"GL_EXT_float_blend"}});
 
   for (const auto &iter : webGLToANGLEExtensions) {
     const std::string &webGLExtension = iter.first;
@@ -2245,6 +2252,18 @@ GL_METHOD(GetExtension) {
       if (inst->requestableExtensions.count(ext.c_str()) == 0) {
         printf("Warning: could not enable ANGLE extension: %s\n", ext.c_str());
       } else if (inst->enabledExtensions.count(ext.c_str()) == 0) {
+        glRequestExtensionANGLE(ext.c_str());
+        const char *extensionsString = (const char *)glGetString(GL_EXTENSIONS);
+        inst->enabledExtensions = GetStringSetFromCString(extensionsString);
+      }
+    }
+  }
+
+  auto optionalIter = inst->webGLToOptionalANGLEExtensions.find(*name);
+  if (optionalIter != inst->webGLToOptionalANGLEExtensions.end()) {
+    for (const std::string &ext : optionalIter->second) {
+      if (inst->requestableExtensions.count(ext.c_str()) != 0 &&
+          inst->enabledExtensions.count(ext.c_str()) == 0) {
         glRequestExtensionANGLE(ext.c_str());
         const char *extensionsString = (const char *)glGetString(GL_EXTENSIONS);
         inst->enabledExtensions = GetStringSetFromCString(extensionsString);

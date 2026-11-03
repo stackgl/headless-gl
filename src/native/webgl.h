@@ -63,6 +63,8 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   std::set<std::string> enabledExtensions;
   std::set<std::string> supportedWebGLExtensions;
   WebGLToANGLEExtensionsMap webGLToANGLEExtensions;
+  // ANGLE extensions that a WebGL extension also enables, but only where ANGLE offers them.
+  WebGLToANGLEExtensionsMap webGLToOptionalANGLEExtensions;
 
   // A list of object references, need do destroy them at program exit
   std::map<std::pair<GLuint, GLObjectType>, bool> objects;
