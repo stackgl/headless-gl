@@ -2008,7 +2008,8 @@ GL_METHOD(ReadPixels) {
   }
 
   Nan::TypedArrayContents<char> pixels(info[6]);
-  glReadPixels(x, y, width, height, format, type, *pixels);
+  glReadPixelsRobustANGLE(x, y, width, height, format, type, pixels.length(), nullptr, nullptr,
+                          nullptr, *pixels);
 }
 
 GL_METHOD(GetTexParameter) {

@@ -18,6 +18,21 @@ for (const webgl2 of [false, true]) {
     t.end()
   })
 
+  tape(`readPixels: WebGL${webgl2 ? 2 : 1} arrays too small for the pixels`, function (t) {
+    const gl = createContext(2, 1, { createWebGL2Context: webgl2 })
+    gl.clearColor(1, 0, 0, 1)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    // A view of the first 4 bytes of a larger buffer, so bytes written past the view's end can be seen.
+    const backing = new Uint8Array(16)
+    gl.readPixels(0, 0, 2, 1, gl.RGBA, gl.UNSIGNED_BYTE, backing.subarray(0, 4))
+    t.equal(gl.getError(), gl.INVALID_OPERATION, 'readPixels sets INVALID_OPERATION')
+    t.deepEqual([...backing], new Array(16).fill(0), 'and writes nothing')
+
+    gl.getExtension('STACKGL_destroy_context').destroy()
+    t.end()
+  })
+
   tape(`readPixels: WebGL${webgl2 ? 2 : 1} with no pixels to read or nowhere to put them`, function (t) {
     const gl = createContext(2, 1, { createWebGL2Context: webgl2 })
 
