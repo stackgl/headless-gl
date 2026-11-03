@@ -3487,20 +3487,19 @@ GL_METHOD(GetActiveUniforms) {
   GLuint program = Nan::To<uint32_t>(info[0]).ToChecked();
   auto uniformIndices = info[1].As<v8::Array>();
   GLsizei count = uniformIndices->Length();
-  GLuint *indices = new GLuint[count];
+  std::vector<GLuint> indices(count);
   for (GLsizei i = 0; i < count; i++) {
     indices[i] = Nan::To<uint32_t>(Nan::Get(uniformIndices, i).ToLocalChecked()).ToChecked();
   }
   GLenum pname = Nan::To<int32_t>(info[2]).ToChecked();
-  GLint *params = new GLint[count];
-  glGetActiveUniformsiv(program, count, indices, pname, params);
+  // Every parameter has one value for each uniform.
+  std::vector<GLint> params(count);
+  glGetActiveUniformsiv(program, count, indices.data(), pname, params.data());
   v8::Local<v8::Array> result = Nan::New<v8::Array>(count);
   for (GLsizei i = 0; i < count; i++) {
     Nan::Set(result, i, Nan::New(params[i]));
   }
   info.GetReturnValue().Set(result);
-  delete[] indices;
-  delete[] params;
 }
 
 GL_METHOD(GetUniformBlockIndex) {

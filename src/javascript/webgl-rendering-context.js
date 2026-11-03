@@ -1780,6 +1780,45 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return null
   }
 
+  getActiveUniforms (program, uniformIndices, pname) {
+    if (!checkObject(program) ||
+      typeof uniformIndices !== 'object' || uniformIndices === null || typeof uniformIndices[Symbol.iterator] !== 'function') {
+      throw new TypeError('getActiveUniforms(WebGLProgram, sequence<GLuint>, GLenum)')
+    }
+    const indices = Array.from(uniformIndices, index => index >>> 0)
+    pname |= 0
+    if (!program) {
+      this.setError(this.INVALID_VALUE)
+      return null
+    } else if (!this._checkWrapper(program, WebGLProgram)) {
+      return null
+    }
+
+    // WebGL leaves out UNIFORM_NAME_LENGTH, which OpenGL ES has.
+    switch (pname) {
+      case this.UNIFORM_TYPE:
+      case this.UNIFORM_SIZE:
+      case this.UNIFORM_BLOCK_INDEX:
+      case this.UNIFORM_OFFSET:
+      case this.UNIFORM_ARRAY_STRIDE:
+      case this.UNIFORM_MATRIX_STRIDE:
+      case this.UNIFORM_IS_ROW_MAJOR:
+        break
+      default:
+        this.setError(this.INVALID_ENUM)
+        return null
+    }
+
+    this._saveError()
+    const values = super.getActiveUniforms(program._ | 0, indices, pname)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error !== this.NO_ERROR) {
+      return null
+    }
+    return pname === this.UNIFORM_IS_ROW_MAJOR ? values.map(Boolean) : values
+  }
+
   getAttachedShaders (program) {
     if (!checkObject(program) ||
       (typeof program === 'object' &&

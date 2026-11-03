@@ -96,3 +96,35 @@ tape('uniform blocks: getUniformIndices', function (t) {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('uniform blocks: getActiveUniforms', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const program = createProgram(gl)
+  const indices = gl.getUniformIndices(program, ['base', 'weights[0]', 'transform', 'scale'])
+
+  // Uniforms outside a block have no block index, offset or strides, so GL gives -1 for them.
+  const expected = [
+    ['UNIFORM_TYPE', [gl.FLOAT_VEC4, gl.FLOAT, gl.FLOAT_MAT2, gl.FLOAT]],
+    ['UNIFORM_SIZE', [1, 3, 1, 1]],
+    ['UNIFORM_BLOCK_INDEX', [0, 0, 0, -1]],
+    ['UNIFORM_OFFSET', [0, 16, 64, -1]],
+    ['UNIFORM_ARRAY_STRIDE', [0, 16, 0, -1]],
+    ['UNIFORM_MATRIX_STRIDE', [0, 0, 16, -1]],
+    ['UNIFORM_IS_ROW_MAJOR', [false, false, false, false]]
+  ]
+  for (const [pname, values] of expected) {
+    t.deepEqual(gl.getActiveUniforms(program, indices, gl[pname]), values, pname)
+  }
+  t.deepEqual(gl.getActiveUniforms(program, [], gl.UNIFORM_TYPE), [], 'no indices give no values')
+  t.equal(gl.getError(), gl.NO_ERROR, 'and sets no error')
+
+  t.equal(gl.getActiveUniforms(program, indices, gl.UNIFORM_NAME_LENGTH), null, 'returns null for UNIFORM_NAME_LENGTH, which WebGL leaves out')
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and sets INVALID_ENUM')
+  t.equal(gl.getActiveUniforms(program, [0, 99], gl.UNIFORM_TYPE), null, 'returns null for an index past the last uniform')
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and sets INVALID_VALUE')
+  t.equal(gl.getActiveUniforms(null, indices, gl.UNIFORM_TYPE), null, 'returns null for a null program')
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and sets INVALID_VALUE')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
