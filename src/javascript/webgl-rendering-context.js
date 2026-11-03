@@ -41,6 +41,7 @@ const { WebGLVertexArrayObject } = require('./webgl-vertex-array-object')
 const { getEXTColorBufferFloat } = require('./extensions/ext-color-buffer-float')
 const { getEXTFloatBlend } = require('./extensions/ext-float-blend')
 const { getWebGLColorBufferFloat } = require('./extensions/webgl-color-buffer-float')
+const { getWebGLDebugRendererInfo } = require('./extensions/webgl-debug-renderer-info')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -70,7 +71,8 @@ const availableExtensions = {
   ext_shader_texture_lod: getEXTShaderTextureLod,
   ext_color_buffer_float: getEXTColorBufferFloat,
   ext_float_blend: getEXTFloatBlend,
-  webgl_color_buffer_float: getWebGLColorBufferFloat
+  webgl_color_buffer_float: getWebGLColorBufferFloat,
+  webgl_debug_renderer_info: getWebGLDebugRendererInfo
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
@@ -1800,6 +1802,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         if (this._extensions) {
           if (this._extensions.oes_vertex_array_object && pname === this._extensions.oes_vertex_array_object.VERTEX_ARRAY_BINDING_OES) {
             return this._extensions.oes_vertex_array_object._activeVertexArrayObject
+          }
+          // VENDOR and RENDERER above are fixed, while the unmasked strings come from ANGLE and name the GPU and the backend ANGLE uses.
+          const debugRendererInfo = this._extensions.webgl_debug_renderer_info
+          if (debugRendererInfo && pname === debugRendererInfo.UNMASKED_VENDOR_WEBGL) {
+            return super.getParameter(this.VENDOR)
+          }
+          if (debugRendererInfo && pname === debugRendererInfo.UNMASKED_RENDERER_WEBGL) {
+            return super.getParameter(this.RENDERER)
           }
         }
         return super.getParameter(pname)

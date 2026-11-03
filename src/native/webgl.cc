@@ -399,6 +399,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   // Each WebGL extension maps to one or more required ANGLE extensions.
   webGLToANGLEExtensions.insert({"STACKGL_destroy_context", {}});
   webGLToANGLEExtensions.insert({"STACKGL_resize_drawingbuffer", {}});
+  webGLToANGLEExtensions.insert({"WEBGL_debug_renderer_info", {}});
   webGLToANGLEExtensions.insert(
       {"EXT_texture_filter_anisotropic", {"GL_EXT_texture_filter_anisotropic"}});
   webGLToANGLEExtensions.insert({"OES_texture_float_linear", {"GL_OES_texture_float_linear"}});
