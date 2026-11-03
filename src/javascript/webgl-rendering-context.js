@@ -1036,10 +1036,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       dstAlpha)
   }
 
-  // WebGL2's getBufferSubData can use length elements of a typed array or DataView from offset elements in, where a DataView's elements are bytes, or every element from there when length is 0.
+  // WebGL2's bufferData, bufferSubData and getBufferSubData can use length elements of a typed array or DataView from offset elements in, where a DataView's elements are bytes, or every element from there when length is 0.
   // Returns those bytes, or null after setting INVALID_VALUE if they run past the end of the data.
   _getElementBytes (data, offset, length) {
     const bytes = unpackTypedArray(data)
+    if (offset === undefined || !this._isWebGL2()) {
+      return bytes
+    }
     const elementSize = data.BYTES_PER_ELEMENT || 1
     const elements = bytes.length / elementSize
     offset = Math.trunc(offset) || 0
@@ -1051,7 +1054,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return bytes.subarray(offset * elementSize, (offset + length) * elementSize)
   }
 
-  bufferData (target, data, usage) {
+  bufferData (target, data, usage, srcOffset, length) {
     target |= 0
     usage |= 0
 
@@ -1084,7 +1087,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (typeof data === 'object') {
       let u8Data = null
       if (isTypedArray(data) || data instanceof DataView) {
-        u8Data = unpackTypedArray(data)
+        u8Data = this._getElementBytes(data, srcOffset, length)
+        if (!u8Data) {
+          return
+        }
       } else if (data instanceof ArrayBuffer) {
         u8Data = new Uint8Array(data)
       } else {
@@ -1128,7 +1134,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
-  bufferSubData (target, offset, data) {
+  bufferSubData (target, offset, data, srcOffset, length) {
     target |= 0
     offset |= 0
 
@@ -1159,7 +1165,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
     let u8Data = null
     if (isTypedArray(data) || data instanceof DataView) {
-      u8Data = unpackTypedArray(data)
+      u8Data = this._getElementBytes(data, srcOffset, length)
+      if (!u8Data) {
+        return
+      }
     } else if (data instanceof ArrayBuffer) {
       u8Data = new Uint8Array(data)
     } else {

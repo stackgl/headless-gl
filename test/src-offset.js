@@ -75,3 +75,60 @@ tape('srcOffset: texture uploads without enough data after srcOffset', function 
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+// Draws with the first 4 floats of the buffer as the color of every vertex.
+function drawBufferColor (gl, buffer) {
+  return drawPixel(gl, `#version 300 es
+precision mediump float;
+in vec4 vertexColor;
+out vec4 color;
+void main() {
+  color = vertexColor;
+}`, () => {
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+    gl.enableVertexAttribArray(1)
+    gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribDivisor(1, 1)
+  }, `#version 300 es
+layout(location = 0) in vec2 position;
+layout(location = 1) in vec4 color;
+out vec4 vertexColor;
+void main() {
+  vertexColor = color;
+  gl_Position = vec4(position, 0.0, 1.0);
+}`)
+}
+
+tape('srcOffset: bufferData and bufferSubData copy length elements from srcOffset', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const buffer = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([9, 9, 1, 0.4, 0, 1, 9]), gl.STATIC_DRAW, 2, 4)
+  t.equal(gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE), 16, 'bufferData sizes the buffer to length elements')
+  t.deepEqual(drawBufferColor(gl, buffer), [255, 102, 0, 255], 'and copies them from srcOffset')
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([9, 0, 1, 0, 1]), gl.STATIC_DRAW, 1)
+  t.equal(gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE), 16, 'bufferData without a length takes every element from srcOffset')
+  t.deepEqual(drawBufferColor(gl, buffer), [0, 255, 0, 255], 'and copies them')
+
+  // A DataView's elements are bytes.
+  const floats = new Float32Array([9, 1, 0.4, 0, 1])
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, new DataView(floats.buffer), 4, 16)
+  t.deepEqual(drawBufferColor(gl, buffer), [255, 102, 0, 255], 'bufferSubData copies length elements from srcOffset')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+  gl.bufferData(gl.ARRAY_BUFFER, floats, gl.STATIC_DRAW, 6)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'bufferData sets INVALID_VALUE with srcOffset past the end')
+  gl.bufferData(gl.ARRAY_BUFFER, floats, gl.STATIC_DRAW, 2, 4)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and with length past the end')
+  t.equal(gl.getBufferParameter(gl.ARRAY_BUFFER, gl.BUFFER_SIZE), 16, 'which leaves the buffer as it was')
+  gl.bufferSubData(gl.ARRAY_BUFFER, 0, floats, 2, 4)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'bufferSubData sets INVALID_VALUE with length past the end')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
