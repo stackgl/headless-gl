@@ -2462,9 +2462,13 @@ GL_METHOD(GetExtension) {
     printf("Warning: no record of ANGLE exts for WebGL extension: %s\n", *name);
   } else {
     for (const std::string &ext : extsIter->second) {
+      // ANGLE doesn't list extensions that are already enabled as requestable.
+      if (inst->enabledExtensions.count(ext.c_str()) != 0) {
+        continue;
+      }
       if (inst->requestableExtensions.count(ext.c_str()) == 0) {
         printf("Warning: could not enable ANGLE extension: %s\n", ext.c_str());
-      } else if (inst->enabledExtensions.count(ext.c_str()) == 0) {
+      } else {
         glRequestExtensionANGLE(ext.c_str());
         const char *extensionsString = (const char *)glGetString(GL_EXTENSIONS);
         inst->enabledExtensions = GetStringSetFromCString(extensionsString);

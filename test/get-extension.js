@@ -22,3 +22,22 @@ tape('getExtension: unsupported extensions return null without printing anything
   t.equal(result.stdout, '', 'nothing is printed')
   t.end()
 })
+
+tape('getExtension: supported extensions are enabled without printing anything', function (t) {
+  const script = `
+    const createContext = require(${JSON.stringify(path.join(__dirname, '..', 'index'))})
+    for (const webgl2 of [false, true]) {
+      const gl = createContext(1, 1, { createWebGL2Context: webgl2 })
+      for (const name of gl.getSupportedExtensions()) {
+        if (!gl.getExtension(name)) {
+          console.error(name + ' is null')
+        }
+      }
+    }
+  `
+  const result = childProcess.spawnSync(process.execPath, ['-e', script], { encoding: 'utf8' })
+  t.equal(result.status, 0, 'the child process exits normally')
+  t.equal(result.stderr, '', 'every supported extension returns an object')
+  t.equal(result.stdout, '', 'nothing is printed')
+  t.end()
+})
