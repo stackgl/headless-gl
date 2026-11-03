@@ -38,3 +38,27 @@ for (const webgl2 of [false, true]) {
     t.end()
   })
 }
+
+tape('readPixels: WebGL2 into a pixel pack buffer', function (t) {
+  const gl = createContext(2, 1, { createWebGL2Context: true })
+  gl.clearColor(1, 0, 0, 1)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+
+  gl.bindBuffer(gl.PIXEL_PACK_BUFFER, gl.createBuffer())
+  gl.bufferData(gl.PIXEL_PACK_BUFFER, 12, gl.STREAM_READ)
+  gl.readPixels(0, 0, 2, 1, gl.RGBA, gl.UNSIGNED_BYTE, 4)
+  t.equal(gl.getError(), gl.NO_ERROR, 'readPixels at an offset sets no error')
+  const pixels = new Uint8Array(12)
+  gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, pixels)
+  t.deepEqual([...pixels], [0, 0, 0, 0, 255, 0, 0, 255, 255, 0, 0, 255], 'and writes the pixels from that offset')
+
+  gl.readPixels(0, 0, 2, 1, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(8))
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'an array while a pixel pack buffer is bound sets INVALID_OPERATION')
+  gl.readPixels(0, 0, 2, 1, gl.RGBA, gl.UNSIGNED_BYTE, -1)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'a negative offset sets INVALID_VALUE')
+  gl.readPixels(0, 0, 2, 1, gl.RGBA, gl.UNSIGNED_BYTE, 8)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'pixels past the end of the buffer set INVALID_OPERATION')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
