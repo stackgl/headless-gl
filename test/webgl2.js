@@ -343,3 +343,17 @@ void main() {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('webgl2: clearBuffer methods with too few values', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true, depth: true, stencil: true })
+
+  gl.clearBufferfv(gl.COLOR, 0, new Float32Array(3))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'clearBufferfv sets INVALID_VALUE with 3 values for COLOR')
+  gl.clearBufferiv(gl.STENCIL, 0, [])
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'clearBufferiv sets INVALID_VALUE with no value for STENCIL')
+  gl.clearBufferfv(gl.DEPTH, 0, [0.5])
+  t.equal(gl.getError(), gl.NO_ERROR, 'clearBufferfv takes 1 value for DEPTH')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
