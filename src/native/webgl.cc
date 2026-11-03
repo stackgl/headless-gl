@@ -406,6 +406,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   webGLToANGLEExtensions.insert({"EXT_float_blend", {"GL_EXT_float_blend"}});
   webGLToANGLEExtensions.insert(
       {"EXT_texture_mirror_clamp_to_edge", {"GL_EXT_texture_mirror_clamp_to_edge"}});
+  webGLToANGLEExtensions.insert({"EXT_depth_clamp", {"GL_EXT_depth_clamp"}});
   if (createWebGL2Context) {
     webGLToANGLEExtensions.insert({"EXT_color_buffer_float", {"GL_EXT_color_buffer_float"}});
   } else {
@@ -1977,6 +1978,7 @@ GL_METHOD(GetParameter) {
 
   case GL_BLEND:
   case GL_CULL_FACE:
+  case GL_DEPTH_CLAMP_EXT:
   case GL_DEPTH_TEST:
   case GL_DEPTH_WRITEMASK:
   case GL_DITHER:

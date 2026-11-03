@@ -110,6 +110,10 @@ declare namespace createContext {
     getExtension(extensionName: "STACKGL_resize_drawingbuffer"): STACKGL_resize_drawingbuffer;
   }
 
+  interface EXT_depth_clamp {
+    readonly DEPTH_CLAMP_EXT: 0x864F;
+  }
+
   interface EXT_texture_mirror_clamp_to_edge {
     readonly MIRROR_CLAMP_TO_EDGE_EXT: 0x8743;
   }
@@ -118,6 +122,7 @@ declare namespace createContext {
    * getExtension for the extensions headless-gl supports that TypeScript's DOM types don't declare yet.
    */
   interface SupplementalExtensions {
+    getExtension(extensionName: "EXT_depth_clamp"): EXT_depth_clamp | null;
     getExtension(extensionName: "EXT_texture_mirror_clamp_to_edge"): EXT_texture_mirror_clamp_to_edge | null;
   }
 

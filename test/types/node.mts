@@ -11,6 +11,7 @@ gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, { width: 1, 
 gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(4))
 gl.getExtension('STACKGL_resize_drawingbuffer').resize(2, 2)
 const mirrorClamp: number | undefined = gl.getExtension('EXT_texture_mirror_clamp_to_edge')?.MIRROR_CLAMP_TO_EDGE_EXT
+const depthClamp: number | undefined = gl.getExtension('EXT_depth_clamp')?.DEPTH_CLAMP_EXT
 // @ts-expect-error getExtension returns null for unsupported extensions, including those the DOM types don't declare.
 gl.getExtension('EXT_texture_mirror_clamp_to_edge').MIRROR_CLAMP_TO_EDGE_EXT
 
@@ -37,4 +38,4 @@ document.title
 gl.getExtension('STACKGL_destroy_context').destroy()
 gl2.getExtension('STACKGL_destroy_context').destroy()
 
-export { textureCube, mirrorClamp }
+export { textureCube, mirrorClamp, depthClamp }
