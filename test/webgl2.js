@@ -91,6 +91,56 @@ void main() {
   t.end()
 })
 
+tape('webgl2: texture uploads take every kind of typed array', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture())
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+  // Draws the integer texture's color divided by 255.
+  function sample (sampler) {
+    return drawPixel(gl, `#version 300 es
+precision highp float;
+precision highp ${sampler};
+uniform ${sampler} sampler;
+out vec4 color;
+void main() {
+  color = vec4(texture(sampler, vec2(0.5))) / 255.0;
+}`)
+  }
+
+  const cases = [
+    ['RGBA32UI', gl.RGBA_INTEGER, gl.UNSIGNED_INT, Uint32Array, 'usampler2D'],
+    ['RGBA32I', gl.RGBA_INTEGER, gl.INT, Int32Array, 'isampler2D'],
+    ['RGBA16I', gl.RGBA_INTEGER, gl.SHORT, Int16Array, 'isampler2D'],
+    ['RGBA8I', gl.RGBA_INTEGER, gl.BYTE, Int8Array, 'isampler2D']
+  ]
+  for (const [internalFormat, format, type, TypedArray, sampler] of cases) {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl[internalFormat], 1, 1, 0, format, type, new TypedArray([10, 20, 30, 127]))
+    t.deepEqual(sample(sampler), [10, 20, 30, 127], `texImage2D with ${TypedArray.name}`)
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 1, format, type, new TypedArray([40, 50, 60, 127]))
+    t.deepEqual(sample(sampler), [40, 50, 60, 127], `texSubImage2D with ${TypedArray.name}`)
+  }
+
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8UI, 1, 1, 0, gl.RGBA_INTEGER, gl.UNSIGNED_BYTE, new DataView(new Uint8Array([10, 20, 30, 127]).buffer))
+  t.deepEqual(sample('usampler2D'), [10, 20, 30, 127], 'texImage2D with a DataView')
+
+  // Node 24 and later have Float16Array, which HALF_FLOAT data can come in.
+  if (globalThis.Float16Array) {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, 1, 1, 0, gl.RGBA, gl.HALF_FLOAT, new globalThis.Float16Array([10, 20, 30, 127]))
+    t.deepEqual(sample('sampler2D'), [10, 20, 30, 127], 'texImage2D with a Float16Array')
+  }
+
+  // A DataView made in another realm, such as a vm context, isn't an instance of this realm's DataView.
+  const otherRealmView = require('vm').runInNewContext('new DataView(new Uint8Array([10, 20, 30, 127]).buffer)')
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8UI, 1, 1, 0, gl.RGBA_INTEGER, gl.UNSIGNED_BYTE, otherRealmView)
+  t.deepEqual(sample('usampler2D'), [10, 20, 30, 127], 'texImage2D with a DataView from another realm')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
 tape('webgl2: wrong argument types throw a TypeError', function (t) {
   const gl = createContext(1, 1, { createWebGL2Context: true })
 

@@ -181,10 +181,8 @@ function convertPixels (pixels) {
   if (typeof pixels === 'object' && pixels !== null) {
     if (isInstanceOfType(pixels, 'ArrayBuffer')) {
       return new Uint8Array(pixels)
-    } else if (isTypedArray(pixels) || pixels instanceof DataView) {
+    } else if (ArrayBuffer.isView(pixels)) {
       return unpackTypedArray(pixels)
-    } else if (isInstanceOfType(pixels, 'Buffer')) {
-      return new Uint8Array(pixels)
     }
   }
   return null
