@@ -46,6 +46,7 @@ const { getEXTFragDepth } = require('./extensions/ext-frag-depth')
 const { getOESFboRenderMipmap } = require('./extensions/oes-fbo-render-mipmap')
 const { getEXTTextureMirrorClampToEdge } = require('./extensions/ext-texture-mirror-clamp-to-edge')
 const { getEXTDepthClamp } = require('./extensions/ext-depth-clamp')
+const { getEXTsRGB } = require('./extensions/ext-srgb')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -80,7 +81,8 @@ const availableExtensions = {
   ext_frag_depth: getEXTFragDepth,
   oes_fbo_render_mipmap: getOESFboRenderMipmap,
   ext_texture_mirror_clamp_to_edge: getEXTTextureMirrorClampToEdge,
-  ext_depth_clamp: getEXTDepthClamp
+  ext_depth_clamp: getEXTDepthClamp,
+  ext_srgb: getEXTsRGB
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
