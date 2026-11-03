@@ -2228,7 +2228,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       case this.VERTEX_ATTRIB_ARRAY_NORMALIZED:
         return attrib._pointerNormal
       case this.CURRENT_VERTEX_ATTRIB:
-        return new Float32Array(vertexAttribValue)
+        return vertexAttribValue.slice()
       default:
         return super.getVertexAttrib(index, pname)
     }
@@ -2912,21 +2912,42 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (index >= 0) super.uniformMatrix4x3fv(index, !!transpose, data)
   }
 
+  // getVertexAttrib returns an attribute's value as the type it was set with, so the integer setters keep it as an Int32Array or Uint32Array.
+  vertexAttribI4i (index, x, y, z, w) {
+    index |= 0
+    if (!this._checkVertexIndex(index)) return
+    this._vertexGlobalState._attribs[index]._data = new Int32Array([x, y, z, w])
+    super.vertexAttribI4i(index, x, y, z, w)
+  }
+
+  vertexAttribI4ui (index, x, y, z, w) {
+    index |= 0
+    if (!this._checkVertexIndex(index)) return
+    this._vertexGlobalState._attribs[index]._data = new Uint32Array([x, y, z, w])
+    super.vertexAttribI4ui(index, x, y, z, w)
+  }
+
   vertexAttribI4iv (index, values) {
+    index |= 0
+    if (!this._checkVertexIndex(index)) return
     values = this._toTypedArray(values, Int32Array, 'vertexAttribI4iv')
     if (values.length < 4) {
       this.setError(this.INVALID_VALUE)
       return
     }
+    this._vertexGlobalState._attribs[index]._data = values.slice(0, 4)
     super.vertexAttribI4iv(index, values)
   }
 
   vertexAttribI4uiv (index, values) {
+    index |= 0
+    if (!this._checkVertexIndex(index)) return
     values = this._toTypedArray(values, Uint32Array, 'vertexAttribI4uiv')
     if (values.length < 4) {
       this.setError(this.INVALID_VALUE)
       return
     }
+    this._vertexGlobalState._attribs[index]._data = values.slice(0, 4)
     super.vertexAttribI4uiv(index, values)
   }
 
@@ -3411,7 +3432,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   vertexAttrib1f (index, v0) {
     index |= 0
     if (!this._checkVertexIndex(index)) return
-    const data = this._vertexGlobalState._attribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data = new Float32Array(4)
     data[3] = 1
     data[1] = data[2] = 0
     data[0] = v0
@@ -3421,7 +3442,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   vertexAttrib2f (index, v0, v1) {
     index |= 0
     if (!this._checkVertexIndex(index)) return
-    const data = this._vertexGlobalState._attribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data = new Float32Array(4)
     data[3] = 1
     data[2] = 0
     data[1] = v1
@@ -3432,7 +3453,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   vertexAttrib3f (index, v0, v1, v2) {
     index |= 0
     if (!this._checkVertexIndex(index)) return
-    const data = this._vertexGlobalState._attribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data = new Float32Array(4)
     data[3] = 1
     data[2] = v2
     data[1] = v1
@@ -3443,7 +3464,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   vertexAttrib4f (index, v0, v1, v2, v3) {
     index |= 0
     if (!this._checkVertexIndex(index)) return
-    const data = this._vertexGlobalState._attribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data = new Float32Array(4)
     data[3] = v3
     data[2] = v2
     data[1] = v1
@@ -3458,7 +3479,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       this.setError(this.INVALID_VALUE)
       return
     }
-    const data = this._vertexGlobalState._attribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data = new Float32Array(4)
     data[3] = 1
     data[2] = 0
     data[1] = 0
@@ -3473,7 +3494,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       this.setError(this.INVALID_VALUE)
       return
     }
-    const data = this._vertexGlobalState._attribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data = new Float32Array(4)
     data[3] = 1
     data[2] = 0
     data[1] = value[1]
@@ -3488,7 +3509,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       this.setError(this.INVALID_VALUE)
       return
     }
-    const data = this._vertexGlobalState._attribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data = new Float32Array(4)
     data[3] = 1
     data[2] = value[2]
     data[1] = value[1]
@@ -3503,7 +3524,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       this.setError(this.INVALID_VALUE)
       return
     }
-    const data = this._vertexGlobalState._attribs[index]._data
+    const data = this._vertexGlobalState._attribs[index]._data = new Float32Array(4)
     data[3] = value[3]
     data[2] = value[2]
     data[1] = value[1]

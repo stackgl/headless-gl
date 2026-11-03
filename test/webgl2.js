@@ -371,3 +371,29 @@ tape('webgl2: vertexAttribI4iv and vertexAttribI4uiv with too few values', funct
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('webgl2: getVertexAttrib returns the values of integer attributes', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const current = index => gl.getVertexAttrib(index, gl.CURRENT_VERTEX_ATTRIB)
+
+  gl.vertexAttribI4i(1, -1, 2, 3, 4)
+  t.ok(current(1) instanceof Int32Array, 'vertexAttribI4i makes it an Int32Array')
+  t.deepEqual([...current(1)], [-1, 2, 3, 4], 'with its values')
+  gl.vertexAttribI4ui(2, 1, 2, 3, 0xFFFFFFFF)
+  t.ok(current(2) instanceof Uint32Array, 'vertexAttribI4ui makes it a Uint32Array')
+  t.deepEqual([...current(2)], [1, 2, 3, 0xFFFFFFFF], 'with its values')
+  gl.vertexAttribI4iv(3, [5, 6, 7, 8])
+  t.deepEqual([...current(3)], [5, 6, 7, 8], 'vertexAttribI4iv')
+  gl.vertexAttribI4uiv(4, new Uint32Array([9, 10, 11, 12]))
+  t.deepEqual([...current(4)], [9, 10, 11, 12], 'vertexAttribI4uiv')
+
+  gl.vertexAttrib4f(1, 0.5, 1, 2, 3)
+  t.ok(current(1) instanceof Float32Array, 'vertexAttrib4f makes it a Float32Array again')
+  t.deepEqual([...current(1)], [0.5, 1, 2, 3], 'with its values')
+
+  gl.vertexAttribI4i(gl.getParameter(gl.MAX_VERTEX_ATTRIBS), 1, 2, 3, 4)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'vertexAttribI4i sets INVALID_VALUE with an index out of range')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
