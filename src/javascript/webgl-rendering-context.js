@@ -3047,31 +3047,19 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   compressedTexImage3D (target, level, internalFormat, width, height, depth, border, data, srcOffset, srcLengthOverride) {
-    if (!ArrayBuffer.isView(data)) {
-      throw new TypeError('compressedTexImage3D(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, ArrayBufferView)')
+    target |= 0
+    const args = this._getCompressedData(target, data, srcOffset, srcLengthOverride, 'compressedTexImage3D(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, ArrayBufferView)')
+    if (args) {
+      super.compressedTexImage3D(target, level | 0, internalFormat | 0, width | 0, height | 0, depth | 0, border | 0, ...args)
     }
-    if (!this._checkCompressedTextureBound(target | 0) || !this._checkUnpackSource(data)) {
-      return
-    }
-    const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
-    if (!bytes) {
-      return
-    }
-    super.compressedTexImage3D(target | 0, level | 0, internalFormat | 0, width | 0, height | 0, depth | 0, border | 0, bytes)
   }
 
   compressedTexSubImage3D (target, level, xoffset, yoffset, zoffset, width, height, depth, format, data, srcOffset, srcLengthOverride) {
-    if (!ArrayBuffer.isView(data)) {
-      throw new TypeError('compressedTexSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, ArrayBufferView)')
+    target |= 0
+    const args = this._getCompressedData(target, data, srcOffset, srcLengthOverride, 'compressedTexSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, ArrayBufferView)')
+    if (args) {
+      super.compressedTexSubImage3D(target, level | 0, xoffset | 0, yoffset | 0, zoffset | 0, width | 0, height | 0, depth | 0, format | 0, ...args)
     }
-    if (!this._checkCompressedTextureBound(target | 0) || !this._checkUnpackSource(data)) {
-      return
-    }
-    const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
-    if (!bytes) {
-      return
-    }
-    super.compressedTexSubImage3D(target | 0, level | 0, xoffset | 0, yoffset | 0, zoffset | 0, width | 0, height | 0, depth | 0, format | 0, bytes)
   }
 
   // Returns the index that the native uniform methods take for a location, or -1 to skip the call, as WebGL does for a null location.
@@ -3429,32 +3417,41 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return true
   }
 
-  compressedTexImage2D (target, level, internalFormat, width, height, border, data, srcOffset, srcLengthOverride) {
-    if (!ArrayBuffer.isView(data)) {
-      throw new TypeError('compressedTexImage2D(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, ArrayBufferView)')
+  // Compressed uploads take an ArrayBufferView, with WebGL2's srcOffset and srcLengthOverride, or in WebGL2 an image size and a byte offset into the pixel unpack buffer in their place.
+  // Returns the arguments to give the native method after the upload's others, or null after setting an error.
+  _getCompressedData (target, data, srcOffset, srcLengthOverride, signature) {
+    const isOffset = this._isWebGL2() && typeof data === 'number'
+    if (!isOffset && !ArrayBuffer.isView(data)) {
+      throw new TypeError(signature)
     }
-    if (!this._checkCompressedTextureBound(target | 0) || !this._checkUnpackSource(data)) {
-      return
+    if (!this._checkCompressedTextureBound(target)) {
+      return null
+    }
+    if (isOffset) {
+      const offset = Math.trunc(srcOffset) || 0
+      return this._checkUnpackSource(offset) ? [data | 0, offset] : null
+    }
+    if (!this._checkUnpackSource(data)) {
+      return null
     }
     const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
-    if (!bytes) {
-      return
+    return bytes && [bytes]
+  }
+
+  compressedTexImage2D (target, level, internalFormat, width, height, border, data, srcOffset, srcLengthOverride) {
+    target |= 0
+    const args = this._getCompressedData(target, data, srcOffset, srcLengthOverride, 'compressedTexImage2D(GLenum, GLint, GLenum, GLsizei, GLsizei, GLint, ArrayBufferView)')
+    if (args) {
+      super.compressedTexImage2D(target, level | 0, internalFormat | 0, width | 0, height | 0, border | 0, ...args)
     }
-    super.compressedTexImage2D(target | 0, level | 0, internalFormat | 0, width | 0, height | 0, border | 0, bytes)
   }
 
   compressedTexSubImage2D (target, level, xoffset, yoffset, width, height, format, data, srcOffset, srcLengthOverride) {
-    if (!ArrayBuffer.isView(data)) {
-      throw new TypeError('compressedTexSubImage2D(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, ArrayBufferView)')
+    target |= 0
+    const args = this._getCompressedData(target, data, srcOffset, srcLengthOverride, 'compressedTexSubImage2D(GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLenum, ArrayBufferView)')
+    if (args) {
+      super.compressedTexSubImage2D(target, level | 0, xoffset | 0, yoffset | 0, width | 0, height | 0, format | 0, ...args)
     }
-    if (!this._checkCompressedTextureBound(target | 0) || !this._checkUnpackSource(data)) {
-      return
-    }
-    const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
-    if (!bytes) {
-      return
-    }
-    super.compressedTexSubImage2D(target | 0, level | 0, xoffset | 0, yoffset | 0, width | 0, height | 0, format | 0, bytes)
   }
 
   _checkUniformValid (location, v0, name, count, type) {

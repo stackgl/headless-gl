@@ -1306,12 +1306,13 @@ void CallTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei w
 
 // WebGL2 uploads from the pixel unpack buffer with a byte offset into it in place of the pixels.
 // Returns false after setting INVALID_OPERATION when no pixel unpack buffer is bound, so an offset is never read as a pointer.
-// It does the same when UNPACK_FLIP_Y_WEBGL or UNPACK_PREMULTIPLY_ALPHA_WEBGL is set, since pixels in the buffer can't be flipped or premultiplied first.
+// Unless the upload is compressed data, which is never flipped or premultiplied, it does the same when UNPACK_FLIP_Y_WEBGL or UNPACK_PREMULTIPLY_ALPHA_WEBGL is set, since pixels in the buffer can't be flipped or premultiplied first.
 bool GetUnpackBufferOffset(WebGLRenderingContext *inst, v8::Local<v8::Value> value,
-                           const void **offset) {
+                           const void **offset, bool compressed = false) {
   GLint unpackBuffer = 0;
   glGetIntegerv(GL_PIXEL_UNPACK_BUFFER_BINDING, &unpackBuffer);
-  if (unpackBuffer == 0 || inst->unpack_flip_y || inst->unpack_premultiply_alpha) {
+  if (unpackBuffer == 0 ||
+      (!compressed && (inst->unpack_flip_y || inst->unpack_premultiply_alpha))) {
     inst->setError(GL_INVALID_OPERATION);
     return false;
   }
@@ -1402,6 +1403,15 @@ GL_METHOD(CompressedTexImage2D) {
   GLsizei width = Nan::To<int32_t>(info[3]).ToChecked();
   GLsizei height = Nan::To<int32_t>(info[4]).ToChecked();
   GLint border = Nan::To<int32_t>(info[5]).ToChecked();
+  // WebGL2 can pass an image size and an offset into the pixel unpack buffer instead of the data.
+  if (info[6]->IsNumber()) {
+    const void *offset;
+    if (GetUnpackBufferOffset(inst, info[7], &offset, true)) {
+      glCompressedTexImage2D(target, level, internalformat, width, height, border,
+                             Nan::To<int32_t>(info[6]).ToChecked(), offset);
+    }
+    return;
+  }
   if (!IsArrayBufferViewOrThrow(info[6], "CompressedTexImage2D")) {
     return;
   }
@@ -1421,6 +1431,14 @@ GL_METHOD(CompressedTexSubImage2D) {
   GLsizei width = Nan::To<int32_t>(info[4]).ToChecked();
   GLsizei height = Nan::To<int32_t>(info[5]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[6]).ToChecked();
+  if (info[7]->IsNumber()) {
+    const void *offset;
+    if (GetUnpackBufferOffset(inst, info[8], &offset, true)) {
+      glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format,
+                                Nan::To<int32_t>(info[7]).ToChecked(), offset);
+    }
+    return;
+  }
   if (!IsArrayBufferViewOrThrow(info[7], "CompressedTexSubImage2D")) {
     return;
   }
@@ -2922,6 +2940,14 @@ GL_METHOD(CompressedTexImage3D) {
   GLsizei height = Nan::To<int32_t>(info[4]).ToChecked();
   GLsizei depth = Nan::To<int32_t>(info[5]).ToChecked();
   GLint border = Nan::To<int32_t>(info[6]).ToChecked();
+  if (info[7]->IsNumber()) {
+    const void *offset;
+    if (GetUnpackBufferOffset(inst, info[8], &offset, true)) {
+      glCompressedTexImage3D(target, level, internalformat, width, height, depth, border,
+                             Nan::To<int32_t>(info[7]).ToChecked(), offset);
+    }
+    return;
+  }
   if (!IsArrayBufferViewOrThrow(info[7], "CompressedTexImage3D")) {
     return;
   }
@@ -2942,6 +2968,14 @@ GL_METHOD(CompressedTexSubImage3D) {
   GLsizei height = Nan::To<int32_t>(info[6]).ToChecked();
   GLsizei depth = Nan::To<int32_t>(info[7]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[8]).ToChecked();
+  if (info[9]->IsNumber()) {
+    const void *offset;
+    if (GetUnpackBufferOffset(inst, info[10], &offset, true)) {
+      glCompressedTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth,
+                                format, Nan::To<int32_t>(info[9]).ToChecked(), offset);
+    }
+    return;
+  }
   if (!IsArrayBufferViewOrThrow(info[9], "CompressedTexSubImage3D")) {
     return;
   }

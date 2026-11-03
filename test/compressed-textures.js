@@ -238,10 +238,48 @@ void main() {
 
   gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 2, 0, new Uint8Array(8))
   t.equal(gl.getError(), gl.INVALID_VALUE, 'data for fewer layers sets INVALID_VALUE')
-  t.throws(() => gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 1, 0, 8, new Uint8Array(DXT1_RED)), TypeError, 'OpenGL ES\'s imageSize argument throws a TypeError')
+  // A number where the data goes is WebGL2's image size for an upload from the pixel unpack buffer, so OpenGL ES's arguments never read the data.
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 1, 0, 8, new Uint8Array(DXT1_RED))
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'OpenGL ES\'s imageSize argument sets INVALID_OPERATION without a pixel unpack buffer')
   gl.bindTexture(gl.TEXTURE_2D_ARRAY, null)
   gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 1, 0, new Uint8Array(DXT1_RED))
   t.equal(gl.getError(), gl.INVALID_OPERATION, 'no texture bound sets INVALID_OPERATION')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('compressed textures: WebGL2 uploads from the pixel unpack buffer', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const ext = gl.getExtension('WEBGL_compressed_texture_s3tc')
+  const DXT1 = ext.COMPRESSED_RGB_S3TC_DXT1_EXT
+
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, gl.createBuffer())
+  // A block to skip, then a blue and a red block.
+  gl.bufferData(gl.PIXEL_UNPACK_BUFFER, new Uint8Array([9, 9, 9, 9, 9, 9, 9, 9, ...DXT1_BLUE, ...DXT1_RED]), gl.STATIC_DRAW)
+  // Compressed data isn't flipped, so UNPACK_FLIP_Y_WEBGL doesn't stop the uploads.
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true)
+
+  createTexture(gl)
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, 8, 8)
+  t.deepEqual(sample(gl), [0, 0, 255, 255], 'compressedTexImage2D reads imageSize bytes from the offset')
+  gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 4, 4, DXT1, 8, 16)
+  t.deepEqual(sample(gl), [255, 0, 0, 255], 'and so does compressedTexSubImage2D')
+
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, gl.createTexture())
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 2, 0, 16, 8)
+  gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 1, 4, 4, 1, DXT1, 8, 8)
+  t.equal(gl.getError(), gl.NO_ERROR, 'and compressedTexImage3D and compressedTexSubImage3D, with no GL errors')
+
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, new Uint8Array(DXT1_RED))
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'an ArrayBufferView with a pixel unpack buffer bound sets INVALID_OPERATION')
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, 8, -8)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'a negative offset sets INVALID_VALUE')
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, 8, 24)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'data past the end of the buffer sets INVALID_OPERATION')
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null)
+  gl.compressedTexImage2D(gl.TEXTURE_2D, 0, DXT1, 4, 4, 0, 8, 0)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'an offset without a pixel unpack buffer sets INVALID_OPERATION')
 
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
