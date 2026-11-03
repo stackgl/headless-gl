@@ -2202,6 +2202,22 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return super.getTexParameter(target, pname)
     }
 
+    if (this._isWebGL2()) {
+      switch (pname) {
+        case this.TEXTURE_BASE_LEVEL:
+        case this.TEXTURE_COMPARE_FUNC:
+        case this.TEXTURE_COMPARE_MODE:
+        case this.TEXTURE_IMMUTABLE_LEVELS:
+        case this.TEXTURE_MAX_LEVEL:
+        case this.TEXTURE_MAX_LOD:
+        case this.TEXTURE_MIN_LOD:
+        case this.TEXTURE_WRAP_R:
+          return super.getTexParameter(target, pname)
+        case this.TEXTURE_IMMUTABLE_FORMAT:
+          return !!super.getTexParameter(target, pname)
+      }
+    }
+
     this.setError(this.INVALID_ENUM)
     return null
   }

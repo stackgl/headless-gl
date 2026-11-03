@@ -2048,7 +2048,9 @@ GL_METHOD(GetTexParameter) {
   GLenum target = Nan::To<int32_t>(info[0]).ToChecked();
   GLenum pname = Nan::To<int32_t>(info[1]).ToChecked();
 
-  if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT) {
+  // The level of detail limits and anisotropy are floats, which the integer query would round.
+  if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT || pname == GL_TEXTURE_MIN_LOD ||
+      pname == GL_TEXTURE_MAX_LOD) {
     GLfloat param_value = 0;
     glGetTexParameterfv(target, pname, &param_value);
     info.GetReturnValue().Set(Nan::New<v8::Number>(param_value));

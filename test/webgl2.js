@@ -484,3 +484,39 @@ tape('webgl2: texParameterf sets WebGL2\'s texture parameters', function (t) {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('webgl2: getTexParameter returns WebGL2\'s texture parameters', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  gl.bindTexture(gl.TEXTURE_3D, gl.createTexture())
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_BASE_LEVEL, 1)
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAX_LEVEL, 3)
+  gl.texParameterf(gl.TEXTURE_3D, gl.TEXTURE_MIN_LOD, -1.5)
+  gl.texParameterf(gl.TEXTURE_3D, gl.TEXTURE_MAX_LOD, 2.5)
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.MIRRORED_REPEAT)
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_COMPARE_MODE, gl.COMPARE_REF_TO_TEXTURE)
+  gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_COMPARE_FUNC, gl.GREATER)
+  const expected = [
+    ['TEXTURE_BASE_LEVEL', 1],
+    ['TEXTURE_MAX_LEVEL', 3],
+    ['TEXTURE_MIN_LOD', -1.5],
+    ['TEXTURE_MAX_LOD', 2.5],
+    ['TEXTURE_WRAP_R', gl.MIRRORED_REPEAT],
+    ['TEXTURE_COMPARE_MODE', gl.COMPARE_REF_TO_TEXTURE],
+    ['TEXTURE_COMPARE_FUNC', gl.GREATER],
+    ['TEXTURE_IMMUTABLE_FORMAT', false],
+    ['TEXTURE_IMMUTABLE_LEVELS', 0]
+  ]
+  for (const [pname, value] of expected) {
+    t.equal(gl.getTexParameter(gl.TEXTURE_3D, gl[pname]), value, pname)
+  }
+
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture())
+  gl.texStorage2D(gl.TEXTURE_2D, 2, gl.RGBA8, 2, 2)
+  t.equal(gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_IMMUTABLE_FORMAT), true, 'TEXTURE_IMMUTABLE_FORMAT after texStorage2D')
+  t.equal(gl.getTexParameter(gl.TEXTURE_2D, gl.TEXTURE_IMMUTABLE_LEVELS), 2, 'TEXTURE_IMMUTABLE_LEVELS after texStorage2D')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
