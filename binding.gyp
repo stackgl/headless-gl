@@ -59,6 +59,10 @@
            ]
         }],
         ['OS=="linux" and (target_arch=="x64" or target_arch=="arm64")', {
+            # Node 22's headers build addons on Linux as C++17. This builds them as C++20, as on macOS and Windows.
+            'cflags_cc': [
+              '-std=gnu++20'
+            ],
             "copies": [
               {
                 'destination': '<(PRODUCT_DIR)',
