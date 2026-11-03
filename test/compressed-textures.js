@@ -206,3 +206,43 @@ for (const webgl2 of [false, true]) {
     t.end()
   })
 }
+
+tape('compressed textures: WebGL2 compressedTexImage3D and compressedTexSubImage3D', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const ext = gl.getExtension('WEBGL_compressed_texture_s3tc')
+  const DXT1 = ext.COMPRESSED_RGB_S3TC_DXT1_EXT
+
+  // Draws layer 1 of the bound 2D array texture.
+  function sampleLayer1 () {
+    return drawPixel(gl, `#version 300 es
+precision mediump float;
+precision mediump sampler2DArray;
+uniform sampler2DArray sampler;
+out vec4 color;
+void main() {
+  color = texture(sampler, vec3(0.5, 0.5, 1.0));
+}`)
+  }
+
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, gl.createTexture())
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+  gl.texParameteri(gl.TEXTURE_2D_ARRAY, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 2, 0, new Uint8Array([...DXT1_RED, ...DXT1_BLUE]))
+  t.deepEqual(sampleLayer1(), [0, 0, 255, 255], 'compressedTexImage3D uploads each layer')
+  gl.compressedTexSubImage3D(gl.TEXTURE_2D_ARRAY, 0, 0, 0, 1, 4, 4, 1, DXT1, new Uint8Array(DXT1_RED))
+  t.deepEqual(sampleLayer1(), [255, 0, 0, 255], 'compressedTexSubImage3D replaces a layer')
+  // A block to skip, then the layers to upload.
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 2, 0, new Uint8Array([9, ...DXT1_RED, ...DXT1_BLUE, 9]), 1, 16)
+  t.deepEqual(sampleLayer1(), [0, 0, 255, 255], 'compressedTexImage3D reads srcLengthOverride bytes from srcOffset')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 2, 0, new Uint8Array(8))
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'data for fewer layers sets INVALID_VALUE')
+  t.throws(() => gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 1, 0, 8, new Uint8Array(DXT1_RED)), TypeError, 'OpenGL ES\'s imageSize argument throws a TypeError')
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, null)
+  gl.compressedTexImage3D(gl.TEXTURE_2D_ARRAY, 0, DXT1, 4, 4, 1, 0, new Uint8Array(DXT1_RED))
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'no texture bound sets INVALID_OPERATION')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

@@ -3046,6 +3046,34 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     super.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data)
   }
 
+  compressedTexImage3D (target, level, internalFormat, width, height, depth, border, data, srcOffset, srcLengthOverride) {
+    if (!ArrayBuffer.isView(data)) {
+      throw new TypeError('compressedTexImage3D(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, ArrayBufferView)')
+    }
+    if (!this._checkCompressedTextureBound(target | 0) || !this._checkUnpackSource(data)) {
+      return
+    }
+    const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
+    if (!bytes) {
+      return
+    }
+    super.compressedTexImage3D(target | 0, level | 0, internalFormat | 0, width | 0, height | 0, depth | 0, border | 0, bytes)
+  }
+
+  compressedTexSubImage3D (target, level, xoffset, yoffset, zoffset, width, height, depth, format, data, srcOffset, srcLengthOverride) {
+    if (!ArrayBuffer.isView(data)) {
+      throw new TypeError('compressedTexSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, ArrayBufferView)')
+    }
+    if (!this._checkCompressedTextureBound(target | 0) || !this._checkUnpackSource(data)) {
+      return
+    }
+    const bytes = this._getElementBytes(data, srcOffset, srcLengthOverride)
+    if (!bytes) {
+      return
+    }
+    super.compressedTexSubImage3D(target | 0, level | 0, xoffset | 0, yoffset | 0, zoffset | 0, width | 0, height | 0, depth | 0, format | 0, bytes)
+  }
+
   // Returns the index that the native uniform methods take for a location, or -1 to skip the call, as WebGL does for a null location.
   _getUniformLocationIndex (location) {
     if (location === null || location === undefined) {
@@ -3391,10 +3419,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   // ANGLE's WebGL compatibility mode takes compressed uploads with no texture bound, where WebGL sets INVALID_OPERATION.
-  // Returns false after setting it if no texture is bound to a TEXTURE_2D or cube map face target.
+  // Returns false after setting it if no texture is bound to the target, or for a cube map face, to TEXTURE_CUBE_MAP.
   _checkCompressedTextureBound (target) {
-    const unit = this._getActiveTextureUnit()
-    const texture = target === this.TEXTURE_2D ? unit._bind2D : validCubeTarget(target) ? unit._bindCube : undefined
+    const texture = validCubeTarget(target) ? this._getActiveTextureUnit()._bindCube : this._getActiveTexture(target)
     if (texture === null) {
       this.setError(this.INVALID_OPERATION)
       return false

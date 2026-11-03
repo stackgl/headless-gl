@@ -2922,18 +2922,13 @@ GL_METHOD(CompressedTexImage3D) {
   GLsizei height = Nan::To<int32_t>(info[4]).ToChecked();
   GLsizei depth = Nan::To<int32_t>(info[5]).ToChecked();
   GLint border = Nan::To<int32_t>(info[6]).ToChecked();
-  GLsizei imageSize = Nan::To<int32_t>(info[7]).ToChecked();
-  if (info[8]->IsUndefined()) {
-    glCompressedTexImage3D(target, level, internalformat, width, height, depth, border, imageSize,
-                           nullptr);
-  } else if (info[8]->IsArrayBufferView()) {
-    auto buffer = info[8].As<v8::ArrayBufferView>();
-    void *bufferPtr = GetArrayBufferViewData(buffer);
-    glCompressedTexImage3D(target, level, internalformat, width, height, depth, border, imageSize,
-                           bufferPtr);
-  } else {
-    Nan::ThrowTypeError("Invalid data type for CompressedTexImage3D");
+  if (!IsArrayBufferViewOrThrow(info[7], "CompressedTexImage3D")) {
+    return;
   }
+  auto data = info[7].As<v8::ArrayBufferView>();
+  // GL reads imageSize bytes, which is the data's length, as for CompressedTexImage2D.
+  glCompressedTexImage3D(target, level, internalformat, width, height, depth, border,
+                         data->ByteLength(), GetArrayBufferViewData(data));
 }
 
 GL_METHOD(CompressedTexSubImage3D) {
@@ -2947,18 +2942,12 @@ GL_METHOD(CompressedTexSubImage3D) {
   GLsizei height = Nan::To<int32_t>(info[6]).ToChecked();
   GLsizei depth = Nan::To<int32_t>(info[7]).ToChecked();
   GLenum format = Nan::To<int32_t>(info[8]).ToChecked();
-  GLsizei imageSize = Nan::To<int32_t>(info[9]).ToChecked();
-  if (info[10]->IsUndefined()) {
-    glCompressedTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth,
-                              format, imageSize, nullptr);
-  } else if (info[10]->IsArrayBufferView()) {
-    auto buffer = info[10].As<v8::ArrayBufferView>();
-    void *bufferPtr = GetArrayBufferViewData(buffer);
-    glCompressedTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth,
-                              format, imageSize, bufferPtr);
-  } else {
-    Nan::ThrowTypeError("Invalid data type for CompressedTexSubImage3D");
+  if (!IsArrayBufferViewOrThrow(info[9], "CompressedTexSubImage3D")) {
+    return;
   }
+  auto data = info[9].As<v8::ArrayBufferView>();
+  glCompressedTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format,
+                            data->ByteLength(), GetArrayBufferViewData(data));
 }
 
 GL_METHOD(GetFragDataLocation) {
