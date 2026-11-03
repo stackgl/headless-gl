@@ -236,10 +236,33 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return true
   }
 
+  // The getParameter name for the binding of each WebGL2 buffer target besides ARRAY_BUFFER and ELEMENT_ARRAY_BUFFER, or 0.
+  _getBufferBindingName (target) {
+    if (!this._isWebGL2()) {
+      return 0
+    }
+    switch (target) {
+      case this.COPY_READ_BUFFER:
+        return this.COPY_READ_BUFFER_BINDING
+      case this.COPY_WRITE_BUFFER:
+        return this.COPY_WRITE_BUFFER_BINDING
+      case this.PIXEL_PACK_BUFFER:
+        return this.PIXEL_PACK_BUFFER_BINDING
+      case this.PIXEL_UNPACK_BUFFER:
+        return this.PIXEL_UNPACK_BUFFER_BINDING
+      case this.TRANSFORM_FEEDBACK_BUFFER:
+        return this.TRANSFORM_FEEDBACK_BUFFER_BINDING
+      case this.UNIFORM_BUFFER:
+        return this.UNIFORM_BUFFER_BINDING
+      default:
+        return 0
+    }
+  }
+
   _isBufferTarget (target) {
     return target === this.ARRAY_BUFFER ||
       target === this.ELEMENT_ARRAY_BUFFER ||
-      (this._isWebGL2() && (target === this.PIXEL_PACK_BUFFER || target === this.PIXEL_UNPACK_BUFFER))
+      this._getBufferBindingName(target) !== 0
   }
 
   _getActiveBuffer (target) {
@@ -247,14 +270,38 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return this._vertexGlobalState._arrayBufferBinding
     } else if (target === this.ELEMENT_ARRAY_BUFFER) {
       return this._vertexObjectState._elementArrayBufferBinding
-    } else if (this._isWebGL2()) {
-      if (target === this.PIXEL_PACK_BUFFER) {
-        return this._pixelPackBufferBinding
-      } else if (target === this.PIXEL_UNPACK_BUFFER) {
-        return this._pixelUnpackBufferBinding
-      }
+    }
+    // GL keeps the other bindings, including the ones bindBufferBase and bindBufferRange change, so they're read back from it.
+    const bindingName = this._getBufferBindingName(target)
+    if (bindingName) {
+      return this._buffers[super.getParameter(bindingName)] || null
     }
     return null
+  }
+
+  // WebGL1 binds a buffer to one target for its lifetime.
+  // WebGL2 only keeps element array buffers apart from other data, and COPY_READ_BUFFER and COPY_WRITE_BUFFER take either.
+  // Returns false after setting INVALID_OPERATION if buffer can't be bound to target.
+  _checkBufferTarget (buffer, target) {
+    if (!buffer._binding) {
+      buffer._binding = target
+      return true
+    }
+    if (!this._isWebGL2()) {
+      if (buffer._binding !== target) {
+        this.setError(this.INVALID_OPERATION)
+        return false
+      }
+      return true
+    }
+    const isElementArray = buffer._binding === this.ELEMENT_ARRAY_BUFFER
+    if (target === this.ELEMENT_ARRAY_BUFFER
+      ? !isElementArray
+      : isElementArray && target !== this.COPY_READ_BUFFER && target !== this.COPY_WRITE_BUFFER) {
+      this.setError(this.INVALID_OPERATION)
+      return false
+    }
+    return true
   }
 
   _getActiveTextureUnit () {
@@ -616,13 +663,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!checkObject(buffer)) {
       throw new TypeError('bindBuffer(GLenum, WebGLBuffer)')
     }
-
-    const isPBO = this._isWebGL2() &&
-      (target === this.PIXEL_PACK_BUFFER || target === this.PIXEL_UNPACK_BUFFER)
-
-    if (target !== this.ARRAY_BUFFER &&
-      target !== this.ELEMENT_ARRAY_BUFFER &&
-      !isPBO) {
+    if (!this._isBufferTarget(target)) {
       this.setError(this.INVALID_ENUM)
       return
     }
@@ -633,24 +674,20 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     } else if (buffer._pendingDelete) {
       return
     } else if (this._checkWrapper(buffer, WebGLBuffer)) {
-      if (buffer._binding && buffer._binding !== target) {
-        this.setError(this.INVALID_OPERATION)
+      if (!this._checkBufferTarget(buffer, target)) {
         return
       }
-      buffer._binding = target | 0
       super.bindBuffer(target, buffer._ | 0)
     } else {
       return
     }
 
     if (target === this.ARRAY_BUFFER) {
+      // Buffers of type ARRAY_BUFFER are bound to the global vertex state.
       this._vertexGlobalState.setArrayBuffer(buffer)
     } else if (target === this.ELEMENT_ARRAY_BUFFER) {
+      // Buffers of type ELEMENT_ARRAY_BUFFER are bound to vertex array object state.
       this._vertexObjectState.setElementArrayBuffer(buffer)
-    } else if (target === this.PIXEL_PACK_BUFFER) {
-      this._pixelPackBufferBinding = buffer
-    } else if (target === this.PIXEL_UNPACK_BUFFER) {
-      this._pixelUnpackBufferBinding = buffer
     }
   }
 
@@ -665,7 +702,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return super.bindBufferBase(target, index, null)
     } else if (buffer._pendingDelete) {
       //
-    } else if (this._checkWrapper(buffer, WebGLBuffer)) {
+    } else if (this._checkWrapper(buffer, WebGLBuffer) && this._checkBufferTarget(buffer, target)) {
       return super.bindBufferBase(target, index, buffer._ | 0)
     }
   }
@@ -683,7 +720,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return super.bindBufferRange(target, index, null, offset, size)
     } else if (buffer._pendingDelete) {
       //
-    } else if (this._checkWrapper(buffer, WebGLBuffer)) {
+    } else if (this._checkWrapper(buffer, WebGLBuffer) && this._checkBufferTarget(buffer, target)) {
       return super.bindBufferRange(target, index, buffer._ | 0, offset, size)
     }
   }
@@ -1289,6 +1326,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (this._vertexObjectState._elementArrayBufferBinding === buffer) {
       this.bindBuffer(this.ELEMENT_ARRAY_BUFFER, null)
     }
+    // GL unbinds a buffer when it's deleted, but deleting it waits while a vertex array object refers to it.
+    if (this._isWebGL2()) {
+      for (const target of [this.COPY_READ_BUFFER, this.COPY_WRITE_BUFFER, this.PIXEL_PACK_BUFFER, this.PIXEL_UNPACK_BUFFER, this.TRANSFORM_FEEDBACK_BUFFER, this.UNIFORM_BUFFER]) {
+        if (this._getActiveBuffer(target) === buffer) {
+          super.bindBuffer(target, 0)
+        }
+      }
+    }
 
     if (this._vertexObjectState === this._defaultVertexObjectState) {
       // If no vertex array object is bound, release attrib bindings for the
@@ -1682,6 +1727,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   getParameter (pname) {
+    pname |= 0
     switch (pname) {
       case this.COMPRESSED_TEXTURE_FORMATS:
         return new Uint32Array(0)
@@ -1689,6 +1735,18 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         return this._vertexGlobalState._arrayBufferBinding
       case this.ELEMENT_ARRAY_BUFFER_BINDING:
         return this._vertexObjectState._elementArrayBufferBinding
+      case this.COPY_READ_BUFFER_BINDING:
+        return this._getActiveBuffer(this.COPY_READ_BUFFER)
+      case this.COPY_WRITE_BUFFER_BINDING:
+        return this._getActiveBuffer(this.COPY_WRITE_BUFFER)
+      case this.PIXEL_PACK_BUFFER_BINDING:
+        return this._getActiveBuffer(this.PIXEL_PACK_BUFFER)
+      case this.PIXEL_UNPACK_BUFFER_BINDING:
+        return this._getActiveBuffer(this.PIXEL_UNPACK_BUFFER)
+      case this.TRANSFORM_FEEDBACK_BUFFER_BINDING:
+        return this._getActiveBuffer(this.TRANSFORM_FEEDBACK_BUFFER)
+      case this.UNIFORM_BUFFER_BINDING:
+        return this._getActiveBuffer(this.UNIFORM_BUFFER)
       case this.CURRENT_PROGRAM:
         return this._activeProgram
       case this.FRAMEBUFFER_BINDING:
@@ -2256,7 +2314,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     width |= 0
     height |= 0
 
-    if (this._isWebGL2() && this._pixelPackBufferBinding) {
+    if (this._getActiveBuffer(this.PIXEL_PACK_BUFFER)) {
       if (typeof pixels !== 'number') {
         this.setError(this.INVALID_OPERATION)
         return
