@@ -14,9 +14,10 @@ declare function useContext2 (context: WebGL2RenderingContext): void
 const gl = createGL(1, 1)
 useContext(gl)
 const canvas: HTMLCanvasElement | OffscreenCanvas = gl.canvas
+const mirrorClamp: number | undefined = gl.getExtension('EXT_texture_mirror_clamp_to_edge')?.MIRROR_CLAMP_TO_EDGE_EXT
 gl.getExtension('STACKGL_destroy_context').destroy()
 
 const gl2 = createGL(1, 1, { createWebGL2Context: true })
 useContext2(gl2)
 
-export { canvas }
+export { canvas, mirrorClamp }

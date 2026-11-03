@@ -110,6 +110,17 @@ declare namespace createContext {
     getExtension(extensionName: "STACKGL_resize_drawingbuffer"): STACKGL_resize_drawingbuffer;
   }
 
+  interface EXT_texture_mirror_clamp_to_edge {
+    readonly MIRROR_CLAMP_TO_EDGE_EXT: 0x8743;
+  }
+
+  /**
+   * getExtension for the extensions headless-gl supports that TypeScript's DOM types don't declare yet.
+   */
+  interface SupplementalExtensions {
+    getExtension(extensionName: "EXT_texture_mirror_clamp_to_edge"): EXT_texture_mirror_clamp_to_edge | null;
+  }
+
   /**
    * Add WebGLRenderingContext and WebGL2RenderingContext properties to this interface to retype every context that createContext returns, for example as the DOM's types:
    *
@@ -124,9 +135,9 @@ declare namespace createContext {
    */
   interface CustomContextTypes {}
 
-  type WebGLRenderingContext = (CustomContextTypes extends { WebGLRenderingContext: infer T } ? T : HeadlessWebGLRenderingContext) & StackGLExtension;
+  type WebGLRenderingContext = (CustomContextTypes extends { WebGLRenderingContext: infer T } ? T : HeadlessWebGLRenderingContext) & StackGLExtension & SupplementalExtensions;
 
-  type WebGL2RenderingContext = (CustomContextTypes extends { WebGL2RenderingContext: infer T } ? T : HeadlessWebGL2RenderingContext) & StackGLExtension;
+  type WebGL2RenderingContext = (CustomContextTypes extends { WebGL2RenderingContext: infer T } ? T : HeadlessWebGL2RenderingContext) & StackGLExtension & SupplementalExtensions;
 
   /**
    * The class of WebGL1 contexts, for instanceof checks. It can't be constructed directly.

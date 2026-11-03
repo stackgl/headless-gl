@@ -274,6 +274,7 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`STACKGL_resize_drawingbuffer`](https://github.com/stackgl/headless-gl#stackgl_resize_drawingbuffer) | Yes | Yes |
 | [`EXT_float_blend`](https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/) | Yes | Yes |
 | [`EXT_texture_filter_anisotropic`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/) | Yes | Yes |
+| [`EXT_texture_mirror_clamp_to_edge`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_mirror_clamp_to_edge/) | Yes | Yes |
 | [`OES_texture_float_linear`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/) | Yes | Yes |
 | [`WEBGL_debug_renderer_info`](https://www.khronos.org/registry/webgl/extensions/WEBGL_debug_renderer_info/) | Yes | Yes |
 | [`EXT_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/) | No | Yes |

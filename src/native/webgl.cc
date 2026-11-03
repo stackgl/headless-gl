@@ -404,6 +404,8 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
       {"EXT_texture_filter_anisotropic", {"GL_EXT_texture_filter_anisotropic"}});
   webGLToANGLEExtensions.insert({"OES_texture_float_linear", {"GL_OES_texture_float_linear"}});
   webGLToANGLEExtensions.insert({"EXT_float_blend", {"GL_EXT_float_blend"}});
+  webGLToANGLEExtensions.insert(
+      {"EXT_texture_mirror_clamp_to_edge", {"GL_EXT_texture_mirror_clamp_to_edge"}});
   if (createWebGL2Context) {
     webGLToANGLEExtensions.insert({"EXT_color_buffer_float", {"GL_EXT_color_buffer_float"}});
   } else {
