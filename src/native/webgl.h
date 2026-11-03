@@ -59,6 +59,8 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   GLint unpack_colorspace_conversion;
   GLint unpack_alignment;
 
+  bool isWebGL2;
+
   std::set<std::string> requestableExtensions;
   std::set<std::string> enabledExtensions;
   std::set<std::string> supportedWebGLExtensions;
@@ -106,9 +108,10 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static WebGLRenderingContext *ACTIVE;
   bool setActive();
 
-  // Unpacks a buffer full of pixels into memory
+  // Returns a copy of pixels with UNPACK_FLIP_Y_WEBGL and UNPACK_PREMULTIPLY_ALPHA_WEBGL applied, laid out as the other unpack parameters say.
+  // Returns an empty vector if the format and type are unknown or the pixels are too short, leaving ANGLE to report the error.
   std::vector<uint8_t> unpackPixels(GLenum type, GLenum format, GLint width, GLint height,
-                                    unsigned char *pixels);
+                                    const uint8_t *pixels, size_t length);
 
   // Error handling
   std::set<GLenum> errorSet;

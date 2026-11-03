@@ -231,7 +231,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
                                              bool failIfMajorPerformanceCaveat,
                                              bool createWebGL2Context)
     : state(GLCONTEXT_STATE_INIT), unpack_flip_y(false), unpack_premultiply_alpha(false),
-      unpack_colorspace_conversion(0x9244), unpack_alignment(4),
+      unpack_colorspace_conversion(0x9244), unpack_alignment(4), isWebGL2(createWebGL2Context),
       webGLToANGLEExtensions(&CaseInsensitiveCompare),
       webGLToOptionalANGLEExtensions(&CaseInsensitiveCompare), next(NULL), prev(NULL) {
 
@@ -1045,88 +1045,139 @@ GL_METHOD(BindTexture) {
   glBindTexture(target, texture);
 }
 
+// Returns the size in bytes of a pixel of the given format and type, or 0 if the combination is unknown.
+GLint GetPixelSize(GLenum format, GLenum type) {
+  switch (type) {
+  case GL_UNSIGNED_SHORT_5_6_5:
+  case GL_UNSIGNED_SHORT_4_4_4_4:
+  case GL_UNSIGNED_SHORT_5_5_5_1:
+    return 2;
+  case GL_UNSIGNED_INT_2_10_10_10_REV:
+  case GL_UNSIGNED_INT_10F_11F_11F_REV:
+  case GL_UNSIGNED_INT_5_9_9_9_REV:
+  case GL_UNSIGNED_INT_24_8:
+    return 4;
+  case GL_FLOAT_32_UNSIGNED_INT_24_8_REV:
+    return 8;
+  }
+
+  GLint channelSize = 0;
+  switch (type) {
+  case GL_UNSIGNED_BYTE:
+  case GL_BYTE:
+    channelSize = 1;
+    break;
+  case GL_UNSIGNED_SHORT:
+  case GL_SHORT:
+  case GL_HALF_FLOAT:
+  case GL_HALF_FLOAT_OES:
+    channelSize = 2;
+    break;
+  case GL_UNSIGNED_INT:
+  case GL_INT:
+  case GL_FLOAT:
+    channelSize = 4;
+    break;
+  default:
+    return 0;
+  }
+
+  switch (format) {
+  case GL_ALPHA:
+  case GL_LUMINANCE:
+  case GL_RED:
+  case GL_RED_INTEGER:
+  case GL_DEPTH_COMPONENT:
+    return channelSize;
+  case GL_LUMINANCE_ALPHA:
+  case GL_RG:
+  case GL_RG_INTEGER:
+    return channelSize * 2;
+  case GL_RGB:
+  case GL_RGB_INTEGER:
+  case GL_SRGB_EXT:
+    return channelSize * 3;
+  case GL_RGBA:
+  case GL_RGBA_INTEGER:
+  case GL_SRGB_ALPHA_EXT:
+    return channelSize * 4;
+  }
+  return 0;
+}
+
+// Multiplies the color of a pixel by its alpha, for UNPACK_PREMULTIPLY_ALPHA_WEBGL.
+void PremultiplyPixel(GLenum format, GLenum type, uint8_t *pixel) {
+  if (format == GL_LUMINANCE_ALPHA) {
+    pixel[0] *= pixel[1] / 255.0;
+  } else if (format != GL_RGBA && format != GL_SRGB_ALPHA_EXT) {
+    return;
+  } else if (type == GL_UNSIGNED_BYTE) {
+    float scale = pixel[3] / 255.0;
+    pixel[0] *= scale;
+    pixel[1] *= scale;
+    pixel[2] *= scale;
+  } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
+    int r = pixel[0] & 0x0f;
+    int g = pixel[0] >> 4;
+    int b = pixel[1] & 0x0f;
+    int a = pixel[1] >> 4;
+
+    float scale = a / 15.0;
+    r *= scale;
+    g *= scale;
+    b *= scale;
+
+    pixel[0] = r + (g << 4);
+    pixel[1] = b + (a << 4);
+  } else if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
+    if ((pixel[0] & 1) == 0) {
+      pixel[0] = 1; // why does this get set to 1?!?!?!
+      pixel[1] = 0;
+    }
+  }
+}
+
 std::vector<uint8_t> WebGLRenderingContext::unpackPixels(GLenum type, GLenum format, GLint width,
-                                                         GLint height, unsigned char *pixels) {
-
-  // Compute pixel size
-  GLint pixelSize = 1;
-  if (type == GL_UNSIGNED_BYTE || type == GL_FLOAT || type == GL_HALF_FLOAT_OES) {
-    if (type == GL_FLOAT) {
-      pixelSize = 4;
-    } else if (type == GL_HALF_FLOAT_OES) {
-      pixelSize = 2;
-    }
-    switch (format) {
-    case GL_ALPHA:
-    case GL_LUMINANCE:
-      break;
-    case GL_LUMINANCE_ALPHA:
-      pixelSize *= 2;
-      break;
-    case GL_RGB:
-    case GL_SRGB_EXT:
-      pixelSize *= 3;
-      break;
-    case GL_RGBA:
-    case GL_SRGB_ALPHA_EXT:
-      pixelSize *= 4;
-      break;
-    }
-  } else {
-    pixelSize = 2;
+                                                         GLint height, const uint8_t *pixels,
+                                                         size_t length) {
+  GLint pixelSize = GetPixelSize(format, type);
+  if (pixelSize == 0 || width <= 0 || height <= 0) {
+    return {};
   }
 
-  // Compute row stride
-  GLint rowStride = pixelSize * width;
-  if ((rowStride % unpack_alignment) != 0) {
-    rowStride += unpack_alignment - (rowStride % unpack_alignment);
+  // WebGL2 can also take pixels from longer rows, and skip pixels and rows before them.
+  GLint rowLength = 0;
+  GLint skipPixels = 0;
+  GLint skipRows = 0;
+  if (isWebGL2) {
+    glGetIntegerv(GL_UNPACK_ROW_LENGTH, &rowLength);
+    glGetIntegerv(GL_UNPACK_SKIP_PIXELS, &skipPixels);
+    glGetIntegerv(GL_UNPACK_SKIP_ROWS, &skipRows);
   }
 
-  GLint imageSize = rowStride * height;
-  std::vector<uint8_t> unpacked(imageSize);
+  size_t rowSize = static_cast<size_t>(width) * pixelSize;
+  size_t rowStride = static_cast<size_t>(rowLength > 0 ? rowLength : width) * pixelSize;
+  rowStride = (rowStride + unpack_alignment - 1) / unpack_alignment * unpack_alignment;
+  size_t start =
+      static_cast<size_t>(skipRows) * rowStride + static_cast<size_t>(skipPixels) * pixelSize;
+  size_t end = start + (height - 1) * rowStride + rowSize;
+  if (length < end) {
+    return {};
+  }
+
+  std::vector<uint8_t> unpacked(pixels, pixels + end);
 
   if (unpack_flip_y) {
-    for (int i = 0, j = height - 1; j >= 0; ++i, --j) {
-      memcpy(&unpacked[j * rowStride], reinterpret_cast<void *>(pixels + i * rowStride),
-             width * pixelSize);
+    for (GLint row = 0; row < height; ++row) {
+      memcpy(&unpacked[start + (height - 1 - row) * rowStride], pixels + start + row * rowStride,
+             rowSize);
     }
-  } else {
-    memcpy(unpacked.data(), reinterpret_cast<void *>(pixels), imageSize);
   }
 
-  // Premultiply alpha unpacking
-  if (unpack_premultiply_alpha &&
-      (format == GL_LUMINANCE_ALPHA || format == GL_RGBA || format == GL_SRGB_ALPHA_EXT)) {
-
-    for (int row = 0; row < height; ++row) {
-      for (int col = 0; col < width; ++col) {
-        uint8_t *pixel = &unpacked[(row * rowStride) + (col * pixelSize)];
-        if (format == GL_LUMINANCE_ALPHA) {
-          pixel[0] *= pixel[1] / 255.0;
-        } else if (type == GL_UNSIGNED_BYTE) {
-          float scale = pixel[3] / 255.0;
-          pixel[0] *= scale;
-          pixel[1] *= scale;
-          pixel[2] *= scale;
-        } else if (type == GL_UNSIGNED_SHORT_4_4_4_4) {
-          int r = pixel[0] & 0x0f;
-          int g = pixel[0] >> 4;
-          int b = pixel[1] & 0x0f;
-          int a = pixel[1] >> 4;
-
-          float scale = a / 15.0;
-          r *= scale;
-          g *= scale;
-          b *= scale;
-
-          pixel[0] = r + (g << 4);
-          pixel[1] = b + (a << 4);
-        } else if (type == GL_UNSIGNED_SHORT_5_5_5_1) {
-          if ((pixel[0] & 1) == 0) {
-            pixel[0] = 1; // why does this get set to 1?!?!?!
-            pixel[1] = 0;
-          }
-        }
+  if (unpack_premultiply_alpha) {
+    for (GLint row = 0; row < height; ++row) {
+      for (GLint col = 0; col < width; ++col) {
+        PremultiplyPixel(format, type, &unpacked[start + row * rowStride + col * pixelSize]);
       }
     }
   }
@@ -1159,18 +1210,17 @@ GL_METHOD(TexImage2D) {
   GLint type = Nan::To<int32_t>(info[7]).ToChecked();
   Nan::TypedArrayContents<unsigned char> pixels(info[8]);
 
-  if (*pixels) {
-    if (inst->unpack_flip_y || inst->unpack_premultiply_alpha) {
-      std::vector<uint8_t> unpacked = inst->unpackPixels(type, format, width, height, *pixels);
+  if (*pixels && (inst->unpack_flip_y || inst->unpack_premultiply_alpha)) {
+    std::vector<uint8_t> unpacked =
+        inst->unpackPixels(type, format, width, height, *pixels, pixels.length());
+    if (!unpacked.empty()) {
       CallTexImage2D(target, level, internalformat, width, height, border, format, type,
                      unpacked.size(), unpacked.data());
-    } else {
-      CallTexImage2D(target, level, internalformat, width, height, border, format, type,
-                     pixels.length(), *pixels);
+      return;
     }
-  } else {
-    CallTexImage2D(target, level, internalformat, width, height, border, format, type, 0, nullptr);
   }
+  CallTexImage2D(target, level, internalformat, width, height, border, format, type,
+                 pixels.length(), *pixels);
 }
 
 GL_METHOD(TexSubImage2D) {
@@ -1191,13 +1241,16 @@ GL_METHOD(TexSubImage2D) {
       inst->setError(GL_INVALID_OPERATION);
       return;
     }
-    std::vector<uint8_t> unpacked = inst->unpackPixels(type, format, width, height, *pixels);
-    glTexSubImage2DRobustANGLE(target, level, xoffset, yoffset, width, height, format, type,
-                               unpacked.size(), unpacked.data());
-  } else {
-    glTexSubImage2DRobustANGLE(target, level, xoffset, yoffset, width, height, format, type,
-                               pixels.length(), *pixels);
+    std::vector<uint8_t> unpacked =
+        inst->unpackPixels(type, format, width, height, *pixels, pixels.length());
+    if (!unpacked.empty()) {
+      glTexSubImage2DRobustANGLE(target, level, xoffset, yoffset, width, height, format, type,
+                                 unpacked.size(), unpacked.data());
+      return;
+    }
   }
+  glTexSubImage2DRobustANGLE(target, level, xoffset, yoffset, width, height, format, type,
+                             pixels.length(), *pixels);
 }
 
 GL_METHOD(TexParameteri) {
