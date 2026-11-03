@@ -41,6 +41,7 @@ tape('buffer targets: WebGL2 binds, fills and reports buffers at every target', 
     gl.bufferData(gl[target], new Uint8Array([1, 2, 3, 4]), gl.STATIC_DRAW)
     gl.bufferSubData(gl[target], 1, new Uint8Array([5]))
     t.equal(gl.getError(), gl.NO_ERROR, `bufferData and bufferSubData at ${target} set no error`)
+    t.equal(gl.getBufferParameter(gl[target], gl.BUFFER_SIZE), 4, `getBufferParameter(${target}, BUFFER_SIZE) returns the size`)
 
     gl.deleteBuffer(buffer)
     t.equal(gl.getParameter(gl[binding]), null, `deleting the buffer unbinds it from ${target}`)

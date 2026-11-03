@@ -1808,8 +1808,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   getBufferParameter (target, pname) {
     target |= 0
     pname |= 0
-    if (target !== this.ARRAY_BUFFER &&
-      target !== this.ELEMENT_ARRAY_BUFFER) {
+    if (!this._isBufferTarget(target)) {
       this.setError(this.INVALID_ENUM)
       return null
     }
