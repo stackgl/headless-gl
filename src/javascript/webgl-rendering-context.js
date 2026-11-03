@@ -2244,11 +2244,27 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         this.setError(this.INVALID_OPERATION)
         return
       }
+      pixels = Math.trunc(pixels) || 0
+      if (pixels < 0) {
+        this.setError(this.INVALID_VALUE)
+        return
+      }
       return super.readPixels(x, y, width, height, format, type, pixels)
     }
 
-    if (typeof pixels !== 'object') {
-      throw new TypeError('readPixels(..., ArrayBufferView pixels)')
+    // WebGL2 takes an offset only into a pixel pack buffer.
+    if (typeof pixels === 'number' && this._isWebGL2()) {
+      this.setError(this.INVALID_OPERATION)
+      return
+    }
+
+    if (pixels === null || pixels === undefined) {
+      this.setError(this.INVALID_VALUE)
+      return
+    }
+
+    if (!ArrayBuffer.isView(pixels)) {
+      throw new TypeError('readPixels(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, ArrayBufferView)')
     }
 
     return super.readPixels(x, y, width, height, format, type, pixels)

@@ -1813,7 +1813,6 @@ GL_METHOD(ReadPixels) {
   }
 
   Nan::TypedArrayContents<char> pixels(info[6]);
-  if (!*pixels) return Nan::ThrowTypeError("Invalid pixel data buffer");
   glReadPixels(x, y, width, height, format, type, *pixels);
 }
 
