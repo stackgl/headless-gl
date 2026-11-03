@@ -426,6 +426,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
          {"GL_CHROMIUM_color_buffer_float_rgba", "GL_OES_texture_float"}});
     webGLToANGLEExtensions.insert({"OES_vertex_array_object", {"GL_OES_vertex_array_object"}});
     webGLToANGLEExtensions.insert({"EXT_shader_texture_lod", {"GL_EXT_shader_texture_lod"}});
+    webGLToANGLEExtensions.insert({"OES_texture_half_float", {"GL_OES_texture_half_float"}});
     webGLToANGLEExtensions.insert({"EXT_sRGB", {"GL_EXT_sRGB"}});
     webGLToANGLEExtensions.insert({"OES_fbo_render_mipmap", {"GL_OES_fbo_render_mipmap"}});
     webGLToANGLEExtensions.insert({"EXT_frag_depth", {"GL_EXT_frag_depth"}});
@@ -1040,9 +1041,11 @@ std::vector<uint8_t> WebGLRenderingContext::unpackPixels(GLenum type, GLenum for
 
   // Compute pixel size
   GLint pixelSize = 1;
-  if (type == GL_UNSIGNED_BYTE || type == GL_FLOAT) {
+  if (type == GL_UNSIGNED_BYTE || type == GL_FLOAT || type == GL_HALF_FLOAT_OES) {
     if (type == GL_FLOAT) {
       pixelSize = 4;
+    } else if (type == GL_HALF_FLOAT_OES) {
+      pixelSize = 2;
     }
     switch (format) {
     case GL_ALPHA:
