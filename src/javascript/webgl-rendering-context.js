@@ -2374,7 +2374,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return super.polygonOffset(+factor, +units)
   }
 
-  readPixels (x, y, width, height, format, type, pixels) {
+  readPixels (x, y, width, height, format, type, pixels, dstOffset) {
     x |= 0
     y |= 0
     width |= 0
@@ -2406,6 +2406,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
     if (!ArrayBuffer.isView(pixels)) {
       throw new TypeError('readPixels(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, ArrayBufferView)')
+    }
+
+    if (dstOffset !== undefined && this._isWebGL2()) {
+      pixels = this._skipElements(pixels, dstOffset)
+      if (!pixels) {
+        return
+      }
     }
 
     return super.readPixels(x, y, width, height, format, type, pixels)
@@ -2702,7 +2709,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       data)
   }
 
-  // WebGL2's texture uploads can start offset elements into a typed array or DataView, where a DataView's elements are bytes.
+  // WebGL2's texture uploads and readPixels can start offset elements into a typed array or DataView, where a DataView's elements are bytes.
   // Returns the pixels from there on, or null after setting INVALID_OPERATION if offset is past the end.
   _skipElements (pixels, offset) {
     offset = Math.trunc(offset) || 0

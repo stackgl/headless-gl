@@ -191,3 +191,27 @@ tape('srcOffset: clearBuffer methods read their values from srcOffset', function
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('dstOffset: readPixels writes dstOffset elements into its array', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  gl.clearColor(1, 0.4, 0, 1)
+  gl.clear(gl.COLOR_BUFFER_BIT)
+
+  const bytes = new Uint8Array(8)
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, bytes, 4)
+  t.deepEqual([...bytes], [0, 0, 0, 0, 255, 102, 0, 255], 'readPixels into a Uint8Array')
+
+  // A DataView's elements are bytes.
+  const view = new DataView(new ArrayBuffer(6))
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, view, 2)
+  t.deepEqual([...new Uint8Array(view.buffer)], [0, 0, 255, 102, 0, 255], 'readPixels into a DataView')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, bytes, 6)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'readPixels sets INVALID_OPERATION with too little room after dstOffset')
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, bytes, 9)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'and with dstOffset past the end')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
