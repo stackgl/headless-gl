@@ -275,6 +275,7 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`EXT_color_buffer_half_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/) | Yes | Yes |
 | [`EXT_depth_clamp`](https://www.khronos.org/registry/webgl/extensions/EXT_depth_clamp/) | Yes | Yes |
 | [`EXT_float_blend`](https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/) | Yes | Yes |
+| [`EXT_texture_compression_rgtc`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_rgtc/) | Yes | Yes |
 | [`EXT_texture_filter_anisotropic`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/) | Yes | Yes |
 | [`EXT_texture_mirror_clamp_to_edge`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_mirror_clamp_to_edge/) | Yes | Yes |
 | [`OES_texture_float_linear`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/) | Yes | Yes |

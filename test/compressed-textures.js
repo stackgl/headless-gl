@@ -126,3 +126,34 @@ for (const webgl2 of [false, true]) {
     t.end()
   })
 }
+
+// An RGTC block is two values of one channel and a 3-bit index per pixel, which picks the first value here. Signed blocks hold signed bytes.
+function rgtcBlock (value) {
+  return [value & 0xFF, 0, 0, 0, 0, 0, 0, 0]
+}
+
+for (const webgl2 of [false, true]) {
+  tape(`compressed textures: WebGL${webgl2 ? 2 : 1} EXT_texture_compression_rgtc`, function (t) {
+    const gl = createContext(1, 1, { createWebGL2Context: webgl2 })
+    const ext = gl.getExtension('EXT_texture_compression_rgtc')
+    t.ok(ext, 'is available')
+    t.deepEqual([...gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS)].sort(), [0x8DBB, 0x8DBC, 0x8DBD, 0x8DBE], 'COMPRESSED_TEXTURE_FORMATS lists its formats')
+
+    // Signed values below 0 are clamped to 0 when drawn to the drawing buffer.
+    const cases = [
+      ['COMPRESSED_RED_RGTC1_EXT', rgtcBlock(102), [102, 0, 0, 255]],
+      ['COMPRESSED_SIGNED_RED_RGTC1_EXT', rgtcBlock(127), [255, 0, 0, 255]],
+      ['COMPRESSED_RED_GREEN_RGTC2_EXT', [...rgtcBlock(102), ...rgtcBlock(204)], [102, 204, 0, 255]],
+      ['COMPRESSED_SIGNED_RED_GREEN_RGTC2_EXT', [...rgtcBlock(127), ...rgtcBlock(-127)], [255, 0, 0, 255]]
+    ]
+    for (const [format, block, expected] of cases) {
+      createTexture(gl)
+      gl.compressedTexImage2D(gl.TEXTURE_2D, 0, ext[format], 4, 4, 0, new Uint8Array(block))
+      t.deepEqual(sample(gl), expected, format)
+    }
+    t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+    gl.getExtension('STACKGL_destroy_context').destroy()
+    t.end()
+  })
+}
