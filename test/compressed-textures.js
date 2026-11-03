@@ -157,3 +157,52 @@ for (const webgl2 of [false, true]) {
     t.end()
   })
 }
+
+// A BC7 block in mode 6, whose two endpoints are 7 bits per channel plus a low bit shared by all four channels, so every channel's value must be odd or every one even. Every pixel's index picks the first endpoint.
+function bc7Block (rgba) {
+  const bytes = new Uint8Array(16)
+  let bit = 0
+  const write = (value, count) => {
+    for (let i = 0; i < count; i++, bit++) {
+      if ((value >> i) & 1) {
+        bytes[bit >> 3] |= 1 << (bit & 7)
+      }
+    }
+  }
+  // Mode 6 is six 0 bits and a 1.
+  write(1 << 6, 7)
+  for (const channel of rgba) {
+    write(channel >> 1, 7)
+    write(channel >> 1, 7)
+  }
+  write(rgba[0] & 1, 1)
+  write(rgba[0] & 1, 1)
+  return bytes
+}
+
+for (const webgl2 of [false, true]) {
+  tape(`compressed textures: WebGL${webgl2 ? 2 : 1} EXT_texture_compression_bptc`, function (t) {
+    const gl = createContext(1, 1, { createWebGL2Context: webgl2 })
+    const ext = gl.getExtension('EXT_texture_compression_bptc')
+    if (!ext && process.platform === 'darwin') {
+      t.skip('ANGLE\'s OpenGL backend on macOS has no BPTC textures')
+      gl.getExtension('STACKGL_destroy_context').destroy()
+      t.end()
+      return
+    }
+    t.ok(ext, 'is available')
+    t.deepEqual([...gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS)].sort(), [0x8E8C, 0x8E8D, 0x8E8E, 0x8E8F], 'COMPRESSED_TEXTURE_FORMATS lists its formats')
+
+    createTexture(gl)
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, ext.COMPRESSED_RGBA_BPTC_UNORM_EXT, 4, 4, 0, bc7Block([51, 153, 255, 255]))
+    t.deepEqual(sample(gl), [51, 153, 255, 255], 'COMPRESSED_RGBA_BPTC_UNORM_EXT')
+    for (const format of ['COMPRESSED_SRGB_ALPHA_BPTC_UNORM_EXT', 'COMPRESSED_RGB_BPTC_SIGNED_FLOAT_EXT', 'COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT_EXT']) {
+      createTexture(gl)
+      gl.compressedTexImage2D(gl.TEXTURE_2D, 0, ext[format], 4, 4, 0, new Uint8Array(16))
+    }
+    t.equal(gl.getError(), gl.NO_ERROR, 'the other formats take a block too')
+
+    gl.getExtension('STACKGL_destroy_context').destroy()
+    t.end()
+  })
+}

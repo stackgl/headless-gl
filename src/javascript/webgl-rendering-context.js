@@ -55,6 +55,7 @@ const { getWebGLDepthTexture } = require('./extensions/webgl-depth-texture')
 const { getWebGLCompressedTextureS3TC } = require('./extensions/webgl-compressed-texture-s3tc')
 const { getWebGLCompressedTextureS3TCsRGB } = require('./extensions/webgl-compressed-texture-s3tc-srgb')
 const { getEXTTextureCompressionRGTC } = require('./extensions/ext-texture-compression-rgtc')
+const { getEXTTextureCompressionBPTC } = require('./extensions/ext-texture-compression-bptc')
 
 // These are defined by the WebGL spec
 const MAX_UNIFORM_LENGTH = 256
@@ -102,7 +103,8 @@ const availableExtensions = {
   webgl_depth_texture: getWebGLDepthTexture,
   webgl_compressed_texture_s3tc: getWebGLCompressedTextureS3TC,
   webgl_compressed_texture_s3tc_srgb: getWebGLCompressedTextureS3TCsRGB,
-  ext_texture_compression_rgtc: getEXTTextureCompressionRGTC
+  ext_texture_compression_rgtc: getEXTTextureCompressionRGTC,
+  ext_texture_compression_bptc: getEXTTextureCompressionBPTC
 }
 
 // Creates the object that createContext returns: it has the constants and spec methods for the context's WebGL version, bound to the native context.
