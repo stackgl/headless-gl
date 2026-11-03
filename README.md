@@ -283,6 +283,7 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`EXT_frag_depth`](https://www.khronos.org/registry/webgl/extensions/EXT_frag_depth/) | Yes | Built in |
 | [`EXT_shader_texture_lod`](https://www.khronos.org/registry/webgl/extensions/EXT_shader_texture_lod/) | Yes | Built in |
 | [`OES_element_index_uint`](https://www.khronos.org/registry/webgl/extensions/OES_element_index_uint/) | Yes | Built in |
+| [`OES_fbo_render_mipmap`](https://www.khronos.org/registry/webgl/extensions/OES_fbo_render_mipmap/) | Yes | Built in |
 | [`OES_standard_derivatives`](https://www.khronos.org/registry/webgl/extensions/OES_standard_derivatives/) | Yes | Built in |
 | [`OES_texture_float`](https://www.khronos.org/registry/webgl/extensions/OES_texture_float/) | Yes | Built in |
 | [`OES_vertex_array_object`](https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/) | Yes | Built in |

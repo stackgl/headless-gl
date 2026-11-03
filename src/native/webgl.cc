@@ -421,6 +421,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
          {"GL_CHROMIUM_color_buffer_float_rgba", "GL_OES_texture_float"}});
     webGLToANGLEExtensions.insert({"OES_vertex_array_object", {"GL_OES_vertex_array_object"}});
     webGLToANGLEExtensions.insert({"EXT_shader_texture_lod", {"GL_EXT_shader_texture_lod"}});
+    webGLToANGLEExtensions.insert({"OES_fbo_render_mipmap", {"GL_OES_fbo_render_mipmap"}});
     webGLToANGLEExtensions.insert({"EXT_frag_depth", {"GL_EXT_frag_depth"}});
   }
 
