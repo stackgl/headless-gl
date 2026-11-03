@@ -1790,7 +1790,7 @@ GL_METHOD(GetShaderSource) {
 
 GL_METHOD(ReadPixels) {
   GL_BOILERPLATE;
-  
+
   GLint x = Nan::To<int32_t>(info[0]).ToChecked();
   GLint y = Nan::To<int32_t>(info[1]).ToChecked();
   GLsizei width = Nan::To<int32_t>(info[2]).ToChecked();
@@ -1798,17 +1798,23 @@ GL_METHOD(ReadPixels) {
   GLenum format = Nan::To<int32_t>(info[4]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[5]).ToChecked();
 
-  GLint pbo_binding = 0;
-  glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &pbo_binding);
-
-  if (pbo_binding > 0) {
-    intptr_t offset = static_cast<intptr_t>(Nan::To<int64_t>(info[6]).ToChecked());
-    glReadPixels(x, y, width, height, format, type, reinterpret_cast<void*>(offset));
-  } else {
-    Nan::TypedArrayContents<char> pixels(info[6]);
-    if (!*pixels) return Nan::ThrowTypeError("Invalid pixel data buffer");
-    glReadPixels(x, y, width, height, format, type, *pixels);
+  // WebGL2 passes a byte offset into the pixel pack buffer instead of an array.
+  // WebGL1 has no pixel pack buffer, so its binding is only queried here.
+  if (info[6]->IsNumber()) {
+    GLint packBuffer = 0;
+    glGetIntegerv(GL_PIXEL_PACK_BUFFER_BINDING, &packBuffer);
+    if (packBuffer == 0) {
+      inst->setError(GL_INVALID_OPERATION);
+      return;
+    }
+    GLintptr offset = Nan::To<int64_t>(info[6]).ToChecked();
+    glReadPixels(x, y, width, height, format, type, reinterpret_cast<void *>(offset));
+    return;
   }
+
+  Nan::TypedArrayContents<char> pixels(info[6]);
+  if (!*pixels) return Nan::ThrowTypeError("Invalid pixel data buffer");
+  glReadPixels(x, y, width, height, format, type, *pixels);
 }
 
 GL_METHOD(GetTexParameter) {
