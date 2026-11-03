@@ -109,3 +109,54 @@ tape('buffer targets: bufferData takes the WebGL2 usages only in WebGL2', functi
 
   t.end()
 })
+
+tape('buffer targets: getBufferSubData reads a buffer back', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  gl.bindBuffer(gl.COPY_READ_BUFFER, gl.createBuffer())
+  gl.bufferData(gl.COPY_READ_BUFFER, new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]), gl.STATIC_DRAW)
+
+  const bytes = new Uint8Array(8)
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, bytes)
+  t.deepEqual([...bytes], [1, 2, 3, 4, 5, 6, 7, 8], 'into a whole array')
+
+  const shorts = new Uint16Array(4)
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, 2, shorts, 1, 2)
+  t.deepEqual([...new Uint8Array(shorts.buffer)], [0, 0, 3, 4, 5, 6, 0, 0], 'length elements from dstOffset elements in')
+
+  // A view into the middle of a larger buffer, so bytes written outside the view can be seen.
+  const backing = new Uint8Array(8)
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, 4, new DataView(backing.buffer, 2, 4), 1)
+  t.deepEqual([...backing], [0, 0, 0, 5, 6, 7, 0, 0], 'into a DataView, whose elements are bytes')
+  t.equal(gl.getError(), gl.NO_ERROR, 'and sets no error')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('buffer targets: getBufferSubData with bad arguments', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const dst = new Uint8Array(4)
+
+  gl.getBufferSubData(gl.TEXTURE_2D, 0, dst)
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'a bad target sets INVALID_ENUM')
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, dst)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'no buffer bound sets INVALID_OPERATION')
+
+  gl.bindBuffer(gl.COPY_READ_BUFFER, gl.createBuffer())
+  gl.bufferData(gl.COPY_READ_BUFFER, new Uint8Array([1, 2, 3, 4]), gl.STATIC_DRAW)
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, -1, dst)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'a negative srcByteOffset sets INVALID_VALUE')
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, dst, 5)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'a dstOffset past the end of dstBuffer sets INVALID_VALUE')
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, dst, 2, 3)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'a length past the end of dstBuffer sets INVALID_VALUE')
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, 2, dst)
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'reading past the end of the buffer sets INVALID_VALUE')
+  t.deepEqual([...dst], [0, 0, 0, 0], 'and none of these write to dstBuffer')
+
+  gl.getBufferSubData(gl.COPY_READ_BUFFER, 0, dst, 4)
+  t.equal(gl.getError(), gl.NO_ERROR, 'reading nothing sets no error')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

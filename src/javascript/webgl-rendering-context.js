@@ -1003,6 +1003,21 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       dstAlpha)
   }
 
+  // WebGL2's getBufferSubData can use length elements of a typed array or DataView from offset elements in, where a DataView's elements are bytes, or every element from there when length is 0.
+  // Returns those bytes, or null after setting INVALID_VALUE if they run past the end of the data.
+  _getElementBytes (data, offset, length) {
+    const bytes = unpackTypedArray(data)
+    const elementSize = data.BYTES_PER_ELEMENT || 1
+    const elements = bytes.length / elementSize
+    offset = Math.trunc(offset) || 0
+    length = Math.trunc(length) || elements - offset
+    if (offset < 0 || length < 0 || offset + length > elements) {
+      this.setError(this.INVALID_VALUE)
+      return null
+    }
+    return bytes.subarray(offset * elementSize, (offset + length) * elementSize)
+  }
+
   bufferData (target, data, usage) {
     target |= 0
     usage |= 0
@@ -1133,12 +1148,17 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   getBufferSubData (target, srcByteOffset, dstBuffer, dstOffset = 0, length = 0) {
     target |= 0
-    srcByteOffset |= 0
-    dstOffset |= 0
-    length |= 0
+    srcByteOffset = Math.trunc(srcByteOffset) || 0
+    if (!ArrayBuffer.isView(dstBuffer)) {
+      throw new TypeError('getBufferSubData(GLenum, GLintptr, ArrayBufferView, GLuint, GLuint)')
+    }
 
-    const buffer = this._getActiveBuffer(target)
-    if (!buffer) {
+    if (!this._isBufferTarget(target)) {
+      this.setError(this.INVALID_ENUM)
+      return
+    }
+
+    if (!this._getActiveBuffer(target)) {
       this.setError(this.INVALID_OPERATION)
       return
     }
@@ -1148,16 +1168,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    let subView = dstBuffer
-    if (dstOffset !== 0 || length !== 0) {
-      const elementSize = dstBuffer.BYTES_PER_ELEMENT || 1
-      const start = dstOffset * elementSize
-      const byteLength = length > 0 ? (length * elementSize) : (dstBuffer.byteLength - start)
-
-      subView = new Uint8Array(dstBuffer.buffer, dstBuffer.byteOffset + start, byteLength)
+    const bytes = this._getElementBytes(dstBuffer, dstOffset, length)
+    if (!bytes) {
+      return
     }
 
-    return super.getBufferSubData(target, srcByteOffset, subView)
+    super.getBufferSubData(target, srcByteOffset, bytes)
   }
 
   checkFramebufferStatus (target) {

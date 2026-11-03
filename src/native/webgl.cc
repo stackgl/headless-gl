@@ -2393,29 +2393,28 @@ GL_METHOD(CopyBufferSubData) {
 
 GL_METHOD(GetBufferSubData) {
   GL_BOILERPLATE;
-  GLenum target = Nan::To<uint32_t>(info[0]).ToChecked();
-  GLintptr offset = static_cast<GLintptr>(Nan::To<int64_t>(info[1]).ToChecked());
-  
+
+  GLenum target = Nan::To<int32_t>(info[0]).ToChecked();
+  GLintptr srcByteOffset = Nan::To<int64_t>(info[1]).ToChecked();
   if (!info[2]->IsArrayBufferView()) {
     return Nan::ThrowTypeError("Argument 3 must be an ArrayBufferView");
   }
-
-  v8::Local<v8::ArrayBufferView> view = info[2].As<v8::ArrayBufferView>();
-  void *dest = static_cast<uint8_t*>(view->Buffer()->GetBackingStore()->Data()) + view->ByteOffset();
-  GLsizeiptr length = static_cast<GLsizeiptr>(view->ByteLength());
-
-  if (l_glMapBufferRange && l_glUnmapBuffer) {
-    // 0x0001 is GL_MAP_READ_BIT
-    void* gpuPtr = glMapBufferRange(target, offset, length, GL_MAP_READ_BIT);
-    if (gpuPtr) {
-      memcpy(dest, gpuPtr, length);
-      glUnmapBuffer(target);
-    } else {
-      return Nan::ThrowError("glMapBufferRange failed. Is the buffer bound?");
-    }
-  } else {
-    return Nan::ThrowError("Buffer mapping not supported by this driver.");
+  auto buffer = info[2].As<v8::ArrayBufferView>();
+  GLsizeiptr length = buffer->ByteLength();
+  // GL can't map an empty range, and there's nothing to read.
+  if (length == 0) {
+    return;
   }
+
+  // OpenGL ES has no glGetBufferSubData, so the range is mapped and copied out.
+  // When the range can't be mapped, GL has set the error.
+  void *mapped = glMapBufferRange(target, srcByteOffset, length, GL_MAP_READ_BIT);
+  if (mapped == nullptr) {
+    return;
+  }
+  memcpy(static_cast<uint8_t *>(buffer->Buffer()->GetBackingStore()->Data()) + buffer->ByteOffset(),
+         mapped, length);
+  glUnmapBuffer(target);
 }
 
 GL_METHOD(BlitFramebuffer) {
