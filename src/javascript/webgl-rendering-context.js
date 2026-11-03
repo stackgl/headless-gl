@@ -2245,8 +2245,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (this._checkWrapper(program, WebGLProgram)) {
       const loc = super.getUniformLocation(program._ | 0, name)
       if (loc >= 0) {
+        // GL takes an array's name without [0] as its first element, which the program's active uniforms name with [0].
+        const isArrayName = !/\]$/.test(name) && program._uniforms.some(uniform => uniform.name === name + '[0]')
         let searchName = name
-        if (/\[\d+\]$/.test(name)) {
+        if (isArrayName) {
+          searchName = name + '[0]'
+        } else if (/\[\d+\]$/.test(name)) {
           searchName = name.replace(/\[\d+\]$/, '[0]')
         }
 
@@ -2271,7 +2275,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
           info)
 
         // handle array case
-        if (/\[0\]$/.test(name)) {
+        if (isArrayName || /\[0\]$/.test(name)) {
           const baseName = name.replace(/\[0\]$/, '')
           const arrayLocs = []
 
