@@ -947,6 +947,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return null
     }
 
+    // The native side warns about extensions it can't enable, such as those of the other WebGL version, so only ask it for supported ones.
+    if (!this.getSupportedExtensions().some(supported => supported.toLowerCase() === str)) {
+      return null
+    }
+
     super.getExtension(str)
     const ext = availableExtensions[str](this)
     this._extensions[str] = ext
