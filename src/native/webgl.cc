@@ -3524,10 +3524,17 @@ GL_METHOD(GetActiveUniformBlockName) {
   GL_BOILERPLATE;
   GLuint program = Nan::To<uint32_t>(info[0]).ToChecked();
   GLuint uniformBlockIndex = Nan::To<uint32_t>(info[1]).ToChecked();
-  char name[256];
-  GLsizei length;
-  glGetActiveUniformBlockName(program, uniformBlockIndex, 256, &length, name);
-  info.GetReturnValue().Set(Nan::New(name).ToLocalChecked());
+  // The name's length counts its null terminator, and stays 0 when GL sets an error.
+  GLint nameLength = 0;
+  glGetActiveUniformBlockiv(program, uniformBlockIndex, GL_UNIFORM_BLOCK_NAME_LENGTH, &nameLength);
+  if (nameLength <= 0) {
+    info.GetReturnValue().SetNull();
+    return;
+  }
+  std::vector<char> name(nameLength);
+  GLsizei length = 0;
+  glGetActiveUniformBlockName(program, uniformBlockIndex, nameLength, &length, name.data());
+  info.GetReturnValue().Set(Nan::New(name.data(), length).ToLocalChecked());
 }
 
 GL_METHOD(UniformBlockBinding) {

@@ -59,3 +59,18 @@ tape('uniform blocks: drawing with a uniform buffer', function (t) {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('uniform blocks: getActiveUniformBlockName', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const program = createProgram(gl)
+
+  t.equal(gl.getActiveUniformBlockName(program, 0), 'Colors', 'returns the block\'s name')
+  t.equal(gl.getError(), gl.NO_ERROR, 'and sets no error')
+  t.equal(gl.getActiveUniformBlockName(program, 1), null, 'returns null for an index past the last block')
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and sets INVALID_VALUE')
+  t.equal(gl.getActiveUniformBlockName(null, 0), null, 'returns null for a null program')
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and sets INVALID_VALUE')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

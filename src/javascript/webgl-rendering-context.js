@@ -1769,6 +1769,17 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return null
   }
 
+  getActiveUniformBlockName (program, uniformBlockIndex) {
+    if (!checkObject(program)) {
+      throw new TypeError('getActiveUniformBlockName(WebGLProgram, GLuint)')
+    } else if (!program) {
+      this.setError(this.INVALID_VALUE)
+    } else if (this._checkWrapper(program, WebGLProgram)) {
+      return super.getActiveUniformBlockName(program._ | 0, uniformBlockIndex | 0)
+    }
+    return null
+  }
+
   getAttachedShaders (program) {
     if (!checkObject(program) ||
       (typeof program === 'object' &&
