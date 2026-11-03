@@ -1899,6 +1899,25 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return -1
   }
 
+  getInternalformatParameter (target, internalformat, pname) {
+    target |= 0
+    internalformat |= 0
+    pname |= 0
+    // WebGL only has SAMPLES, which OpenGL ES has alongside NUM_SAMPLE_COUNTS.
+    if (pname !== this.SAMPLES) {
+      this.setError(this.INVALID_ENUM)
+      return null
+    }
+    this._saveError()
+    const samples = super.getInternalformatParameter(target, internalformat, pname)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error !== this.NO_ERROR) {
+      return null
+    }
+    return new Int32Array(samples)
+  }
+
   getParameter (pname) {
     pname |= 0
     switch (pname) {

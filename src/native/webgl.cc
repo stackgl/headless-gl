@@ -2723,7 +2723,25 @@ GL_METHOD(GetInternalformatParameter) {
   GLenum target = Nan::To<int32_t>(info[0]).ToChecked();
   GLenum internalformat = Nan::To<int32_t>(info[1]).ToChecked();
   GLenum pname = Nan::To<int32_t>(info[2]).ToChecked();
-  GLint result;
+
+  // SAMPLES gives a value for each sample count the format supports, and NUM_SAMPLE_COUNTS says how many.
+  if (pname == GL_SAMPLES) {
+    GLint count = 0;
+    glGetInternalformativ(target, internalformat, GL_NUM_SAMPLE_COUNTS, 1, &count);
+    std::vector<GLint> samples(count > 0 ? count : 0);
+    // With no sample counts, GL has either set an error, which asking again would set again, or has none to give.
+    if (!samples.empty()) {
+      glGetInternalformativ(target, internalformat, pname, samples.size(), samples.data());
+    }
+    v8::Local<v8::Array> result = Nan::New<v8::Array>(samples.size());
+    for (size_t i = 0; i < samples.size(); i++) {
+      Nan::Set(result, i, Nan::New(samples[i]));
+    }
+    info.GetReturnValue().Set(result);
+    return;
+  }
+
+  GLint result = 0;
   glGetInternalformativ(target, internalformat, pname, 1, &result);
   info.GetReturnValue().Set(Nan::New(result));
 }

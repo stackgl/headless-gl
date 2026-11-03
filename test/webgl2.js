@@ -430,3 +430,26 @@ void main() {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('webgl2: getInternalformatParameter returns every sample count', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  const samples = gl.getInternalformatParameter(gl.RENDERBUFFER, gl.RGBA8, gl.SAMPLES)
+  t.ok(samples instanceof Int32Array, 'SAMPLES is an Int32Array')
+  t.ok(samples.length > 0, 'with at least one sample count')
+  t.equal(samples[0], gl.getParameter(gl.MAX_SAMPLES), 'starting from MAX_SAMPLES')
+  t.deepEqual([...samples], [...samples].sort((a, b) => b - a), 'in descending order')
+  gl.bindRenderbuffer(gl.RENDERBUFFER, gl.createRenderbuffer())
+  for (const count of samples) {
+    gl.renderbufferStorageMultisample(gl.RENDERBUFFER, count, gl.RGBA8, 1, 1)
+  }
+  t.equal(gl.getError(), gl.NO_ERROR, 'each of which makes a renderbuffer')
+
+  t.equal(gl.getInternalformatParameter(gl.RENDERBUFFER, gl.RGBA8, 0x9380), null, 'returns null for NUM_SAMPLE_COUNTS, which WebGL leaves out')
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and sets INVALID_ENUM')
+  t.equal(gl.getInternalformatParameter(gl.RENDERBUFFER, gl.RGB9_E5, gl.SAMPLES), null, 'returns null for a format that can\'t be rendered to')
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and sets INVALID_ENUM')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
