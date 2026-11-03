@@ -3454,7 +3454,7 @@ GL_METHOD(GetIndexedParameter) {
   GL_BOILERPLATE;
   GLenum target = Nan::To<int32_t>(info[0]).ToChecked();
   GLuint index = Nan::To<uint32_t>(info[1]).ToChecked();
-  GLint result;
+  GLint result = 0;
   glGetIntegeri_v(target, index, &result);
   info.GetReturnValue().Set(Nan::New(result));
 }

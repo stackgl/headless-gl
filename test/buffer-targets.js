@@ -62,6 +62,9 @@ tape('buffer targets: WebGL2 binds, fills and reports buffers at every target', 
   t.equal(gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_SIZE, 0), 8, 'and size')
   t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
 
+  t.equal(gl.getIndexedParameter(gl.UNIFORM_BUFFER_START, 1000), null, 'getIndexedParameter returns null for an index past the last binding')
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and sets INVALID_VALUE')
+
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })

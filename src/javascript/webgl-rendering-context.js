@@ -756,7 +756,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   getIndexedParameter (target, index) {
     target |= 0
     index |= 0
+    this._saveError()
     const value = super.getIndexedParameter(target, index)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error !== this.NO_ERROR) {
+      return null
+    }
     if (target === this.TRANSFORM_FEEDBACK_BUFFER_BINDING || target === this.UNIFORM_BUFFER_BINDING) {
       return this._buffers[value] || null
     }
