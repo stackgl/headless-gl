@@ -2645,8 +2645,29 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       data)
   }
 
+  // WebGL2 doesn't flip or premultiply 3D uploads from typed arrays, and sets INVALID_OPERATION instead.
+  _check3DUnpackFlags (pixels) {
+    if (ArrayBuffer.isView(pixels) &&
+      (super.getParameter(this.UNPACK_FLIP_Y_WEBGL) || super.getParameter(this.UNPACK_PREMULTIPLY_ALPHA_WEBGL))) {
+      this.setError(this.INVALID_OPERATION)
+      return false
+    }
+    return true
+  }
+
+  texImage3D (target, level, internalFormat, width, height, depth, border, format, type, pixels) {
+    if (!this._check3DUnpackFlags(pixels)) {
+      return
+    }
+    return super.texImage3D(...arguments)
+  }
+
   texSubImage3D (target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels) {
     if (pixels === null || pixels === undefined) {
+      return
+    }
+
+    if (!this._check3DUnpackFlags(pixels)) {
       return
     }
 

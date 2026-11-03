@@ -52,6 +52,30 @@ tape('webgl2: texImage3D without data', function (t) {
   t.end()
 })
 
+tape('webgl2: 3D uploads from typed arrays with UNPACK_FLIP_Y_WEBGL or UNPACK_PREMULTIPLY_ALPHA_WEBGL', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  gl.bindTexture(gl.TEXTURE_3D, gl.createTexture())
+  const data = new Uint8Array(4)
+
+  for (const pname of ['UNPACK_FLIP_Y_WEBGL', 'UNPACK_PREMULTIPLY_ALPHA_WEBGL']) {
+    gl.pixelStorei(gl[pname], true)
+    gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, data)
+    t.equal(gl.getError(), gl.INVALID_OPERATION, `texImage3D sets INVALID_OPERATION with ${pname}`)
+    gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+    t.equal(gl.getError(), gl.NO_ERROR, `texImage3D without data has no GL error with ${pname}`)
+    gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data)
+    t.equal(gl.getError(), gl.INVALID_OPERATION, `texSubImage3D sets INVALID_OPERATION with ${pname}`)
+    gl.pixelStorei(gl[pname], false)
+  }
+
+  gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, data)
+  gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, data)
+  t.equal(gl.getError(), gl.NO_ERROR, 'both work once they are false')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
 tape('webgl2: typed arrays that start partway into their buffer', function (t) {
   const gl = createContext(1, 1, { createWebGL2Context: true })
   const pixel = new Uint8Array(4)
