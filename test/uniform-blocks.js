@@ -74,3 +74,25 @@ tape('uniform blocks: getActiveUniformBlockName', function (t) {
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('uniform blocks: getUniformIndices', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const program = createProgram(gl)
+
+  const names = ['base', 'weights[0]', 'transform', 'scale', 'missing']
+  const indices = gl.getUniformIndices(program, names)
+  t.equal(indices.length, names.length, 'returns an index for each name')
+  for (let i = 0; i < 4; i++) {
+    t.equal(gl.getActiveUniform(program, indices[i]).name, names[i], `whose active uniform is ${names[i]}`)
+  }
+  t.equal(indices[4], gl.INVALID_INDEX, 'and INVALID_INDEX for a name that isn\'t an active uniform')
+  t.deepEqual(gl.getUniformIndices(program, new Set(['scale'])), [indices[3]], 'takes any iterable of names')
+  t.equal(gl.getError(), gl.NO_ERROR, 'and sets no error')
+
+  t.equal(gl.getUniformIndices(null, names), null, 'returns null for a null program')
+  t.equal(gl.getError(), gl.INVALID_VALUE, 'and sets INVALID_VALUE')
+  t.throws(() => gl.getUniformIndices(program, 'base'), TypeError, 'throws a TypeError for a string instead of a sequence')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

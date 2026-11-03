@@ -3465,20 +3465,21 @@ GL_METHOD(GetUniformIndices) {
   GLuint program = Nan::To<uint32_t>(info[0]).ToChecked();
   auto uniformNames = info[1].As<v8::Array>();
   GLsizei count = uniformNames->Length();
-  const char **names = new const char *[count];
+  // Each Nan::Utf8String frees its characters when it goes out of scope, so the names are copied into strings that last until GL has read them.
+  std::vector<std::string> names(count);
+  std::vector<const char *> namePointers(count);
   for (GLsizei i = 0; i < count; i++) {
     Nan::Utf8String name(Nan::Get(uniformNames, i).ToLocalChecked());
-    names[i] = *name;
+    names[i] = std::string(*name, name.length());
+    namePointers[i] = names[i].c_str();
   }
-  GLuint *indices = new GLuint[count];
-  glGetUniformIndices(program, count, names, indices);
+  std::vector<GLuint> indices(count, GL_INVALID_INDEX);
+  glGetUniformIndices(program, count, namePointers.data(), indices.data());
   v8::Local<v8::Array> result = Nan::New<v8::Array>(count);
   for (GLsizei i = 0; i < count; i++) {
     Nan::Set(result, i, Nan::New(indices[i]));
   }
   info.GetReturnValue().Set(result);
-  delete[] names;
-  delete[] indices;
 }
 
 GL_METHOD(GetActiveUniforms) {

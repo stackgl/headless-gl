@@ -2235,6 +2235,26 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return this.INVALID_INDEX || 0xffffffff
   }
 
+  getUniformIndices (program, uniformNames) {
+    if (!checkObject(program) ||
+      typeof uniformNames !== 'object' || uniformNames === null || typeof uniformNames[Symbol.iterator] !== 'function') {
+      throw new TypeError('getUniformIndices(WebGLProgram, sequence<DOMString>)')
+    }
+    const names = Array.from(uniformNames, String)
+    if (!program) {
+      this.setError(this.INVALID_VALUE)
+    } else if (this._checkWrapper(program, WebGLProgram)) {
+      this._saveError()
+      const indices = super.getUniformIndices(program._ | 0, names)
+      const error = this.getError()
+      this._restoreError(error)
+      if (error === this.NO_ERROR) {
+        return indices
+      }
+    }
+    return null
+  }
+
   getVertexAttrib (index, pname) {
     index |= 0
     pname |= 0
