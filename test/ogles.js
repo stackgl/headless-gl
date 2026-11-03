@@ -1,10 +1,4 @@
-const BLACKLIST = [
-  // FIXME not sure what the hell is happening in these cases
-  // ogles tests are completely nutzo impossible to trace :(
-  'ogles_GL_array_array_001_to_006',
-  'ogles_GL_mat3_mat3_001_to_006',
-  'ogles_GL_vec3_vec3_001_to_008'
-]
+const BLACKLIST = []
 
 require('./util/conformance')(function (str) {
   return str.indexOf('ogles') === 0 && BLACKLIST.indexOf(str) < 0
