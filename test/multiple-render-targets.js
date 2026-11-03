@@ -3,7 +3,7 @@
 const createContext = require('../index')
 const tape = require('tape')
 
-tape.skip('multiple-render-targets', function (t) {
+tape('multiple-render-targets', function (t) {
   const bufferWidth = 1
   const bufferHeight = 1
   const outputWidth = 4
@@ -88,7 +88,7 @@ tape.skip('multiple-render-targets', function (t) {
 
     // draw a single point
     gl.useProgram(program)
-    gl.drawArrays(gl.POINT, 0, 1)
+    gl.drawArrays(gl.POINTS, 0, 1)
     return textures
   }
 
