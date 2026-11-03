@@ -469,3 +469,18 @@ tape('webgl2: getSamplerParameter returns float parameters as floats', function 
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('webgl2: texParameterf sets WebGL2\'s texture parameters', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  gl.bindTexture(gl.TEXTURE_3D, gl.createTexture())
+
+  gl.texParameterf(gl.TEXTURE_3D, gl.TEXTURE_MIN_LOD, -1.5)
+  gl.texParameterf(gl.TEXTURE_3D, gl.TEXTURE_MAX_LOD, 2.5)
+  gl.texParameterf(gl.TEXTURE_3D, gl.TEXTURE_BASE_LEVEL, 1)
+  t.equal(gl.getError(), gl.NO_ERROR, 'TEXTURE_MIN_LOD, TEXTURE_MAX_LOD and TEXTURE_BASE_LEVEL set no error')
+  gl.texParameterf(gl.TEXTURE_3D, gl.TEXTURE_IMMUTABLE_FORMAT, 1)
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'a parameter that can\'t be set still sets INVALID_ENUM')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

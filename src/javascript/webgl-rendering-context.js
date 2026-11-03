@@ -3233,19 +3233,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
     if (this._checkTextureTarget(target)) {
       this._verifyTextureCompleteness(target, pname, param)
-      switch (pname) {
-        case this.TEXTURE_MIN_FILTER:
-        case this.TEXTURE_MAG_FILTER:
-        case this.TEXTURE_WRAP_S:
-        case this.TEXTURE_WRAP_T:
-          return super.texParameterf(target, pname, param)
-      }
-
-      if (this._extensions.ext_texture_filter_anisotropic && pname === this._extensions.ext_texture_filter_anisotropic.TEXTURE_MAX_ANISOTROPY_EXT) {
-        return super.texParameterf(target, pname, param)
-      }
-
-      this.setError(this.INVALID_ENUM)
+      // ANGLE checks the parameter against the context's WebGL version and enabled extensions, as it does for texParameteri.
+      return super.texParameterf(target, pname, param)
     }
   }
 
