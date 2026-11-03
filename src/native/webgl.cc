@@ -409,6 +409,8 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   webGLToANGLEExtensions.insert({"EXT_depth_clamp", {"GL_EXT_depth_clamp"}});
   if (createWebGL2Context) {
     webGLToANGLEExtensions.insert({"EXT_color_buffer_float", {"GL_EXT_color_buffer_float"}});
+    webGLToANGLEExtensions.insert(
+        {"EXT_color_buffer_half_float", {"GL_EXT_color_buffer_half_float"}});
   } else {
     webGLToANGLEExtensions.insert({"ANGLE_instanced_arrays", {"GL_ANGLE_instanced_arrays"}});
     webGLToANGLEExtensions.insert({"OES_element_index_uint", {"GL_OES_element_index_uint"}});
