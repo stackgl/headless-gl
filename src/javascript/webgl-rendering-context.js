@@ -236,6 +236,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return true
   }
 
+  _isBufferTarget (target) {
+    return target === this.ARRAY_BUFFER ||
+      target === this.ELEMENT_ARRAY_BUFFER ||
+      (this._isWebGL2() && (target === this.PIXEL_PACK_BUFFER || target === this.PIXEL_UNPACK_BUFFER))
+  }
+
   _getActiveBuffer (target) {
     if (target === this.ARRAY_BUFFER) {
       return this._vertexGlobalState._arrayBufferBinding
@@ -978,10 +984,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
+    if (!this._isBufferTarget(target)) {
+      this.setError(this.INVALID_ENUM)
+      return
+    }
+
     const active = this._getActiveBuffer(target)
     if (!active) {
-      this.setError(active === null && this._isWebGL2() ? this.INVALID_ENUM : this.INVALID_OPERATION)
-      if (this.getError() === this.NO_ERROR) this.setError(this.INVALID_OPERATION)
+      this.setError(this.INVALID_OPERATION)
       return
     }
 
@@ -1036,16 +1046,23 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     target |= 0
     offset |= 0
 
-    const active = this._getActiveBuffer(target)
-    if (!active) {
-      this.setError(this.INVALID_OPERATION)
+    if (!this._isBufferTarget(target)) {
+      this.setError(this.INVALID_ENUM)
       return
     }
 
-    if (data === null) return
+    if (data === null) {
+      return
+    }
 
     if (!data || typeof data !== 'object') {
       this.setError(this.INVALID_VALUE)
+      return
+    }
+
+    const active = this._getActiveBuffer(target)
+    if (!active) {
+      this.setError(this.INVALID_OPERATION)
       return
     }
 
