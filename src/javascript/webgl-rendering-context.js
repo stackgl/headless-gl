@@ -1980,6 +1980,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         return this._getActiveTextureUnit()._bind2D
       case this.TEXTURE_BINDING_CUBE_MAP:
         return this._getActiveTextureUnit()._bindCube
+      case this.TEXTURE_BINDING_2D_ARRAY:
+        return this._getActiveTextureUnit()._bind2DArray
+      case this.TEXTURE_BINDING_3D:
+        return this._getActiveTextureUnit()._bind3D
+      case this.VERTEX_ARRAY_BINDING:
+        return this._activeVertexArrayObject
       case this.VERSION:
         return (this._isWebGL2() ? 'WebGL 2.0 stack-gl ' : 'WebGL 1.0 stack-gl ') + HEADLESS_VERSION
       case this.VENDOR:
