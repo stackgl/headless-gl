@@ -129,3 +129,117 @@ tape('transform feedback: transformFeedbackVaryings and getTransformFeedbackVary
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('transform feedback: createTransformFeedback returns a WebGLTransformFeedback', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  const transformFeedback = gl.createTransformFeedback()
+  t.equal(transformFeedback.constructor.name, 'WebGLTransformFeedback', 'createTransformFeedback returns a WebGLTransformFeedback')
+  t.equal(gl.isTransformFeedback(transformFeedback), false, 'which isn\'t a transform feedback to isTransformFeedback until it\'s bound, as in OpenGL ES')
+
+  t.equal(gl.getParameter(gl.TRANSFORM_FEEDBACK_BINDING), null, 'TRANSFORM_FEEDBACK_BINDING is null by default')
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedback)
+  t.equal(gl.isTransformFeedback(transformFeedback), true, 'isTransformFeedback returns true once it\'s bound')
+  t.equal(gl.getParameter(gl.TRANSFORM_FEEDBACK_BINDING), transformFeedback, 'and TRANSFORM_FEEDBACK_BINDING is the transform feedback')
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null)
+  t.equal(gl.getParameter(gl.TRANSFORM_FEEDBACK_BINDING), null, 'and null once the default is bound')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('transform feedback: each transform feedback object captures into its own buffers', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const program = createProgram(gl, VARYINGS, gl.INTERLEAVED_ATTRIBS)
+  const first = gl.createTransformFeedback()
+  const second = gl.createTransformFeedback()
+  const firstBuffer = createBuffer(gl, 6 * 4)
+  const secondBuffer = createBuffer(gl, 6 * 4)
+
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, first)
+  gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, firstBuffer)
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, second)
+  gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, secondBuffer)
+  t.equal(gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0), secondBuffer, 'the bound transform feedback has its buffer')
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, first)
+  t.equal(gl.getIndexedParameter(gl.TRANSFORM_FEEDBACK_BUFFER_BINDING, 0), firstBuffer, 'and so does the other')
+
+  const query = gl.createQuery()
+  gl.useProgram(program)
+  gl.enable(gl.RASTERIZER_DISCARD)
+  gl.beginQuery(gl.TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, query)
+  gl.beginTransformFeedback(gl.POINTS)
+  t.equal(gl.getParameter(gl.TRANSFORM_FEEDBACK_ACTIVE), true, 'TRANSFORM_FEEDBACK_ACTIVE is true during the capture')
+  gl.pauseTransformFeedback()
+  t.equal(gl.getParameter(gl.TRANSFORM_FEEDBACK_PAUSED), true, 'and TRANSFORM_FEEDBACK_PAUSED while it\'s paused')
+  gl.resumeTransformFeedback()
+  gl.drawArrays(gl.POINTS, 0, 3)
+  gl.endTransformFeedback()
+  gl.endQuery(gl.TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN)
+  gl.disable(gl.RASTERIZER_DISCARD)
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, null)
+
+  t.equal(gl.getQueryParameter(query, gl.QUERY_RESULT), 3, 'TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN counts the points')
+  t.deepEqual(readBuffer(gl, firstBuffer, 6), [0, 0, 2, 3, 4, 6], 'the bound transform feedback captures into its buffer')
+  t.deepEqual(readBuffer(gl, secondBuffer, 6), [0, 0, 0, 0, 0, 0], 'and the other\'s buffer is untouched')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('transform feedback: deleting transform feedback objects', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const program = createProgram(gl, VARYINGS, gl.INTERLEAVED_ATTRIBS)
+  const transformFeedback = gl.createTransformFeedback()
+
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedback)
+  gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, createBuffer(gl, 6 * 4))
+  gl.useProgram(program)
+  gl.beginTransformFeedback(gl.POINTS)
+  gl.deleteTransformFeedback(transformFeedback)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'deleting an active transform feedback sets INVALID_OPERATION')
+  t.equal(gl.isTransformFeedback(transformFeedback), true, 'and leaves it')
+  t.equal(gl.getParameter(gl.TRANSFORM_FEEDBACK_BINDING), transformFeedback, 'and bound')
+  gl.endTransformFeedback()
+
+  gl.deleteTransformFeedback(transformFeedback)
+  t.equal(gl.getError(), gl.NO_ERROR, 'deleting it once it has ended works')
+  t.equal(gl.isTransformFeedback(transformFeedback), false, 'and isTransformFeedback returns false for it')
+  t.equal(gl.getParameter(gl.TRANSFORM_FEEDBACK_BINDING), null, 'and the default transform feedback is bound in its place')
+  gl.deleteTransformFeedback(transformFeedback)
+  gl.deleteTransformFeedback(null)
+  t.equal(gl.getError(), gl.NO_ERROR, 'deleting it again, or deleting null, does nothing')
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, transformFeedback)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'bindTransformFeedback sets INVALID_OPERATION for a deleted transform feedback')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('transform feedback: transform feedback object errors', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const other = createContext(1, 1, { createWebGL2Context: true })
+  gl.createTransformFeedback()
+  const otherTransformFeedback = other.createTransformFeedback()
+  other.bindTransformFeedback(other.TRANSFORM_FEEDBACK, otherTransformFeedback)
+
+  t.equal(gl.isTransformFeedback(null), false, 'isTransformFeedback returns false for null')
+  t.equal(gl.isTransformFeedback(otherTransformFeedback), false, 'and for another context\'s transform feedback')
+  gl.deleteTransformFeedback(otherTransformFeedback)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'deleteTransformFeedback sets INVALID_OPERATION for another context\'s transform feedback')
+  t.equal(other.isTransformFeedback(otherTransformFeedback), true, 'and leaves it')
+  gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, otherTransformFeedback)
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'bindTransformFeedback sets INVALID_OPERATION for another context\'s transform feedback')
+
+  // The transform feedback is 1, so these would take the GL id of a transform feedback if they took numbers.
+  t.throws(() => gl.isTransformFeedback(1), TypeError, 'isTransformFeedback throws a TypeError for a number')
+  t.throws(() => gl.deleteTransformFeedback(1), TypeError, 'and so does deleteTransformFeedback')
+  t.throws(() => gl.bindTransformFeedback(gl.TRANSFORM_FEEDBACK, 1), TypeError, 'and bindTransformFeedback')
+  t.equal(gl.getError(), gl.NO_ERROR, 'without setting an error')
+
+  other.getExtension('STACKGL_destroy_context').destroy()
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

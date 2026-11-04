@@ -40,6 +40,7 @@ const { WebGLShader } = require('./webgl-shader')
 const { WebGLShaderPrecisionFormat } = require('./webgl-shader-precision-format')
 const { WebGLSync } = require('./webgl-sync')
 const { WebGLTexture } = require('./webgl-texture')
+const { WebGLTransformFeedback } = require('./webgl-transform-feedback')
 const { WebGLUniformLocation } = require('./webgl-uniform-location')
 const { WebGLVertexArrayObject } = require('./webgl-vertex-array-object')
 const { getEXTColorBufferFloat } = require('./extensions/ext-color-buffer-float')
@@ -920,6 +921,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
+  bindTransformFeedback (target, transformFeedback) {
+    if (transformFeedback === null || transformFeedback === undefined) {
+      super.bindTransformFeedback(target | 0, 0)
+    } else if (this._checkObjectArgument(transformFeedback, WebGLTransformFeedback, 'bindTransformFeedback(GLenum, WebGLTransformFeedback)')) {
+      super.bindTransformFeedback(target | 0, transformFeedback._)
+    }
+  }
+
   bindVertexArray (array) {
     if (!checkObject(array)) {
       throw new TypeError('bindVertexArray(WebGLVertexArrayObject)')
@@ -1033,6 +1042,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     const webGlTexture = new WebGLTexture(id, this)
     this._textures[id] = webGlTexture
     return webGlTexture
+  }
+
+  createTransformFeedback () {
+    const id = super.createTransformFeedback()
+    if (id <= 0) return null
+    const transformFeedback = new WebGLTransformFeedback(id, this)
+    this._transformFeedbacks[id] = transformFeedback
+    return transformFeedback
   }
 
   createVertexArray () {
@@ -1609,6 +1626,21 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     texture._checkDelete()
   }
 
+  // GL sets INVALID_OPERATION instead of deleting an active transform feedback, and binds the default one in place of a bound one it deletes.
+  deleteTransformFeedback (transformFeedback) {
+    if (!this._checkDeleteArgument(transformFeedback, WebGLTransformFeedback, 'deleteTransformFeedback(WebGLTransformFeedback)')) {
+      return
+    }
+    this._saveError()
+    super.deleteTransformFeedback(transformFeedback._)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error === this.NO_ERROR) {
+      delete this._transformFeedbacks[transformFeedback._]
+      transformFeedback._ = 0
+    }
+  }
+
   deleteVertexArray (array) {
     if (!checkObject(array)) {
       throw new TypeError('deleteVertexArray(WebGLVertexArrayObject)')
@@ -2042,6 +2074,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         return this._getActiveBuffer(this.PIXEL_UNPACK_BUFFER)
       case this.TRANSFORM_FEEDBACK_BUFFER_BINDING:
         return this._getActiveBuffer(this.TRANSFORM_FEEDBACK_BUFFER)
+      case this.TRANSFORM_FEEDBACK_BINDING:
+        return this._transformFeedbacks[super.getParameter(pname)] || null
       case this.UNIFORM_BUFFER_BINDING:
         return this._getActiveBuffer(this.UNIFORM_BUFFER)
       case this.CURRENT_PROGRAM:
@@ -2619,6 +2653,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   isTexture (object) {
     if (!this._isObject(object, 'isTexture', WebGLTexture)) return false
     return super.isTexture(object._ | 0)
+  }
+
+  isTransformFeedback (object) {
+    if (!this._isObject(object, 'isTransformFeedback', WebGLTransformFeedback)) return false
+    return super.isTransformFeedback(object._)
   }
 
   isVertexArray (object) {

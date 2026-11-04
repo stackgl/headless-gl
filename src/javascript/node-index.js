@@ -80,6 +80,7 @@ function createContext (width, height, options) {
     ctx._activeVertexArrayObject = null
     ctx._queries = {}
     ctx._samplers = {}
+    ctx._transformFeedbacks = {}
   }
 
   // Initialize texture units
