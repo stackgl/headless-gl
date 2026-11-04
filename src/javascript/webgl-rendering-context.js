@@ -73,6 +73,8 @@ const MAX_CLIENT_WAIT_TIMEOUT = Number.MAX_SAFE_INTEGER
 const HALF_FLOAT_OES = 0x8D61
 // WEBGL_depth_texture's type for DEPTH_STENCIL textures, the same as WebGL2's UNSIGNED_INT_24_8.
 const UNSIGNED_INT_24_8_WEBGL = 0x84FA
+// WebGL2's DRAW_BUFFER0, the same as WEBGL_draw_buffers' DRAW_BUFFER0_WEBGL.
+const DRAW_BUFFER0 = 0x8825
 
 const DEFAULT_ATTACHMENTS = [
   gl.COLOR_ATTACHMENT0,
@@ -2157,6 +2159,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         return this._getActiveTextureUnit()._bind3D
       case this.VERTEX_ARRAY_BINDING:
         return this._activeVertexArrayObject
+      // The default framebuffer is a framebuffer object here, so GL reports COLOR_ATTACHMENT0 for its first draw buffer and its read buffer where WebGL has BACK.
+      case DRAW_BUFFER0:
+      case this.READ_BUFFER: {
+        const value = super.getParameter(pname)
+        const framebuffer = pname === DRAW_BUFFER0 ? this._activeFramebuffers.draw : this._activeFramebuffers.read
+        return !framebuffer && value === this.COLOR_ATTACHMENT0 ? this.BACK : value
+      }
       case this.MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
         return MAX_CLIENT_WAIT_TIMEOUT
       case this.VERSION:
