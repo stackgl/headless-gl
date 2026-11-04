@@ -33,6 +33,7 @@ const { WebGLFramebuffer } = require('./webgl-framebuffer')
 const { WebGLBuffer } = require('./webgl-buffer')
 const { WebGLDrawingBufferWrapper } = require('./webgl-drawing-buffer-wrapper')
 const { WebGLProgram } = require('./webgl-program')
+const { WebGLQuery } = require('./webgl-query')
 const { WebGLRenderbuffer } = require('./webgl-renderbuffer')
 const { WebGLSampler } = require('./webgl-sampler')
 const { WebGLShader } = require('./webgl-shader')
@@ -1002,6 +1003,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return webGLProgram
   }
 
+  createQuery () {
+    const id = super.createQuery()
+    if (id <= 0) return null
+    const query = new WebGLQuery(id, this)
+    this._queries[id] = query
+    return query
+  }
+
   createRenderbuffer () {
     const id = super.createRenderbuffer()
     if (id <= 0) return null
@@ -1537,6 +1546,18 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
     renderbuffer._pendingDelete = true
     renderbuffer._checkDelete()
+  }
+
+  // GL keeps a deleted query active until its target's query ends, so it's ended here, as browsers do.
+  deleteQuery (query) {
+    if (this._checkDeleteArgument(query, WebGLQuery, 'deleteQuery(WebGLQuery)')) {
+      if (query._target && super.getQuery(query._target, this.CURRENT_QUERY) === query._) {
+        super.endQuery(query._target)
+      }
+      delete this._queries[query._]
+      super.deleteQuery(query._)
+      query._ = 0
+    }
   }
 
   // GL unbinds a sampler from every texture unit when it's deleted.
@@ -2570,6 +2591,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return super.isProgram(object._ | 0)
   }
 
+  isQuery (object) {
+    if (!this._isObject(object, 'isQuery', WebGLQuery)) return false
+    return super.isQuery(object._)
+  }
+
   isRenderbuffer (object) {
     if (!this._isObject(object, 'isRenderbuffer', WebGLRenderbuffer)) return false
     return super.isRenderbuffer(object._ | 0)
@@ -3249,6 +3275,46 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     const error = this.getError()
     this._restoreError(error)
     return error === this.NO_ERROR ? value : null
+  }
+
+  beginQuery (target, query) {
+    target |= 0
+    if (!this._checkObjectArgument(query, WebGLQuery, 'beginQuery(GLenum, WebGLQuery)')) {
+      return
+    }
+    this._saveError()
+    super.beginQuery(target, query._)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error === this.NO_ERROR) {
+      query._target = target
+    }
+  }
+
+  getQuery (target, pname) {
+    this._saveError()
+    const id = super.getQuery(target | 0, pname | 0)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error !== this.NO_ERROR) {
+      return null
+    }
+    return this._queries[id] || null
+  }
+
+  getQueryParameter (query, pname) {
+    pname |= 0
+    if (!this._checkObjectArgument(query, WebGLQuery, 'getQueryParameter(WebGLQuery, GLenum)')) {
+      return null
+    }
+    this._saveError()
+    const value = super.getQueryParameter(query._, pname)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error !== this.NO_ERROR) {
+      return null
+    }
+    return pname === this.QUERY_RESULT_AVAILABLE ? !!value : value
   }
 
   samplerParameterf (sampler, pname, param) {
