@@ -2979,7 +2979,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     height = height | 0
     if (!(width > 0 && height > 0)) {
       throw new Error('Invalid surface dimensions')
-    } else if (width !== this.drawingBufferWidth ||
+    }
+    const [maxWidth, maxHeight] = this._maxDrawingBufferSize()
+    width = Math.min(width, maxWidth)
+    height = Math.min(height, maxHeight)
+    if (width !== this.drawingBufferWidth ||
       height !== this.drawingBufferHeight) {
       this._resizeDrawingBuffer(width, height)
       this.drawingBufferWidth = width
@@ -3895,6 +3899,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   viewport (x, y, width, height) {
     return super.viewport(x | 0, y | 0, width | 0, height | 0)
+  }
+
+  // The largest drawing buffer the GPU allows, which WebGL makes instead of a larger one. Its color is a texture, its depth and stencil a renderbuffer, and it's drawn with a viewport.
+  _maxDrawingBufferSize () {
+    const size = Math.min(super.getParameter(this.MAX_TEXTURE_SIZE), super.getParameter(this.MAX_RENDERBUFFER_SIZE))
+    const [maxViewportWidth, maxViewportHeight] = super.getParameter(this.MAX_VIEWPORT_DIMS)
+    return [Math.min(size, maxViewportWidth), Math.min(size, maxViewportHeight)]
   }
 
   _allocateDrawingBuffer (width, height) {

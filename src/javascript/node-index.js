@@ -54,9 +54,6 @@ function createContext (width, height, options) {
     throw e
   }
 
-  ctx.drawingBufferWidth = width
-  ctx.drawingBufferHeight = height
-
   ctx._ = CONTEXT_COUNTER++
 
   ctx._contextAttributes = contextAttributes
@@ -111,7 +108,12 @@ function createContext (width, height, options) {
   ctx._unpackAlignment = 4
   ctx._packAlignment = 4
 
-  // Allocate framebuffer
+  // Allocate framebuffer, no larger than the GPU allows
+  const [maxWidth, maxHeight] = ctx._maxDrawingBufferSize()
+  width = Math.min(width, maxWidth)
+  height = Math.min(height, maxHeight)
+  ctx.drawingBufferWidth = width
+  ctx.drawingBufferHeight = height
   ctx._allocateDrawingBuffer(width, height)
 
   const attrib0Buffer = ctx.createBuffer()
