@@ -393,6 +393,18 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
+  // Records what's attached at an attachment point of the bound framebuffer once GL has attached it.
+  _setAttachment (target, attachment, object) {
+    const framebuffer = this._getActiveFramebuffer(target)
+    const entry = object ? { object, id: object._ } : null
+    if (attachment === this.DEPTH_STENCIL_ATTACHMENT) {
+      framebuffer._attachments[this.DEPTH_ATTACHMENT] = entry
+      framebuffer._attachments[this.STENCIL_ATTACHMENT] = entry
+    } else {
+      framebuffer._attachments[attachment] = entry
+    }
+  }
+
   _getAttachments () {
     return this._extensions.webgl_draw_buffers ? this._extensions.webgl_draw_buffers._ALL_ATTACHMENTS : DEFAULT_ATTACHMENTS
   }
@@ -1830,7 +1842,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
+    this._saveError()
     super.framebufferRenderbuffer(target, attachment, renderbufferTarget, renderbuffer?._ ?? null)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error === this.NO_ERROR) {
+      this._setAttachment(target, attachment, renderbuffer)
+    }
   }
 
   framebufferTexture2D (
@@ -1858,7 +1876,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
+    this._saveError()
     super.framebufferTexture2D(target, attachment, textarget, texture?._ ?? null, level)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error === this.NO_ERROR) {
+      this._setAttachment(target, attachment, texture)
+    }
   }
 
   framebufferTextureLayer (target, attachment, texture, level, layer) {
@@ -1881,7 +1905,13 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
+    this._saveError()
     super.framebufferTextureLayer(target, attachment, texture?._ ?? null, level, layer)
+    const error = this.getError()
+    this._restoreError(error)
+    if (error === this.NO_ERROR) {
+      this._setAttachment(target, attachment, texture)
+    }
   }
 
   frontFace (mode) {
@@ -2210,7 +2240,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     pname |= 0
 
     // Since we emulate the default framebuffer, we can't rely on ANGLE's validation.
-    if (!this._getActiveFramebuffer(target)) {
+    const framebuffer = this._getActiveFramebuffer(target)
+    if (!framebuffer) {
       this.setError(this.INVALID_OPERATION)
       return null
     }
@@ -2225,11 +2256,16 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     if (error === this.NO_ERROR && pname === this.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME) {
+      // The attached object may have been deleted, so it's found by what was attached rather than by GL's id when they agree.
+      const entry = framebuffer._attachments[attachment === this.DEPTH_STENCIL_ATTACHMENT ? this.DEPTH_ATTACHMENT : attachment]
+      if (entry && entry.id === result) {
+        return entry.object
+      }
       const type = super.getFramebufferAttachmentParameter(target, attachment, this.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)
       if (type === this.RENDERBUFFER) {
-        return this._renderbuffers[result]
+        return this._renderbuffers[result] || null
       } else {
-        return this._textures[result]
+        return this._textures[result] || null
       }
     }
 

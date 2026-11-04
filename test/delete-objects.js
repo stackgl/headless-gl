@@ -50,3 +50,73 @@ tape('delete objects: deleteTexture unbinds 3D and 2D array textures from every 
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+for (const webgl2 of [false, true]) {
+  tape(`delete objects: WebGL${webgl2 ? 2 : 1} framebuffers that aren't bound keep deleted attachments`, function (t) {
+    const gl = createContext(1, 1, { createWebGL2Context: webgl2 })
+
+    const kinds = {
+      renderbuffer: {
+        type: gl.RENDERBUFFER,
+        create () {
+          const renderbuffer = gl.createRenderbuffer()
+          gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer)
+          gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 1, 1)
+          return renderbuffer
+        },
+        attach (renderbuffer) {
+          gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, renderbuffer)
+        },
+        delete: renderbuffer => gl.deleteRenderbuffer(renderbuffer)
+      },
+      texture: {
+        type: gl.TEXTURE,
+        create () {
+          const texture = gl.createTexture()
+          gl.bindTexture(gl.TEXTURE_2D, texture)
+          gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+          return texture
+        },
+        attach (texture) {
+          gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0)
+        },
+        delete: texture => gl.deleteTexture(texture)
+      }
+    }
+
+    for (const [name, kind] of Object.entries(kinds)) {
+      const object = kind.create()
+      const other = gl.createFramebuffer()
+      const bound = gl.createFramebuffer()
+      gl.bindFramebuffer(gl.FRAMEBUFFER, other)
+      kind.attach(object)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, bound)
+      kind.attach(object)
+
+      kind.delete(object)
+      t.equal(gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE), gl.NONE, `deleting a ${name} detaches it from the bound framebuffer`)
+      // ANGLE gives the new object the deleted one's id.
+      const replacement = kind.create()
+      gl.bindFramebuffer(gl.FRAMEBUFFER, other)
+      t.equal(gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE), kind.type, 'but not from the other framebuffer')
+      t.equal(gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME), object, `whose FRAMEBUFFER_ATTACHMENT_OBJECT_NAME is still the deleted ${name}`)
+      t.notEqual(gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME), replacement, `rather than a new ${name} with its id`)
+      t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    }
+
+    gl.getExtension('STACKGL_destroy_context').destroy()
+    t.end()
+  })
+}
+
+tape('delete objects: WebGL2 FRAMEBUFFER_ATTACHMENT_OBJECT_NAME is null without an attachment', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+  t.equal(gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME), null, 'getFramebufferAttachmentParameter returns null')
+  t.equal(gl.getError(), gl.NO_ERROR, 'without an error')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

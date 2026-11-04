@@ -10,6 +10,8 @@ class WebGLFramebuffer extends Linkable {
     this._width = 0
     this._height = 0
     this._status = null
+    // The object at each attachment point and the id GL had for it. GL keeps an object attached to framebuffers that aren't bound when it's deleted, and may give its id to a new object.
+    this._attachments = {}
   }
 
   _performDelete () {
