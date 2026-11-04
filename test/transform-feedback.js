@@ -68,6 +68,8 @@ tape('transform feedback: transformFeedbackVaryings and getTransformFeedbackVary
   const gl = createContext(1, 1, { createWebGL2Context: true })
   const program = createProgram(gl, VARYINGS, gl.INTERLEAVED_ATTRIBS)
 
+  t.equal(gl.getProgramParameter(program, gl.TRANSFORM_FEEDBACK_VARYINGS), 2, 'getProgramParameter counts the varyings the program captures')
+  t.equal(gl.getProgramParameter(program, gl.TRANSFORM_FEEDBACK_BUFFER_MODE), gl.INTERLEAVED_ATTRIBS, 'and returns its buffer mode')
   VARYINGS.forEach((name, index) => {
     const info = gl.getTransformFeedbackVarying(program, index)
     t.equal(info.constructor.name, 'WebGLActiveInfo', `getTransformFeedbackVarying(${index}) returns a WebGLActiveInfo`)

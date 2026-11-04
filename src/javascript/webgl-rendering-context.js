@@ -2111,6 +2111,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         case this.ATTACHED_SHADERS:
         case this.ACTIVE_ATTRIBUTES:
         case this.ACTIVE_UNIFORMS:
+        case this.ACTIVE_UNIFORM_BLOCKS:
+        case this.TRANSFORM_FEEDBACK_BUFFER_MODE:
+        case this.TRANSFORM_FEEDBACK_VARYINGS:
           return super.getProgramParameter(program._, pname)
       }
       this.setError(this.INVALID_ENUM)

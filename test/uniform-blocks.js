@@ -60,6 +60,17 @@ tape('uniform blocks: drawing with a uniform buffer', function (t) {
   t.end()
 })
 
+tape('uniform blocks: getProgramParameter counts the active uniform blocks', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const program = createProgram(gl)
+
+  t.equal(gl.getProgramParameter(program, gl.ACTIVE_UNIFORM_BLOCKS), 1, 'ACTIVE_UNIFORM_BLOCKS is 1')
+  t.equal(gl.getError(), gl.NO_ERROR, 'and sets no error')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
 tape('uniform blocks: getActiveUniformBlockName', function (t) {
   const gl = createContext(1, 1, { createWebGL2Context: true })
   const program = createProgram(gl)
