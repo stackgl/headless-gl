@@ -2245,9 +2245,14 @@ GL_METHOD(GetParameter) {
   case GL_DEPTH_WRITEMASK:
   case GL_DITHER:
   case GL_POLYGON_OFFSET_FILL:
+  case GL_RASTERIZER_DISCARD:
+  case GL_SAMPLE_ALPHA_TO_COVERAGE:
+  case GL_SAMPLE_COVERAGE:
   case GL_SAMPLE_COVERAGE_INVERT:
   case GL_SCISSOR_TEST:
-  case GL_STENCIL_TEST: {
+  case GL_STENCIL_TEST:
+  case GL_TRANSFORM_FEEDBACK_ACTIVE:
+  case GL_TRANSFORM_FEEDBACK_PAUSED: {
     GLboolean params = GL_FALSE;
     glGetBooleanvRobustANGLE(name, sizeof(GLboolean), &bytesWritten, &params);
 
