@@ -2242,6 +2242,20 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return null
   }
 
+  getTransformFeedbackVarying (program, index) {
+    if (!checkObject(program)) {
+      throw new TypeError('getTransformFeedbackVarying(WebGLProgram, GLuint)')
+    } else if (!program) {
+      this.setError(this.INVALID_VALUE)
+    } else if (this._checkWrapper(program, WebGLProgram)) {
+      const info = super.getTransformFeedbackVarying(program._ | 0, index | 0)
+      if (info) {
+        return new WebGLActiveInfo(info)
+      }
+    }
+    return null
+  }
+
   getUniform (program, location) {
     if (!checkObject(program) ||
       !checkObject(location)) {
@@ -3114,6 +3128,19 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     const args = this._getCompressedData(target, data, srcOffset, srcLengthOverride, 'compressedTexSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, ArrayBufferView)')
     if (args) {
       super.compressedTexSubImage3D(target, level | 0, xoffset | 0, yoffset | 0, zoffset | 0, width | 0, height | 0, depth | 0, format | 0, ...args)
+    }
+  }
+
+  transformFeedbackVaryings (program, varyings, bufferMode) {
+    if (!checkObject(program) ||
+      typeof varyings !== 'object' || varyings === null || typeof varyings[Symbol.iterator] !== 'function') {
+      throw new TypeError('transformFeedbackVaryings(WebGLProgram, sequence<DOMString>, GLenum)')
+    }
+    const names = Array.from(varyings, String)
+    if (!program) {
+      this.setError(this.INVALID_VALUE)
+    } else if (this._checkWrapper(program, WebGLProgram)) {
+      super.transformFeedbackVaryings(program._ | 0, names, bufferMode | 0)
     }
   }
 

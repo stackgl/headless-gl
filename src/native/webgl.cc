@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cmath>
@@ -3516,26 +3517,37 @@ GL_METHOD(TransformFeedbackVaryings) {
   auto varyings = info[1].As<v8::Array>();
   GLenum bufferMode = Nan::To<int32_t>(info[2]).ToChecked();
   GLsizei count = varyings->Length();
-  const char **varyingStrings = new const char *[count];
+  // Each Nan::Utf8String frees its characters when it goes out of scope, so the names are copied into strings that last until GL has read them.
+  std::vector<std::string> names(count);
+  std::vector<const char *> namePointers(count);
   for (GLsizei i = 0; i < count; i++) {
-    Nan::Utf8String str(Nan::Get(varyings, i).ToLocalChecked());
-    varyingStrings[i] = *str;
+    Nan::Utf8String name(Nan::Get(varyings, i).ToLocalChecked());
+    names[i] = std::string(*name, name.length());
+    namePointers[i] = names[i].c_str();
   }
-  glTransformFeedbackVaryings(program, count, varyingStrings, bufferMode);
-  delete[] varyingStrings;
+  glTransformFeedbackVaryings(program, count, namePointers.data(), bufferMode);
 }
 
 GL_METHOD(GetTransformFeedbackVarying) {
   GL_BOILERPLATE;
   GLuint program = Nan::To<uint32_t>(info[0]).ToChecked();
   GLuint index = Nan::To<uint32_t>(info[1]).ToChecked();
-  char name[256];
-  GLsizei length;
-  GLsizei size;
-  GLenum type;
-  glGetTransformFeedbackVarying(program, index, 256, &length, &size, &type, name);
+  // The longest name's length counts its null terminator, and is 0 when the program captures no varyings, in which case GL still sets the error for the index.
+  GLint maxLength = 0;
+  glGetProgramiv(program, GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH, &maxLength);
+  std::vector<char> name(std::max(maxLength, 1));
+  GLsizei length = 0;
+  GLsizei size = 0;
+  GLenum type = 0;
+  glGetTransformFeedbackVarying(program, index, maxLength, &length, &size, &type, name.data());
+  // GL sets an error, and writes nothing, for an index past the last varying.
+  if (length <= 0) {
+    info.GetReturnValue().SetNull();
+    return;
+  }
   v8::Local<v8::Object> result = Nan::New<v8::Object>();
-  Nan::Set(result, Nan::New("name").ToLocalChecked(), Nan::New(name).ToLocalChecked());
+  Nan::Set(result, Nan::New("name").ToLocalChecked(),
+           Nan::New(name.data(), length).ToLocalChecked());
   Nan::Set(result, Nan::New("size").ToLocalChecked(), Nan::New(size));
   Nan::Set(result, Nan::New("type").ToLocalChecked(), Nan::New(type));
   info.GetReturnValue().Set(result);
