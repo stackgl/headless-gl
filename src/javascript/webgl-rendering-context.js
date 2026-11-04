@@ -1844,7 +1844,6 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     mode |= 0
     count |= 0
     type |= 0
-    ioffset |= 0
 
     return super.drawElements(mode, count, type, ioffset)
   }

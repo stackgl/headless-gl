@@ -1602,9 +1602,9 @@ GL_METHOD(DrawElements) {
   GLenum mode = Nan::To<int32_t>(info[0]).ToChecked();
   GLint count = Nan::To<int32_t>(info[1]).ToChecked();
   GLenum type = Nan::To<int32_t>(info[2]).ToChecked();
-  size_t offset = Nan::To<uint32_t>(info[3]).ToChecked();
+  GLintptr offset = Nan::To<int64_t>(info[3]).ToChecked();
 
-  glDrawElements(mode, count, type, reinterpret_cast<GLvoid *>(offset));
+  glDrawElements(mode, count, type, reinterpret_cast<const void *>(offset));
   RENDERDOC_COUNTER();
 }
 
