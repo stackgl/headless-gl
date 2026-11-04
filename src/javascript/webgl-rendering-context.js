@@ -36,6 +36,7 @@ const { WebGLProgram } = require('./webgl-program')
 const { WebGLRenderbuffer } = require('./webgl-renderbuffer')
 const { WebGLShader } = require('./webgl-shader')
 const { WebGLShaderPrecisionFormat } = require('./webgl-shader-precision-format')
+const { WebGLSync } = require('./webgl-sync')
 const { WebGLTexture } = require('./webgl-texture')
 const { WebGLUniformLocation } = require('./webgl-uniform-location')
 const { WebGLVertexArrayObject } = require('./webgl-vertex-array-object')
@@ -411,6 +412,34 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       factor === this.CONSTANT_ALPHA ||
       factor === this.ONE_MINUS_CONSTANT_ALPHA
     )
+  }
+
+  // WebGL's IDL throws a TypeError for an argument that isn't the object type a method takes, including null where the method doesn't allow it.
+  // An object from another context, or one that's been deleted, sets INVALID_OPERATION.
+  _checkObjectArgument (object, Wrapper, signature) {
+    if (!(object instanceof Wrapper)) {
+      throw new TypeError(signature)
+    }
+    if (!this._checkOwns(object) || object._ === 0) {
+      this.setError(this.INVALID_OPERATION)
+      return false
+    }
+    return true
+  }
+
+  // The delete methods of WebGL2's objects do nothing for null or an object that's already deleted, and set INVALID_OPERATION for another context's object.
+  _checkDeleteArgument (object, Wrapper, signature) {
+    if (object === null || object === undefined) {
+      return false
+    }
+    if (!(object instanceof Wrapper)) {
+      throw new TypeError(signature)
+    }
+    if (!this._checkOwns(object)) {
+      this.setError(this.INVALID_OPERATION)
+      return false
+    }
+    return object._ !== 0
   }
 
   _isObject (object, method, Wrapper) {
@@ -2523,6 +2552,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return super.isShader(object._ | 0)
   }
 
+  isSync (object) {
+    if (!this._isObject(object, 'isSync', WebGLSync)) return false
+    return super.isSync(object._)
+  }
+
   isTexture (object) {
     if (!this._isObject(object, 'isTexture', WebGLTexture)) return false
     return super.isTexture(object._ | 0)
@@ -3145,6 +3179,43 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     } else if (this._checkWrapper(program, WebGLProgram)) {
       super.transformFeedbackVaryings(program._ | 0, names, bufferMode | 0)
     }
+  }
+
+  fenceSync (condition, flags) {
+    const id = super.fenceSync(condition | 0, flags | 0)
+    if (id <= 0) return null
+    return new WebGLSync(id, this)
+  }
+
+  deleteSync (sync) {
+    if (this._checkDeleteArgument(sync, WebGLSync, 'deleteSync(WebGLSync)')) {
+      super.deleteSync(sync._)
+      sync._ = 0
+    }
+  }
+
+  clientWaitSync (sync, flags, timeout) {
+    if (!this._checkObjectArgument(sync, WebGLSync, 'clientWaitSync(WebGLSync, GLbitfield, GLuint64)')) {
+      return this.WAIT_FAILED
+    }
+    return super.clientWaitSync(sync._, flags | 0, +timeout)
+  }
+
+  waitSync (sync, flags, timeout) {
+    if (this._checkObjectArgument(sync, WebGLSync, 'waitSync(WebGLSync, GLbitfield, GLint64)')) {
+      super.waitSync(sync._, flags | 0, +timeout)
+    }
+  }
+
+  getSyncParameter (sync, pname) {
+    if (!this._checkObjectArgument(sync, WebGLSync, 'getSyncParameter(WebGLSync, GLenum)')) {
+      return null
+    }
+    this._saveError()
+    const value = super.getSyncParameter(sync._, pname | 0)
+    const error = this.getError()
+    this._restoreError(error)
+    return error === this.NO_ERROR ? value : null
   }
 
   // Returns the index that the native uniform methods take for a location, or -1 to skip the call, as WebGL does for a null location.

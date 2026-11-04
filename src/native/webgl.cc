@@ -3468,7 +3468,7 @@ GL_METHOD(GetSyncParameter) {
   GL_BOILERPLATE;
   GLsync sync = IntToSync(Nan::To<uint32_t>(info[0]).ToChecked());
   GLenum pname = Nan::To<int32_t>(info[1]).ToChecked();
-  GLint result;
+  GLint result = 0;
   glGetSynciv(sync, pname, 1, nullptr, &result);
   info.GetReturnValue().Set(Nan::New(result));
 }
