@@ -1637,10 +1637,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         this.activeTexture(this.TEXTURE0 + i)
         this.bindTexture(this.TEXTURE_CUBE_MAP, null)
       } else if (this._isWebGL2() && unit._bind2DArray === texture) {
-        this.activeTexture(this.TEXTURE_2D_ARRAY)
+        this.activeTexture(this.TEXTURE0 + i)
         this.bindTexture(this.TEXTURE_2D_ARRAY, null)
       } else if (this._isWebGL2() && unit._bind3D === texture) {
-        this.activeTexture(this.TEXTURE_3D)
+        this.activeTexture(this.TEXTURE0 + i)
         this.bindTexture(this.TEXTURE_3D, null)
       }
     }

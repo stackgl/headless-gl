@@ -26,3 +26,27 @@ for (const webgl2 of [false, true]) {
     t.end()
   })
 }
+
+tape('delete objects: deleteTexture unbinds 3D and 2D array textures from every texture unit', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+
+  const texture3D = gl.createTexture()
+  const texture2DArray = gl.createTexture()
+  gl.activeTexture(gl.TEXTURE2)
+  gl.bindTexture(gl.TEXTURE_3D, texture3D)
+  gl.activeTexture(gl.TEXTURE3)
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, texture2DArray)
+  gl.activeTexture(gl.TEXTURE1)
+
+  gl.deleteTexture(texture3D)
+  gl.deleteTexture(texture2DArray)
+  t.equal(gl.getError(), gl.NO_ERROR, 'deleting them sets no error')
+  t.equal(gl.getParameter(gl.ACTIVE_TEXTURE), gl.TEXTURE1, 'and leaves the active texture unit')
+  gl.activeTexture(gl.TEXTURE2)
+  t.equal(gl.getParameter(gl.TEXTURE_BINDING_3D), null, 'the 3D texture is unbound from its unit')
+  gl.activeTexture(gl.TEXTURE3)
+  t.equal(gl.getParameter(gl.TEXTURE_BINDING_2D_ARRAY), null, 'and the 2D array texture from its unit')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
