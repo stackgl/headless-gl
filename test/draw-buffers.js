@@ -89,3 +89,58 @@ tape('draw buffers: WebGL1 drawBuffersWEBGL takes BACK only for the default fram
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('draw buffers: WebGL1 sets INVALID_ENUM for color attachments past the last', function (t) {
+  const gl = createContext(1, 1)
+  const ext = gl.getExtension('WEBGL_draw_buffers')
+  const max = gl.getParameter(ext.MAX_COLOR_ATTACHMENTS_WEBGL)
+
+  const texture = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+  const renderbuffer = gl.createRenderbuffer()
+  gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer)
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 1, 1)
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + max, gl.TEXTURE_2D, texture, 0)
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'framebufferTexture2D sets INVALID_ENUM for COLOR_ATTACHMENT0 + MAX_COLOR_ATTACHMENTS_WEBGL')
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + max, gl.RENDERBUFFER, renderbuffer)
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and so does framebufferRenderbuffer')
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + max - 1, gl.TEXTURE_2D, texture, 0)
+  t.equal(gl.getError(), gl.NO_ERROR, 'while the last color attachment works')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('draw buffers: WebGL2 sets INVALID_ENUM for color attachments past the last', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const max = gl.getParameter(gl.MAX_COLOR_ATTACHMENTS)
+
+  const texture = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, texture)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+  const textureArray = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D_ARRAY, textureArray)
+  gl.texImage3D(gl.TEXTURE_2D_ARRAY, 0, gl.RGBA, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+  const renderbuffer = gl.createRenderbuffer()
+  gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer)
+  gl.renderbufferStorage(gl.RENDERBUFFER, gl.RGBA4, 1, 1)
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+
+  // OpenGL ES sets INVALID_OPERATION, but browsers set INVALID_ENUM.
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + max, gl.TEXTURE_2D, texture, 0)
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'framebufferTexture2D sets INVALID_ENUM for COLOR_ATTACHMENT0 + MAX_COLOR_ATTACHMENTS')
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + max, gl.RENDERBUFFER, renderbuffer)
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and so does framebufferRenderbuffer')
+  gl.framebufferTextureLayer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + max, textureArray, 0, 0)
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and framebufferTextureLayer')
+  t.equal(gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + max, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE), null, 'getFramebufferAttachmentParameter returns null for it')
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and sets INVALID_ENUM')
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + max - 1, gl.TEXTURE_2D, texture, 0)
+  t.equal(gl.getError(), gl.NO_ERROR, 'while the last color attachment works')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})

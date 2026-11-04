@@ -395,6 +395,19 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
   }
 
+  // Browsers set INVALID_ENUM for a color attachment past the last one, up to COLOR_ATTACHMENT31, where OpenGL ES sets INVALID_OPERATION.
+  _checkColorAttachment (attachment) {
+    const ext = this._extensions.webgl_draw_buffers
+    const count = this._isWebGL2()
+      ? super.getParameter(this.MAX_COLOR_ATTACHMENTS)
+      : ext ? super.getParameter(ext.MAX_COLOR_ATTACHMENTS_WEBGL) : 1
+    if (attachment >= this.COLOR_ATTACHMENT0 + count && attachment <= this.COLOR_ATTACHMENT0 + 31) {
+      this.setError(this.INVALID_ENUM)
+      return false
+    }
+    return true
+  }
+
   // Records what's attached at an attachment point of the bound framebuffer once GL has attached it.
   _setAttachment (target, attachment, object) {
     const framebuffer = this._getActiveFramebuffer(target)
@@ -1850,6 +1863,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('framebufferRenderbuffer(GLenum, GLenum, GLenum, WebGLRenderbuffer)')
     }
 
+    if (!this._checkColorAttachment(attachment)) {
+      return
+    }
+
     // Since we emulate the default framebuffer, we can't rely on ANGLE's validation.
     if (!this._getActiveFramebuffer(target)) {
       this.setError(this.INVALID_OPERATION)
@@ -1883,6 +1900,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('framebufferTexture2D(GLenum, GLenum, GLenum, WebGLTexture, GLint)')
     }
 
+    if (!this._checkColorAttachment(attachment)) {
+      return
+    }
+
     // Check object ownership
     if (texture && !this._checkWrapper(texture, WebGLTexture)) {
       return
@@ -1910,6 +1931,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     layer |= 0
     if (!checkObject(texture)) {
       throw new TypeError('framebufferTextureLayer(GLenum, GLenum, WebGLTexture, GLint, GLint)')
+    }
+
+    if (!this._checkColorAttachment(attachment)) {
+      return
     }
 
     // Check object ownership
@@ -2263,6 +2288,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     target |= 0
     attachment |= 0
     pname |= 0
+
+    if (!this._checkColorAttachment(attachment)) {
+      return null
+    }
 
     // Since we emulate the default framebuffer, we can't rely on ANGLE's validation.
     const framebuffer = this._getActiveFramebuffer(target)
