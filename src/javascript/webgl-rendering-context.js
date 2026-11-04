@@ -778,6 +778,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       error = super.getError()
       this._restoreError(error)
     } else if (framebuffer._pendingDelete) {
+      this.setError(this.INVALID_OPERATION)
       return
     } else if (this._checkWrapper(framebuffer, WebGLFramebuffer)) {
       this._saveError()
@@ -814,6 +815,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       buffer = null
       super.bindBuffer(target, 0)
     } else if (buffer._pendingDelete) {
+      this.setError(this.INVALID_OPERATION)
       return
     } else if (this._checkWrapper(buffer, WebGLBuffer)) {
       if (!this._checkBufferTarget(buffer, target)) {
@@ -843,7 +845,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!buffer) {
       return super.bindBufferBase(target, index, null)
     } else if (buffer._pendingDelete) {
-      //
+      this.setError(this.INVALID_OPERATION)
     } else if (this._checkWrapper(buffer, WebGLBuffer) && this._checkBufferTarget(buffer, target)) {
       return super.bindBufferBase(target, index, buffer._ | 0)
     }
@@ -861,7 +863,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!buffer) {
       return super.bindBufferRange(target, index, null, offset, size)
     } else if (buffer._pendingDelete) {
-      //
+      this.setError(this.INVALID_OPERATION)
     } else if (this._checkWrapper(buffer, WebGLBuffer) && this._checkBufferTarget(buffer, target)) {
       return super.bindBufferRange(target, index, buffer._ | 0, offset, size)
     }
@@ -898,6 +900,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         target | 0,
         0)
     } else if (object._pendingDelete) {
+      this.setError(this.INVALID_OPERATION)
       return
     } else if (this._checkWrapper(object, WebGLRenderbuffer)) {
       super.bindRenderbuffer(
@@ -940,7 +943,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       texture = null
     } else if (texture instanceof WebGLTexture &&
       texture._pendingDelete) {
-      // Special case: error codes for deleted textures don't get set for some dumb reason
+      this.setError(this.INVALID_OPERATION)
       return
     } else if (this._checkWrapper(texture, WebGLTexture)) {
       texture._binding = target
