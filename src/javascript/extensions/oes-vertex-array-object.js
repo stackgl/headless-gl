@@ -45,6 +45,10 @@ class OESVertexArrayObject {
       throw new TypeError('deleteVertexArrayOES(WebGLVertexArrayObjectOES)')
     }
 
+    if (!array) {
+      return
+    }
+
     if (!(array instanceof WebGLVertexArrayObjectOES &&
       ctx._checkOwns(array))) {
       ctx.setError(gl.INVALID_OPERATION)
