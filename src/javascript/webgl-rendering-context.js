@@ -65,6 +65,10 @@ const { getEXTTextureCompressionBPTC } = require('./extensions/ext-texture-compr
 const MAX_UNIFORM_LENGTH = 256
 const MAX_ATTRIBUTE_LENGTH = 256
 
+// clientWaitSync's longest timeout in nanoseconds, which WebGL leaves to the implementation.
+// Browsers keep it short or 0 so a page can't block its main thread, but blocking is fine in Node, so this is the largest integer a JavaScript number holds exactly: 2^53 - 1 nanoseconds, about 104 days.
+const MAX_CLIENT_WAIT_TIMEOUT = Number.MAX_SAFE_INTEGER
+
 // OES_texture_half_float's texture type, which differs from WebGL2's HALF_FLOAT.
 const HALF_FLOAT_OES = 0x8D61
 // WEBGL_depth_texture's type for DEPTH_STENCIL textures, the same as WebGL2's UNSIGNED_INT_24_8.
@@ -144,6 +148,15 @@ function wrapContext (ctx) {
   })
 
   return wrapper
+}
+
+// Converts a value to a GLuint64 as WebIDL does, the way `| 0` converts to a GLint: NaN and the infinities become 0, and other numbers are truncated and wrapped modulo 2^64.
+function toUint64 (value) {
+  const x = Math.trunc(+value) % 2 ** 64
+  if (!Number.isFinite(x)) {
+    return 0
+  }
+  return x < 0 ? x + 2 ** 64 : x
 }
 
 // We need to wrap some of the native WebGL functions to handle certain error codes and check input values
@@ -2114,6 +2127,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         return this._getActiveTextureUnit()._bind3D
       case this.VERTEX_ARRAY_BINDING:
         return this._activeVertexArrayObject
+      case this.MAX_CLIENT_WAIT_TIMEOUT_WEBGL:
+        return MAX_CLIENT_WAIT_TIMEOUT
       case this.VERSION:
         return (this._isWebGL2() ? 'WebGL 2.0 stack-gl ' : 'WebGL 1.0 stack-gl ') + HEADLESS_VERSION
       case this.VENDOR:
@@ -3312,7 +3327,12 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (!this._checkObjectArgument(sync, WebGLSync, 'clientWaitSync(WebGLSync, GLbitfield, GLuint64)')) {
       return this.WAIT_FAILED
     }
-    return super.clientWaitSync(sync._, flags | 0, +timeout)
+    timeout = toUint64(timeout)
+    if (timeout > MAX_CLIENT_WAIT_TIMEOUT) {
+      this.setError(this.INVALID_OPERATION)
+      return this.WAIT_FAILED
+    }
+    return super.clientWaitSync(sync._, flags | 0, timeout)
   }
 
   waitSync (sync, flags, timeout) {

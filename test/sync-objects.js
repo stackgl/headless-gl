@@ -35,6 +35,41 @@ tape('sync objects: fenceSync returns a WebGLSync', function (t) {
   t.end()
 })
 
+tape('sync objects: clientWaitSync timeouts', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const sync = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0)
+  gl.finish()
+
+  const max = gl.getParameter(gl.MAX_CLIENT_WAIT_TIMEOUT_WEBGL)
+  t.equal(max, Number.MAX_SAFE_INTEGER, 'MAX_CLIENT_WAIT_TIMEOUT_WEBGL is Number.MAX_SAFE_INTEGER')
+  t.equal(gl.getError(), gl.NO_ERROR, 'and getParameter sets no error')
+
+  t.equal(gl.clientWaitSync(sync, 0, max), gl.ALREADY_SIGNALED, 'clientWaitSync takes a timeout of MAX_CLIENT_WAIT_TIMEOUT_WEBGL')
+  t.equal(gl.getError(), gl.NO_ERROR, 'without an error')
+  t.equal(gl.clientWaitSync(sync, 0, max + 1), gl.WAIT_FAILED, 'and returns WAIT_FAILED for a longer one')
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'and sets INVALID_OPERATION')
+  t.equal(gl.clientWaitSync(sync, 0, -1), gl.WAIT_FAILED, 'and for -1, which wraps around to 2^64 - 1')
+  t.equal(gl.getError(), gl.INVALID_OPERATION, 'and sets INVALID_OPERATION')
+
+  // WebIDL turns Infinity and NaN into 0, so these are polls rather than waits.
+  t.equal(gl.clientWaitSync(sync, 0, Infinity), gl.ALREADY_SIGNALED, 'clientWaitSync takes Infinity')
+  t.equal(gl.clientWaitSync(sync, 0, NaN), gl.ALREADY_SIGNALED, 'and NaN')
+  t.equal(gl.getError(), gl.NO_ERROR, 'without an error')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('sync objects: WebGL1 has no MAX_CLIENT_WAIT_TIMEOUT_WEBGL', function (t) {
+  const gl = createContext(1, 1)
+
+  t.equal(gl.getParameter(0x9247), null, 'getParameter returns null for it')
+  t.equal(gl.getError(), gl.INVALID_ENUM, 'and sets INVALID_ENUM')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
 tape('sync objects: errors', function (t) {
   const gl = createContext(1, 1, { createWebGL2Context: true })
   const other = createContext(1, 1, { createWebGL2Context: true })

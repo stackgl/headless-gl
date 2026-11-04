@@ -173,6 +173,8 @@ Immediately destroys the context and all associated resources.
 
 To create a WebGL 2 context, set the `createWebGL2Context` property to `true` in the `contextAttributes` argument.
 
+Unlike in browsers, query results and sync objects are ready as soon as the GPU finishes, which can be before control returns to the event loop, and `clientWaitSync` can wait for up to `MAX_CLIENT_WAIT_TIMEOUT_WEBGL` nanoseconds, which is `Number.MAX_SAFE_INTEGER`. Code that waits the way browsers require, by checking again in a later callback, works the same.
+
 ## System dependencies
 
 In most cases installing `headless-gl` from npm should just work. However, if you run into problems you might need to adjust your system configuration and make sure all your dependencies are up to date. For general information on building native modules, see the [`node-gyp`](https://github.com/nodejs/node-gyp) documentation.
