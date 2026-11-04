@@ -267,8 +267,9 @@ function toFloat10 (value) {
   return ((abs + 0x1FFFF + ((abs >>> 18) & 1)) >>> 18) & 0x3FF
 }
 
+// Half floats are packed by a Float16Array where Node has one, and passed on as a Uint16Array, which HALF_FLOAT data must come in.
 const HALF_FLOAT_IMAGE_TYPE = globalThis.Float16Array
-  ? { TypedArray: globalThis.Float16Array, float: true, packChannel: value => value }
+  ? { TypedArray: globalThis.Float16Array, float: true, packChannel: value => value, view: result => new Uint16Array(result.buffer) }
   : { TypedArray: Uint16Array, float: true, packChannel: toHalfFloat }
 
 // How images are converted to each type, either a channel at a time or a pixel at a time. Float types take channels from 0 to 1, and the others from 0 to 255.
@@ -302,7 +303,7 @@ function convertImagePixels (pixels, width, height, format, type, premultiplyAlp
   }
   premultiplyAlpha = premultiplyAlpha && !formatInfo.integer
   const { channels } = formatInfo
-  const { TypedArray, float, packChannel, packPixel } = typeInfo
+  const { TypedArray, float, packChannel, packPixel, view = result => result } = typeInfo
 
   // Most uploads from images are RGBA with 8 bits per channel, which only need their rows reordered if they're flipped.
   if (format === gl.RGBA && type === gl.UNSIGNED_BYTE && !premultiplyAlpha) {
@@ -349,7 +350,7 @@ function convertImagePixels (pixels, width, height, format, type, premultiplyAlp
       }
     }
   }
-  return result
+  return view(result)
 }
 
 function formatSize (internalFormat) {

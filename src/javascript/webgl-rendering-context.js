@@ -75,6 +75,46 @@ const HALF_FLOAT_OES = 0x8D61
 const UNSIGNED_INT_24_8_WEBGL = 0x84FA
 // WebGL2's DRAW_BUFFER0, the same as WEBGL_draw_buffers' DRAW_BUFFER0_WEBGL.
 const DRAW_BUFFER0 = 0x8825
+// WebGL2's pixel types that WebGL1 doesn't have.
+const HALF_FLOAT = 0x140B
+const UNSIGNED_INT_5_9_9_9_REV = 0x8C3E
+const UNSIGNED_INT_2_10_10_10_REV = 0x8368
+const UNSIGNED_INT_10F_11F_11F_REV = 0x8C3B
+const FLOAT_32_UNSIGNED_INT_24_8_REV = 0x8DAD
+
+// The typed arrays that pixel data of each type must come in, from the WebGL 1.0 spec and its extensions and the WebGL 2.0 spec's table. FLOAT_32_UNSIGNED_INT_24_8_REV data can only be null.
+const WEBGL1_PIXEL_ARRAYS = new Map([
+  [gl.UNSIGNED_BYTE, ['Uint8Array', 'Uint8ClampedArray']],
+  [gl.UNSIGNED_SHORT_5_6_5, ['Uint16Array']],
+  [gl.UNSIGNED_SHORT_4_4_4_4, ['Uint16Array']],
+  [gl.UNSIGNED_SHORT_5_5_5_1, ['Uint16Array']],
+  [gl.FLOAT, ['Float32Array']],
+  [HALF_FLOAT_OES, ['Uint16Array']],
+  [gl.UNSIGNED_SHORT, ['Uint16Array']],
+  [gl.UNSIGNED_INT, ['Uint32Array']],
+  [UNSIGNED_INT_24_8_WEBGL, ['Uint32Array']]
+])
+const WEBGL2_PIXEL_ARRAYS = new Map([
+  [gl.BYTE, ['Int8Array']],
+  [gl.UNSIGNED_BYTE, ['Uint8Array', 'Uint8ClampedArray']],
+  [gl.SHORT, ['Int16Array']],
+  [gl.UNSIGNED_SHORT, ['Uint16Array']],
+  [gl.UNSIGNED_SHORT_5_6_5, ['Uint16Array']],
+  [gl.UNSIGNED_SHORT_5_5_5_1, ['Uint16Array']],
+  [gl.UNSIGNED_SHORT_4_4_4_4, ['Uint16Array']],
+  [gl.INT, ['Int32Array']],
+  [gl.UNSIGNED_INT, ['Uint32Array']],
+  [UNSIGNED_INT_5_9_9_9_REV, ['Uint32Array']],
+  [UNSIGNED_INT_2_10_10_10_REV, ['Uint32Array']],
+  [UNSIGNED_INT_10F_11F_11F_REV, ['Uint32Array']],
+  [UNSIGNED_INT_24_8_WEBGL, ['Uint32Array']],
+  [HALF_FLOAT, ['Uint16Array']],
+  [gl.FLOAT, ['Float32Array']],
+  [FLOAT_32_UNSIGNED_INT_24_8_REV, []]
+])
+// readPixels doesn't take depth types, so GL reports them whatever the array.
+const WEBGL1_READ_ARRAYS = new Map([...WEBGL1_PIXEL_ARRAYS].filter(([type]) => type !== gl.UNSIGNED_SHORT && type !== gl.UNSIGNED_INT && type !== UNSIGNED_INT_24_8_WEBGL))
+const WEBGL2_READ_ARRAYS = new Map([...WEBGL2_PIXEL_ARRAYS].filter(([type]) => type !== UNSIGNED_INT_24_8_WEBGL && type !== FLOAT_32_UNSIGNED_INT_24_8_REV))
 
 const DEFAULT_ATTACHMENTS = [
   gl.COLOR_ATTACHMENT0,
@@ -2898,6 +2938,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('readPixels(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, ArrayBufferView)')
     }
 
+    if (!this._checkPixelArray(type | 0, pixels, this._isWebGL2() ? WEBGL2_READ_ARRAYS : WEBGL1_READ_ARRAYS)) {
+      return
+    }
+
     if (dstOffset !== undefined && this._isWebGL2()) {
       pixels = this._skipElements(pixels, dstOffset)
       if (!pixels) {
@@ -3172,6 +3216,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       }
     }
 
+    if (!this._checkPixelArray(type, pixels)) {
+      return
+    }
+
     if (srcOffset !== undefined && this._isWebGL2() && ArrayBuffer.isView(pixels)) {
       pixels = this._skipElements(pixels, srcOffset)
       if (!pixels) {
@@ -3254,6 +3302,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return this._uploadImage(image, format, type, data => this.texSubImage2D(target, level, xoffset, yoffset, width | 0, height | 0, format, type, data), { width: width | 0, height: height | 0 })
     }
 
+    if (!this._checkPixelArray(type | 0, pixels)) {
+      return
+    }
+
     if (srcOffset !== undefined && this._isWebGL2() && ArrayBuffer.isView(pixels)) {
       pixels = this._skipElements(pixels, srcOffset)
       if (!pixels) {
@@ -3293,18 +3345,24 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return true
   }
 
-  // WebGL2's texture uploads and readPixels can start offset elements into a typed array or DataView, where a DataView's elements are bytes.
+  // Pixel data must come in the typed array that the spec gives for its type, whatever realm it was made in, or INVALID_OPERATION is set. A type the context doesn't take is left for GL to report, as browsers check the type first.
+  // Returns false after setting the error.
+  _checkPixelArray (type, pixels, arrays = this._isWebGL2() ? WEBGL2_PIXEL_ARRAYS : WEBGL1_PIXEL_ARRAYS) {
+    const names = arrays.get(type)
+    if (names && ArrayBuffer.isView(pixels) && !names.some(name => isInstanceOfType(pixels, name))) {
+      this.setError(this.INVALID_OPERATION)
+      return false
+    }
+    return true
+  }
+
+  // WebGL2's texture uploads and readPixels can start offset elements into a typed array.
   // Returns the pixels from there on, or null after setting INVALID_OPERATION if offset is past the end.
   _skipElements (pixels, offset) {
     offset = Math.trunc(offset) || 0
-    const isDataView = isInstanceOfType(pixels, 'DataView')
-    const length = isDataView ? pixels.byteLength : pixels.length
-    if (offset < 0 || offset > length) {
+    if (offset < 0 || offset > pixels.length) {
       this.setError(this.INVALID_OPERATION)
       return null
-    }
-    if (isDataView) {
-      return new DataView(pixels.buffer, pixels.byteOffset + offset, pixels.byteLength - offset)
     }
     return pixels.subarray(offset)
   }
@@ -3329,6 +3387,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         throw new TypeError('texImage3D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
       }
       return this._uploadImage(image, format, type, data => this.texImage3D(target, level, internalFormat, width, height, depth, border, format, type, data), { width: width | 0, height: height | 0, depth: depth | 0 })
+    }
+    if (!this._checkPixelArray(type | 0, pixels)) {
+      return
     }
     if (!this._check3DUnpackFlags(pixels)) {
       return
@@ -3369,6 +3430,10 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         throw new TypeError('texSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement)')
       }
       return this._uploadImage(image, format, type, data => this.texSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data), { width: width | 0, height: height | 0, depth: depth | 0 })
+    }
+
+    if (!this._checkPixelArray(type | 0, pixels)) {
+      return
     }
 
     if (srcOffset !== undefined && ArrayBuffer.isView(pixels)) {

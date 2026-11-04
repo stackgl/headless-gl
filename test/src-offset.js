@@ -41,10 +41,9 @@ tape('srcOffset: texture uploads start srcOffset elements into the data', functi
   gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes, 4)
   t.deepEqual(sample(gl, 'sampler3D'), [255, 102, 0, 255], 'texImage3D')
 
-  // A DataView's elements are bytes.
   gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
-  gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, new DataView(bytes.buffer), 4)
-  t.deepEqual(sample(gl, 'sampler3D'), [255, 102, 0, 255], 'texSubImage3D with a DataView')
+  gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, bytes, 4)
+  t.deepEqual(sample(gl, 'sampler3D'), [255, 102, 0, 255], 'texSubImage3D')
   t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
 
   gl.getExtension('STACKGL_destroy_context').destroy()
@@ -200,11 +199,6 @@ tape('dstOffset: readPixels writes dstOffset elements into its array', function 
   const bytes = new Uint8Array(8)
   gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, bytes, 4)
   t.deepEqual([...bytes], [0, 0, 0, 0, 255, 102, 0, 255], 'readPixels into a Uint8Array')
-
-  // A DataView's elements are bytes.
-  const view = new DataView(new ArrayBuffer(6))
-  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, view, 2)
-  t.deepEqual([...new Uint8Array(view.buffer)], [0, 0, 255, 102, 0, 255], 'readPixels into a DataView')
   t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
 
   gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, bytes, 6)
