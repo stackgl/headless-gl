@@ -162,7 +162,7 @@ declare namespace createContext {
   };
 
   /**
-   * The WebGL context attributes, plus createWebGL2Context. Only alpha, depth, stencil, premultipliedAlpha, preserveDrawingBuffer and createWebGL2Context have an effect: antialias is always off, and the others are ignored.
+   * The WebGL context attributes, plus createWebGL2Context. Only alpha, depth, stencil and createWebGL2Context have an effect: antialias is always off, and the others are only reported by getContextAttributes. Nothing composites the drawing buffer in Node, so it's always preserved whatever preserveDrawingBuffer is.
    */
   interface ContextAttributes extends WebGLContextAttributes {
     createWebGL2Context?: boolean;
