@@ -61,10 +61,7 @@ const { getWebGLCompressedTextureS3TCsRGB } = require('./extensions/webgl-compre
 const { getEXTTextureCompressionRGTC } = require('./extensions/ext-texture-compression-rgtc')
 const { getEXTTextureCompressionBPTC } = require('./extensions/ext-texture-compression-bptc')
 
-// These are defined by the WebGL spec
-const MAX_ATTRIBUTE_LENGTH = 256
-
-// The longest uniform locations, from the WebGL 1.0 and 2.0 specs.
+// The longest uniform and attribute locations, from the WebGL 1.0 and 2.0 specs.
 const WEBGL1_MAX_LOCATION_LENGTH = 256
 const WEBGL2_MAX_LOCATION_LENGTH = 1024
 
@@ -303,14 +300,6 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     for (let i = 0; i < numAttribs; ++i) {
       names[i] = this.getActiveAttrib(program, i).name
       program._attributes[i] = this.getAttribLocation(program, names[i]) | 0
-    }
-
-    // Check attribute names
-    for (let i = 0; i < names.length; ++i) {
-      if (names[i].length > MAX_ATTRIBUTE_LENGTH) {
-        program._linkInfoLog = 'attribute ' + names[i] + ' is too long'
-        return false
-      }
     }
 
     for (let i = 0; i < numAttribs; ++i) {
@@ -764,7 +753,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('bindAttribLocation(WebGLProgram, GLint, String)')
     }
     name += ''
-    if (!isValidString(name) || name.length > MAX_ATTRIBUTE_LENGTH) {
+    if (!isValidString(name) || name.length > this._maxLocationLength()) {
       this.setError(this.INVALID_VALUE)
     } else if (/^_?webgl_a/.test(name)) {
       this.setError(this.INVALID_OPERATION)
@@ -2150,7 +2139,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       throw new TypeError('getAttribLocation(WebGLProgram, String)')
     }
     name += ''
-    if (!isValidString(name) || name.length > MAX_ATTRIBUTE_LENGTH) {
+    if (!isValidString(name) || name.length > this._maxLocationLength()) {
       this.setError(this.INVALID_VALUE)
     } else if (this._checkWrapper(program, WebGLProgram)) {
       return super.getAttribLocation(program._ | 0, name + '')
@@ -4367,7 +4356,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return this.TEXTURE_2D_ARRAY !== undefined
   }
 
-  // The longest uniform location this context takes.
+  // The longest uniform or attribute location this context takes.
   _maxLocationLength () {
     return this._isWebGL2() ? WEBGL2_MAX_LOCATION_LENGTH : WEBGL1_MAX_LOCATION_LENGTH
   }
