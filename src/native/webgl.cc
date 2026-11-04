@@ -391,12 +391,12 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, 
   // Request necessary WebGL extensions.
   glRequestExtensionANGLE("GL_EXT_texture_storage");
 
-  // Select best preferred depth
+  // Select the depth of drawing buffers without stencil: 24 bits, as with stencil and in browsers. Mesa's llvmpipe computes polygon offsets in floating point, which loses small offsets of 32-bit depth.
   preferredDepth = GL_DEPTH_COMPONENT16;
-  if (strstr(extensionsString, "GL_OES_depth32")) {
-    preferredDepth = GL_DEPTH_COMPONENT32_OES;
-  } else if (strstr(extensionsString, "GL_OES_depth24")) {
+  if (strstr(extensionsString, "GL_OES_depth24")) {
     preferredDepth = GL_DEPTH_COMPONENT24_OES;
+  } else if (strstr(extensionsString, "GL_OES_depth32")) {
+    preferredDepth = GL_DEPTH_COMPONENT32_OES;
   }
 
   // Each WebGL extension maps to one or more required ANGLE extensions.
