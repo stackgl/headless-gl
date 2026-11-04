@@ -48,11 +48,18 @@ class WebGLDrawBuffers {
       ctx.setError(gl.INVALID_OPERATION)
       return
     }
-    if (buffers.length === 1 && buffers[0] === gl.BACK) {
+    if (ctx._activeFramebuffers.draw) {
+      // Only the default framebuffer takes BACK.
+      if (Array.prototype.includes.call(buffers, gl.BACK)) {
+        ctx.setError(gl.INVALID_OPERATION)
+        return
+      }
+    } else if (buffers.length === 1 && buffers[0] === gl.BACK) {
+      // The default framebuffer is a framebuffer object here, whose first color attachment stands for BACK.
       this._buffersState = buffers
       ctx.drawBuffersWEBGL([this.COLOR_ATTACHMENT0_WEBGL])
       return
-    } else if (!ctx._activeFramebuffers.draw) {
+    } else {
       if (buffers.length > 1) {
         ctx.setError(gl.INVALID_OPERATION)
         return

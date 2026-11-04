@@ -1787,6 +1787,22 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return super.drawArrays(mode, first, count)
   }
 
+  // The native drawBuffers and readBuffer turn BACK into COLOR_ATTACHMENT0, which stands for BACK in the framebuffer object that's the default framebuffer here, so WebGL's rules for BACK are checked first.
+  drawBuffers (buffers) {
+    if (typeof buffers !== 'object' || buffers === null || typeof buffers[Symbol.iterator] !== 'function') {
+      throw new TypeError('drawBuffers(sequence<GLenum>)')
+    }
+    buffers = Array.from(buffers, buffer => buffer | 0)
+    // The default framebuffer takes only BACK or NONE, and a framebuffer object never takes BACK.
+    if (this._activeFramebuffers.draw
+      ? buffers.includes(this.BACK)
+      : buffers.length !== 1 || (buffers[0] !== this.BACK && buffers[0] !== this.NONE)) {
+      this.setError(this.INVALID_OPERATION)
+      return
+    }
+    super.drawBuffers(buffers)
+  }
+
   drawElements (mode, count, type, ioffset) {
     mode |= 0
     count |= 0
@@ -2805,6 +2821,18 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   polygonOffset (factor, units) {
     return super.polygonOffset(+factor, +units)
+  }
+
+  readBuffer (src) {
+    src |= 0
+    // The default framebuffer takes BACK rather than a color attachment, and a framebuffer object never takes BACK.
+    if (this._activeFramebuffers.read
+      ? src === this.BACK
+      : src >= this.COLOR_ATTACHMENT0 && src <= this.COLOR_ATTACHMENT15) {
+      this.setError(this.INVALID_OPERATION)
+      return
+    }
+    super.readBuffer(src)
   }
 
   readPixels (x, y, width, height, format, type, pixels, dstOffset) {
