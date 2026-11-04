@@ -2892,6 +2892,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   readPixels (x, y, width, height, format, type, pixels, dstOffset) {
+    pixels = this._pixelArgument(pixels, dstOffset === undefined, false, 'readPixels(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, ArrayBufferView)')
     x |= 0
     y |= 0
     width |= 0
@@ -2919,10 +2920,6 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     if (pixels === null || pixels === undefined) {
       this.setError(this.INVALID_VALUE)
       return
-    }
-
-    if (!ArrayBuffer.isView(pixels)) {
-      throw new TypeError('readPixels(GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, ArrayBufferView)')
     }
 
     if (!this._checkPixelArray(type | 0, pixels, this._isWebGL2() ? WEBGL2_READ_ARRAYS : WEBGL1_READ_ARRAYS)) {
@@ -3164,6 +3161,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return this._uploadImage(image, format, type, data => this.texImage2D(target, level, internalFormat, image.width, image.height, 0, format, type, data))
     }
 
+    pixels = this._pixelArgument(pixels, srcOffset === undefined, true, 'texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, ArrayBufferView)')
+
     target |= 0
     level |= 0
     internalFormat |= 0
@@ -3185,10 +3184,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    const unpackOffset = this._isWebGL2() && typeof pixels === 'number'
-    if (typeof pixels !== 'object' && pixels !== undefined && !unpackOffset) {
-      throw new TypeError('texImage2D(GLenum, GLint, GLenum, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
-    }
+    const unpackOffset = typeof pixels === 'number'
 
     // WebGL2 can upload a width by height rectangle of an image.
     if (this._isWebGL2() && isImageSource(pixels)) {
@@ -3267,6 +3263,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return this._uploadImage(image, format, type, data => this.texSubImage2D(target, level, xoffset, yoffset, image.width, image.height, format, type, data))
     }
 
+    pixels = this._pixelArgument(pixels, srcOffset === undefined, true, 'texSubImage2D(GLenum, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, ArrayBufferView)')
+
     if (!this._checkTextureType(type)) {
       return
     }
@@ -3279,10 +3277,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
       return
     }
 
-    const unpackOffset = this._isWebGL2() && typeof pixels === 'number'
-    if (typeof pixels !== 'object' && !unpackOffset) {
-      throw new TypeError('texSubImage2D(GLenum, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
-    }
+    const unpackOffset = typeof pixels === 'number'
 
     // WebGL2 can upload a width by height rectangle of an image.
     if (this._isWebGL2() && isImageSource(pixels)) {
@@ -3320,6 +3315,22 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   // While a pixel unpack buffer is bound, WebGL2 texture uploads take a byte offset into it in place of pixels, and only then.
   // Returns false after setting an error if pixels don't match the binding.
+  // Browsers choose a method's form by its pixel argument. WebGL1, and WebGL2's forms with a source or destination offset, take only a typed array or null there, and throw a TypeError for anything else. WebGL2's other forms also take an image, except readPixels, and a byte offset into a pixel buffer, which anything else is converted to as a number, so an ArrayBuffer is offset 0.
+  // Returns the pixel argument to use.
+  _pixelArgument (pixels, takesBufferOffset, takesImage, signature) {
+    if (pixels === null || pixels === undefined || ArrayBuffer.isView(pixels)) {
+      return pixels
+    }
+    if (!takesBufferOffset || !this._isWebGL2()) {
+      throw new TypeError(signature)
+    }
+    if (typeof pixels === 'number' || (takesImage && isImageSource(pixels))) {
+      return pixels
+    }
+    const offset = Number(pixels)
+    return Number.isFinite(offset) ? Math.trunc(offset) : 0
+  }
+
   _checkUnpackSource (pixels) {
     if (!this._isWebGL2()) {
       return true
@@ -3369,6 +3380,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   texImage3D (target, level, internalFormat, width, height, depth, border, format, type, pixels, srcOffset) {
+    pixels = this._pixelArgument(pixels, srcOffset === undefined, true, 'texImage3D(GLenum, GLint, GLenum, GLsizei, GLsizei, GLsizei, GLint, GLenum, GLenum, ArrayBufferView)')
     if (!this._checkUnpackSource(pixels)) {
       return
     }
@@ -3395,6 +3407,7 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   }
 
   texSubImage3D (target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, pixels, srcOffset) {
+    pixels = this._pixelArgument(pixels, srcOffset === undefined, true, 'texSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLenum, GLenum, ArrayBufferView)')
     if (!this._checkUnpackSource(pixels)) {
       return
     }
@@ -3408,9 +3421,6 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     const unpackOffset = typeof pixels === 'number'
-    if (typeof pixels !== 'object' && !unpackOffset) {
-      throw new TypeError('texSubImage3D(GLenum, GLint, GLint, GLint, GLint, GLint, GLint, GLint, GLenum, GLenum, Uint8Array)')
-    }
 
     if (
       typeof pixels.width !== 'undefined' &&

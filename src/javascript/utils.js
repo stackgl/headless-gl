@@ -369,14 +369,7 @@ function formatSize (internalFormat) {
 }
 
 function convertPixels (pixels) {
-  if (typeof pixels === 'object' && pixels !== null) {
-    if (isInstanceOfType(pixels, 'ArrayBuffer')) {
-      return new Uint8Array(pixels)
-    } else if (ArrayBuffer.isView(pixels)) {
-      return unpackTypedArray(pixels)
-    }
-  }
-  return null
+  return ArrayBuffer.isView(pixels) ? unpackTypedArray(pixels) : null
 }
 
 function checkFormat (format) {

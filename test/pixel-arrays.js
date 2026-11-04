@@ -145,3 +145,72 @@ for (const webgl2 of [false, true]) {
     t.end()
   })
 }
+
+// Pixel arguments that aren't typed arrays.
+const NOT_TYPED_ARRAYS = [
+  ['ArrayBuffer', () => new ArrayBuffer(16)],
+  ['array', () => new Array(16).fill(0)],
+  ['plain object', () => ({})]
+]
+
+tape('pixel arrays: WebGL1 throws a TypeError for pixel data that isn\'t a typed array', function (t) {
+  const gl = createContext(1, 1)
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture())
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+
+  const imageData = ['ImageData-like object', () => ({ width: 1, height: 1, data: new Uint8ClampedArray(4) })]
+  for (const [name, make] of [...NOT_TYPED_ARRAYS, imageData]) {
+    t.throws(() => gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, make()), TypeError, `texImage2D throws: ${name}`)
+    t.throws(() => gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, make()), TypeError, 'and so does texSubImage2D')
+    t.throws(() => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, make()), TypeError, 'and readPixels')
+  }
+  t.equal(gl.getError(), gl.NO_ERROR, 'without setting an error')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
+
+tape('pixel arrays: WebGL2 takes pixel data that isn\'t a typed array as an offset into a pixel buffer, where its forms take one', function (t) {
+  const gl = createContext(1, 1, { createWebGL2Context: true })
+  const texture2D = gl.createTexture()
+  gl.bindTexture(gl.TEXTURE_2D, texture2D)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+  gl.bindTexture(gl.TEXTURE_3D, gl.createTexture())
+  gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, null)
+
+  for (const [name, make] of NOT_TYPED_ARRAYS) {
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, make())
+    t.equal(gl.getError(), gl.INVALID_OPERATION, `texImage2D sets INVALID_OPERATION without a pixel unpack buffer: ${name}`)
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, make())
+    t.equal(gl.getError(), gl.INVALID_OPERATION, 'and so does texSubImage2D')
+    gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, make())
+    t.equal(gl.getError(), gl.INVALID_OPERATION, 'and texImage3D')
+    gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, make())
+    t.equal(gl.getError(), gl.INVALID_OPERATION, 'and texSubImage3D')
+    gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, make())
+    t.equal(gl.getError(), gl.INVALID_OPERATION, 'and readPixels without a pixel pack buffer')
+
+    t.throws(() => gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, make(), 0), TypeError, 'but texImage2D with a srcOffset throws a TypeError')
+    t.throws(() => gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, make(), 0), TypeError, 'and so does texSubImage2D')
+    t.throws(() => gl.texImage3D(gl.TEXTURE_3D, 0, gl.RGBA8, 1, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, make(), 0), TypeError, 'and texImage3D')
+    t.throws(() => gl.texSubImage3D(gl.TEXTURE_3D, 0, 0, 0, 0, 1, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, make(), 0), TypeError, 'and texSubImage3D')
+    t.throws(() => gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, make(), 0), TypeError, 'and readPixels with a dstOffset')
+  }
+
+  // An ArrayBuffer converts to offset 0.
+  const unpackBuffer = gl.createBuffer()
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, unpackBuffer)
+  gl.bufferData(gl.PIXEL_UNPACK_BUFFER, new Uint8Array([255, 102, 0, 255]), gl.STATIC_DRAW)
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new ArrayBuffer(4))
+  t.equal(gl.getError(), gl.NO_ERROR, 'with a pixel unpack buffer, texImage2D takes an ArrayBuffer as offset 0')
+  gl.bindBuffer(gl.PIXEL_UNPACK_BUFFER, null)
+  gl.bindFramebuffer(gl.FRAMEBUFFER, gl.createFramebuffer())
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture2D, 0)
+  const pixel = new Uint8Array(4)
+  gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+  t.deepEqual([...pixel], [255, 102, 0, 255], 'and uploads the pixel buffer\'s data')
+  t.equal(gl.getError(), gl.NO_ERROR, 'no GL errors')
+
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
