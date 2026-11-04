@@ -62,8 +62,11 @@ const { getEXTTextureCompressionRGTC } = require('./extensions/ext-texture-compr
 const { getEXTTextureCompressionBPTC } = require('./extensions/ext-texture-compression-bptc')
 
 // These are defined by the WebGL spec
-const MAX_UNIFORM_LENGTH = 256
 const MAX_ATTRIBUTE_LENGTH = 256
+
+// The longest uniform locations, from the WebGL 1.0 and 2.0 specs.
+const WEBGL1_MAX_LOCATION_LENGTH = 256
+const WEBGL2_MAX_LOCATION_LENGTH = 1024
 
 // clientWaitSync's longest timeout in nanoseconds, which WebGL leaves to the implementation.
 // Browsers keep it short or 0 so a page can't block its main thread, but blocking is fine in Node, so this is the largest integer a JavaScript number holds exactly: 2^53 - 1 nanoseconds, about 104 days.
@@ -323,14 +326,6 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     program._uniforms.length = numUniforms
     for (let i = 0; i < numUniforms; ++i) {
       program._uniforms[i] = this.getActiveUniform(program, i)
-    }
-
-    // Check attribute and uniform name lengths
-    for (let i = 0; i < program._uniforms.length; ++i) {
-      if (program._uniforms[i].name.length > MAX_UNIFORM_LENGTH) {
-        program._linkInfoLog = 'uniform ' + program._uniforms[i].name + ' is too long'
-        return false
-      }
     }
 
     program._linkInfoLog = ''
@@ -2597,9 +2592,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
 
     name += ''
-    if (!isValidString(name)) {
+    if (!isValidString(name) || name.length > this._maxLocationLength()) {
       this.setError(this.INVALID_VALUE)
-      return
+      return null
     }
 
     if (this._checkWrapper(program, WebGLProgram)) {
@@ -4370,6 +4365,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
 
   _isWebGL2 () {
     return this.TEXTURE_2D_ARRAY !== undefined
+  }
+
+  // The longest uniform location this context takes.
+  _maxLocationLength () {
+    return this._isWebGL2() ? WEBGL2_MAX_LOCATION_LENGTH : WEBGL1_MAX_LOCATION_LENGTH
   }
 }
 
