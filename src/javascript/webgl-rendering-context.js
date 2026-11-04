@@ -34,6 +34,7 @@ const { WebGLBuffer } = require('./webgl-buffer')
 const { WebGLDrawingBufferWrapper } = require('./webgl-drawing-buffer-wrapper')
 const { WebGLProgram } = require('./webgl-program')
 const { WebGLRenderbuffer } = require('./webgl-renderbuffer')
+const { WebGLSampler } = require('./webgl-sampler')
 const { WebGLShader } = require('./webgl-shader')
 const { WebGLShaderPrecisionFormat } = require('./webgl-shader-precision-format')
 const { WebGLSync } = require('./webgl-sync')
@@ -852,6 +853,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     this._activeRenderbuffer = object
   }
 
+  bindSampler (unit, sampler) {
+    if (sampler === null || sampler === undefined) {
+      super.bindSampler(unit | 0, 0)
+    } else if (this._checkObjectArgument(sampler, WebGLSampler, 'bindSampler(GLuint, WebGLSampler)')) {
+      super.bindSampler(unit | 0, sampler._)
+    }
+  }
+
   bindTexture (target, texture) {
     target |= 0
 
@@ -999,6 +1008,14 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     const webGLRenderbuffer = new WebGLRenderbuffer(id, this)
     this._renderbuffers[id] = webGLRenderbuffer
     return webGLRenderbuffer
+  }
+
+  createSampler () {
+    const id = super.createSampler()
+    if (id <= 0) return null
+    const sampler = new WebGLSampler(id, this)
+    this._samplers[id] = sampler
+    return sampler
   }
 
   createTexture () {
@@ -1522,6 +1539,15 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     renderbuffer._checkDelete()
   }
 
+  // GL unbinds a sampler from every texture unit when it's deleted.
+  deleteSampler (sampler) {
+    if (this._checkDeleteArgument(sampler, WebGLSampler, 'deleteSampler(WebGLSampler)')) {
+      delete this._samplers[sampler._]
+      super.deleteSampler(sampler._)
+      sampler._ = 0
+    }
+  }
+
   deleteTexture (texture) {
     if (!checkObject(texture)) {
       throw new TypeError('deleteTexture(WebGLTexture)')
@@ -2005,6 +2031,8 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
         return this._activeFramebuffers.read
       case this.RENDERBUFFER_BINDING:
         return this._activeRenderbuffer
+      case this.SAMPLER_BINDING:
+        return this._samplers[super.getParameter(pname)] || null
       case this.TEXTURE_BINDING_2D:
         return this._getActiveTextureUnit()._bind2D
       case this.TEXTURE_BINDING_CUBE_MAP:
@@ -2545,6 +2573,11 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
   isRenderbuffer (object) {
     if (!this._isObject(object, 'isRenderbuffer', WebGLRenderbuffer)) return false
     return super.isRenderbuffer(object._ | 0)
+  }
+
+  isSampler (object) {
+    if (!this._isObject(object, 'isSampler', WebGLSampler)) return false
+    return super.isSampler(object._)
   }
 
   isShader (object) {
@@ -3213,6 +3246,29 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     }
     this._saveError()
     const value = super.getSyncParameter(sync._, pname | 0)
+    const error = this.getError()
+    this._restoreError(error)
+    return error === this.NO_ERROR ? value : null
+  }
+
+  samplerParameterf (sampler, pname, param) {
+    if (this._checkObjectArgument(sampler, WebGLSampler, 'samplerParameterf(WebGLSampler, GLenum, GLfloat)')) {
+      super.samplerParameterf(sampler._, pname | 0, +param)
+    }
+  }
+
+  samplerParameteri (sampler, pname, param) {
+    if (this._checkObjectArgument(sampler, WebGLSampler, 'samplerParameteri(WebGLSampler, GLenum, GLint)')) {
+      super.samplerParameteri(sampler._, pname | 0, param | 0)
+    }
+  }
+
+  getSamplerParameter (sampler, pname) {
+    if (!this._checkObjectArgument(sampler, WebGLSampler, 'getSamplerParameter(WebGLSampler, GLenum)')) {
+      return null
+    }
+    this._saveError()
+    const value = super.getSamplerParameter(sampler._, pname | 0)
     const error = this.getError()
     this._restoreError(error)
     return error === this.NO_ERROR ? value : null

@@ -78,6 +78,7 @@ function createContext (width, height, options) {
   if (contextAttributes.createWebGL2Context) {
     ctx._vaos = {}
     ctx._activeVertexArrayObject = null
+    ctx._samplers = {}
   }
 
   // Initialize texture units
