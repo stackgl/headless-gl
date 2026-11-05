@@ -16,7 +16,7 @@ const createGL = require('gl')
 const width = 64
 const height = 64
 
-const gl = createGL(width, height, { preserveDrawingBuffer: true })
+const gl = createGL(width, height)
 
 //Clear screen to red
 gl.clearColor(1, 0, 0, 1)
