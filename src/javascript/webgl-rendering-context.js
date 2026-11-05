@@ -1128,8 +1128,9 @@ class WebGLRenderingContextHelper extends NativeWebGLRenderingContext {
     return array
   }
 
+  // A copy, as browsers return a new dictionary each time, so changing it changes nothing.
   getContextAttributes () {
-    return this._contextAttributes
+    return { ...this._contextAttributes }
   }
 
   getExtension (name) {

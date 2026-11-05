@@ -47,3 +47,13 @@ tape('context classes can\'t be constructed directly', function (t) {
   t.throws(() => new createContext.WebGL2RenderingContext(), TypeError)
   t.end()
 })
+
+tape('create context: changing what getContextAttributes returns changes nothing', function (t) {
+  const gl = createContext(1, 1)
+  gl.getContextAttributes().depth = false
+  t.equal(gl.getContextAttributes().depth, true, 'getContextAttributes returns a new object each time')
+  gl.getExtension('STACKGL_resize_drawingbuffer').resize(2, 2)
+  t.equal(gl.getParameter(gl.DEPTH_BITS), 24, 'and a resized drawing buffer keeps its depth')
+  gl.getExtension('STACKGL_destroy_context').destroy()
+  t.end()
+})
