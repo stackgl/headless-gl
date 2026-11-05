@@ -1,4 +1,4 @@
-const BLACKLIST = [
+const BLOCKLIST = [
   // These expect the canvas to be cleared after compositing, which only a browser does.
   'canvas_buffer-offscreen-test',
   'canvas_buffer-preserve-test',
@@ -8,5 +8,5 @@ const BLACKLIST = [
 ]
 
 require('./util/conformance')(function (str) {
-  return str.indexOf('canvas') === 0 && BLACKLIST.indexOf(str) < 0
+  return str.indexOf('canvas') === 0 && BLOCKLIST.indexOf(str) < 0
 })
