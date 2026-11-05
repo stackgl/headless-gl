@@ -74,6 +74,8 @@ const gl = createGL(width, height)
 * `height` is the height of the drawing buffer
 * `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2). Only `alpha`, `depth` and `stencil` change the drawing buffer, and `antialias` is always off. Nothing composites the drawing buffer in Node, so it's always preserved whatever `preserveDrawingBuffer` is. The rest, such as `premultipliedAlpha`, only change what `getContextAttributes` reports.
 
+If `width` or `height` is larger than the GPU allows, the drawing buffer is made as large as it allows, as in browsers, and `gl.drawingBufferWidth` and `gl.drawingBufferHeight` give its size. The `STACKGL_resize_drawingbuffer` extension does the same.
+
 **Returns** A new `WebGLRenderingContext` object, or a `WebGL2RenderingContext` when `createWebGL2Context` is `true`.
 
 **Throws** an `Error` with the code `HEADLESS_GL_CONTEXT_CREATION_FAILED` if the context can't be created, for example when a library that ANGLE needs isn't installed. The error message gives the reason, such as the name of the missing library. Throws a `RangeError` if `width` or `height` is less than 1.
