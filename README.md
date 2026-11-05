@@ -262,7 +262,7 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`EXT_color_buffer_half_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/) | Yes | Yes |
 | [`EXT_depth_clamp`](https://www.khronos.org/registry/webgl/extensions/EXT_depth_clamp/) | Yes | Yes |
 | [`EXT_float_blend`](https://www.khronos.org/registry/webgl/extensions/EXT_float_blend/) | Yes | Yes |
-| [`EXT_texture_compression_bptc`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/) | Yes | Yes |
+| [`EXT_texture_compression_bptc`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_bptc/) | Yes\* | Yes\* |
 | [`EXT_texture_compression_rgtc`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_compression_rgtc/) | Yes | Yes |
 | [`EXT_texture_filter_anisotropic`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/) | Yes | Yes |
 | [`EXT_texture_mirror_clamp_to_edge`](https://www.khronos.org/registry/webgl/extensions/EXT_texture_mirror_clamp_to_edge/) | Yes | Yes |
@@ -286,6 +286,8 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`OES_vertex_array_object`](https://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/) | Yes | Built in |
 | [`WEBGL_depth_texture`](https://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/) | Yes | Built in |
 | [`WEBGL_draw_buffers`](https://www.khronos.org/registry/webgl/extensions/WEBGL_draw_buffers/) | Yes | Built in |
+
+\* Not on macOS, where ANGLE's OpenGL backend has no BPTC textures.
 
 Float textures are built into WebGL2, but rendering to them still needs `EXT_color_buffer_float`, or `EXT_color_buffer_half_float` for 16-bit float textures.
 
