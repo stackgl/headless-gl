@@ -13,6 +13,20 @@ function flag (options, name, dflt) {
   return !!options[name]
 }
 
+const POWER_PREFERENCES = ['default', 'low-power', 'high-performance']
+
+// powerPreference is a WebIDL enum, so a value that isn't one of its strings throws a TypeError, as in browsers.
+function powerPreference (options) {
+  if (!options || typeof options !== 'object' || options.powerPreference === undefined) {
+    return 'default'
+  }
+  const value = String(options.powerPreference)
+  if (!POWER_PREFERENCES.includes(value)) {
+    throw new TypeError(`Error creating WebGLContext: powerPreference must be one of ${POWER_PREFERENCES.join(', ')}, got ${value}.`)
+  }
+  return value
+}
+
 function createContext (width, height, options) {
   if (!((width | 0) > 0 && (height | 0) > 0)) {
     throw new RangeError(`Error creating WebGLContext: width and height must be at least 1, got ${width} and ${height}.`)
@@ -27,8 +41,10 @@ function createContext (width, height, options) {
     false, // flag(options, 'antialias', true),
     flag(options, 'premultipliedAlpha', true),
     flag(options, 'preserveDrawingBuffer', false),
-    flag(options, 'preferLowPowerToHighPerformance', false),
+    powerPreference(options),
     flag(options, 'failIfMajorPerformanceCaveat', false),
+    flag(options, 'desynchronized', false),
+    flag(options, 'xrCompatible', false),
     flag(options, 'createWebGL2Context', false))
 
   // Can only use premultipliedAlpha if alpha is set
@@ -46,7 +62,7 @@ function createContext (width, height, options) {
       contextAttributes.antialias,
       contextAttributes.premultipliedAlpha,
       contextAttributes.preserveDrawingBuffer,
-      contextAttributes.preferLowPowerToHighPerformance,
+      contextAttributes.powerPreference === 'low-power',
       contextAttributes.failIfMajorPerformanceCaveat,
       contextAttributes.createWebGL2Context)
   } catch (e) {

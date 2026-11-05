@@ -72,7 +72,7 @@ const gl = createGL(width, height)
 
 * `width` is the width of the drawing buffer
 * `height` is the height of the drawing buffer
-* `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2). Only `alpha`, `depth` and `stencil` change the drawing buffer, and `antialias` is always off. Nothing composites the drawing buffer in Node, so it's always preserved whatever `preserveDrawingBuffer` is, and `premultipliedAlpha` only changes what `getContextAttributes` reports.
+* `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2). Only `alpha`, `depth` and `stencil` change the drawing buffer, and `antialias` is always off. Nothing composites the drawing buffer in Node, so it's always preserved whatever `preserveDrawingBuffer` is. The rest, such as `premultipliedAlpha`, only change what `getContextAttributes` reports.
 
 **Returns** A new `WebGLRenderingContext` object, or a `WebGL2RenderingContext` when `createWebGL2Context` is `true`.
 

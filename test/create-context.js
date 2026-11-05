@@ -57,3 +57,30 @@ tape('create context: changing what getContextAttributes returns changes nothing
   gl.getExtension('STACKGL_destroy_context').destroy()
   t.end()
 })
+
+tape('create context: getContextAttributes reports the standard attributes', function (t) {
+  const gl = createContext(1, 1)
+  t.deepEqual(gl.getContextAttributes(), {
+    alpha: true,
+    depth: true,
+    stencil: false,
+    antialias: false,
+    premultipliedAlpha: true,
+    preserveDrawingBuffer: false,
+    powerPreference: 'default',
+    failIfMajorPerformanceCaveat: false,
+    desynchronized: false,
+    xrCompatible: false,
+    createWebGL2Context: false
+  }, 'with their defaults, and createWebGL2Context')
+  gl.getExtension('STACKGL_destroy_context').destroy()
+
+  for (const value of ['low-power', 'high-performance']) {
+    const other = createContext(1, 1, { powerPreference: value, desynchronized: true, xrCompatible: true })
+    const attributes = other.getContextAttributes()
+    t.deepEqual([attributes.powerPreference, attributes.desynchronized, attributes.xrCompatible], [value, true, true], `as they were asked for, such as powerPreference ${value}`)
+    other.getExtension('STACKGL_destroy_context').destroy()
+  }
+  t.throws(() => createContext(1, 1, { powerPreference: 'fast' }), TypeError, 'createContext throws a TypeError for a powerPreference that isn\'t one of its values')
+  t.end()
+})

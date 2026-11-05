@@ -6,8 +6,10 @@ class WebGLContextAttributes {
     antialias,
     premultipliedAlpha,
     preserveDrawingBuffer,
-    preferLowPowerToHighPerformance,
+    powerPreference,
     failIfMajorPerformanceCaveat,
+    desynchronized,
+    xrCompatible,
     createWebGL2Context) {
     this.alpha = alpha
     this.depth = depth
@@ -15,8 +17,10 @@ class WebGLContextAttributes {
     this.antialias = antialias
     this.premultipliedAlpha = premultipliedAlpha
     this.preserveDrawingBuffer = preserveDrawingBuffer
-    this.preferLowPowerToHighPerformance = preferLowPowerToHighPerformance
+    this.powerPreference = powerPreference
     this.failIfMajorPerformanceCaveat = failIfMajorPerformanceCaveat
+    this.desynchronized = desynchronized
+    this.xrCompatible = xrCompatible
     this.createWebGL2Context = createWebGL2Context
   }
 }
