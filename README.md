@@ -208,9 +208,9 @@ To build from source, also install `build-base` and `python3`. For headless use 
 
 #### Windows
 
-* [Python 3](https://www.python.org/)
-* [Microsoft Visual Studio](https://www.microsoft.com/en-us/download/details.aspx?id=5555)
-* d3dcompiler_47.dll should be in c:\windows\system32, but if isn't then you can find another copy in the deps/ folder
+Prebuilt binaries (x64) need nothing else. ANGLE's Direct3D 11 backend compiles shaders with `d3dcompiler_47.dll`, which Windows 10 and later include.
+
+To build from source, install [Python 3](https://www.python.org/) and [Visual Studio](https://visualstudio.microsoft.com/downloads/) with the "Desktop development with C++" workload.
 
 ## FAQ
 
