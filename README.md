@@ -169,9 +169,11 @@ interface STACKGL_destroy_context {
 ##### `gl.getExtension('STACKGL_destroy_context').destroy()`
 Immediately destroys the context and all associated resources.
 
-### Expiremental WebGL2 support
+### WebGL2
 
-To create a WebGL 2 context, set the `createWebGL2Context` property to `true` in the `contextAttributes` argument.
+To create a WebGL2 context, set the `createWebGL2Context` property to `true` in the `contextAttributes` argument.
+
+Every WebGL2 method is implemented, but WebGL2 hasn't been tested against the [WebGL 2.0 conformance suite](https://www.khronos.org/registry/webgl/conformance-suites/2.0.0/webgl-conformance-tests.html) yet.
 
 Unlike in browsers, query results and sync objects are ready as soon as the GPU finishes, which can be before control returns to the event loop, and `clientWaitSync` can wait for up to `MAX_CLIENT_WAIT_TIMEOUT_WEBGL` nanoseconds, which is `Number.MAX_SAFE_INTEGER`. Code that waits the way browsers require, by checking again in a later callback, works the same.
 
