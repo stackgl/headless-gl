@@ -62,7 +62,6 @@ function createContext (width, height, options) {
       contextAttributes.antialias,
       contextAttributes.premultipliedAlpha,
       contextAttributes.preserveDrawingBuffer,
-      contextAttributes.powerPreference === 'low-power',
       contextAttributes.failIfMajorPerformanceCaveat,
       contextAttributes.createWebGL2Context)
   } catch (e) {

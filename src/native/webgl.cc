@@ -230,7 +230,6 @@ bool CaseInsensitiveCompare(const std::string &a, const std::string &b) {
 WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, bool depth,
                                              bool stencil, bool antialias, bool premultipliedAlpha,
                                              bool preserveDrawingBuffer,
-                                             bool preferLowPowerToHighPerformance,
                                              bool failIfMajorPerformanceCaveat,
                                              bool createWebGL2Context)
     : state(GLCONTEXT_STATE_INIT), unpack_flip_y(false), unpack_premultiply_alpha(false),
@@ -587,7 +586,7 @@ GL_METHOD(DisposeAll) {
 GL_METHOD(New) {
   Nan::HandleScope();
 
-  bool createWebGL2Context = Nan::To<bool>(info[10]).ToChecked();
+  bool createWebGL2Context = Nan::To<bool>(info[9]).ToChecked();
 
   WebGLRenderingContext *instance =
       new WebGLRenderingContext(Nan::To<int32_t>(info[0]).ToChecked(), // Width
@@ -598,8 +597,7 @@ GL_METHOD(New) {
                                 Nan::To<bool>(info[5]).ToChecked(),    // antialias
                                 Nan::To<bool>(info[6]).ToChecked(),    // premultipliedAlpha
                                 Nan::To<bool>(info[7]).ToChecked(),    // preserve drawing buffer
-                                Nan::To<bool>(info[8]).ToChecked(),    // low power
-                                Nan::To<bool>(info[9]).ToChecked(),    // fail if crap
+                                Nan::To<bool>(info[8]).ToChecked(),    // fail if crap
                                 createWebGL2Context);
 
   if (instance->state != GLCONTEXT_STATE_OK) {
