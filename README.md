@@ -307,7 +307,11 @@ Once this is done, you should be good to go! A few more things:
 * `webgl.d.ts` holds WebGL declarations copied from TypeScript's DOM types. After updating the `typescript` dev dependency, run `node scripts/webgl-types.js` to copy them again.
 * When you replace the ANGLE libraries in `deps/`, run `node scripts/angle-assets.js <release tag> <folder>` with a new release tag, and commit the updated `src/angle.json` with the libraries. When the change reaches master, the ANGLE release workflow creates that release for source builds to download from.
 
-Note: the `gl-conformance` package is currently hosted on GitHub Package Registry. To install from there, you may need to add `//npm.pkg.github.com` to your user directory's `.npmrc` file
+Note: the `@stackgl/gl-conformance` dev dependency is hosted on GitHub Packages, which needs a token to install any package, even a public one. Create a personal access token (classic) with the `read:packages` scope, and add it to the `.npmrc` file in your home directory:
+
+```
+//npm.pkg.github.com/:_authToken=<your token>
+```
 
 ### Debugging with RenderDoc
 
