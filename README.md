@@ -251,6 +251,21 @@ They aren't. Texture uploads take a typed array, an object with pixel data like 
 * [`get-pixels`](https://www.npmjs.com/package/get-pixels)
 * [`save-pixels`](https://www.npmjs.com/package/save-pixels)
 
+### Which typed arrays can pixel data be in?
+
+As in browsers, `texImage2D`, `texSubImage2D`, `texImage3D`, `texSubImage3D` and `readPixels` take pixel data in the kind of typed array that their `type` needs, and set `INVALID_OPERATION` for any other kind, or for a `DataView`:
+
+| `type` | Typed array |
+| --- | --- |
+| `UNSIGNED_BYTE` | `Uint8Array`, such as a Node `Buffer`, or `Uint8ClampedArray` |
+| `FLOAT` | `Float32Array` |
+| `HALF_FLOAT` and `HALF_FLOAT_OES` | `Uint16Array`, with each half float's 16 bits |
+| `UNSIGNED_SHORT` and `UNSIGNED_SHORT_*` | `Uint16Array` |
+| `UNSIGNED_INT` and `UNSIGNED_INT_*` | `Uint32Array` |
+| `BYTE`, `SHORT` and `INT` (WebGL2) | `Int8Array`, `Int16Array` and `Int32Array` |
+
+Anything else, such as an `ArrayBuffer` or a plain array, throws a `TypeError`. The exception is WebGL2's forms without a `srcOffset` or `dstOffset` argument, which convert it to a byte offset into the bound pixel buffer.
+
 ### What extensions are supported?
 
 Supported extensions by WebGL version. "Built in" means WebGL2 has the feature itself, so `getExtension` returns `null` for that extension on a WebGL2 context.
