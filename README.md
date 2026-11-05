@@ -181,8 +181,7 @@ In most cases installing `headless-gl` from npm should just work. However, if yo
 
 #### macOS
 
-* [Python 3](https://www.python.org/)
-* [Xcode](https://developer.apple.com/xcode/)
+Prebuilt binaries (arm64 and x64) need nothing else. To build from source, install [Python 3](https://www.python.org/) and the [Xcode](https://developer.apple.com/xcode/) Command Line Tools, with `xcode-select --install`.
 
 #### Ubuntu/Debian
 
