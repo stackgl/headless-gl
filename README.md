@@ -125,7 +125,7 @@ assert(gl.drawingBufferHeight === 10 && gl.drawingBufferWidth === 10)
 
 const ext = gl.getExtension('STACKGL_resize_drawingbuffer')
 ext.resize(20, 5)
-assert(gl.drawingBufferHeight === 20 && gl.drawingBufferWidth === 5)
+assert(gl.drawingBufferWidth === 20 && gl.drawingBufferHeight === 5)
 ```
 
 #### IDL
