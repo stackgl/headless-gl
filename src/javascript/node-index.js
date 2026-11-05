@@ -53,17 +53,7 @@ function createContext (width, height, options) {
 
   let ctx
   try {
-    ctx = new WebGLRenderingContextHelper(
-      1,
-      1,
-      contextAttributes.alpha,
-      contextAttributes.depth,
-      contextAttributes.stencil,
-      contextAttributes.antialias,
-      contextAttributes.premultipliedAlpha,
-      contextAttributes.preserveDrawingBuffer,
-      contextAttributes.failIfMajorPerformanceCaveat,
-      contextAttributes.createWebGL2Context)
+    ctx = new WebGLRenderingContextHelper(1, 1, contextAttributes.createWebGL2Context)
   } catch (e) {
     e.code = 'HEADLESS_GL_CONTEXT_CREATION_FAILED'
     throw e

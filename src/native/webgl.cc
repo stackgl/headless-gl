@@ -227,11 +227,7 @@ bool CaseInsensitiveCompare(const std::string &a, const std::string &b) {
   return aLower < bLower;
 };
 
-WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool alpha, bool depth,
-                                             bool stencil, bool antialias, bool premultipliedAlpha,
-                                             bool preserveDrawingBuffer,
-                                             bool failIfMajorPerformanceCaveat,
-                                             bool createWebGL2Context)
+WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool createWebGL2Context)
     : state(GLCONTEXT_STATE_INIT), unpack_flip_y(false), unpack_premultiply_alpha(false),
       unpack_colorspace_conversion(0x9244), unpack_alignment(4), isWebGL2(createWebGL2Context),
       webGLToANGLEExtensions(&CaseInsensitiveCompare),
@@ -586,18 +582,11 @@ GL_METHOD(DisposeAll) {
 GL_METHOD(New) {
   Nan::HandleScope();
 
-  bool createWebGL2Context = Nan::To<bool>(info[9]).ToChecked();
+  bool createWebGL2Context = Nan::To<bool>(info[2]).ToChecked();
 
   WebGLRenderingContext *instance =
       new WebGLRenderingContext(Nan::To<int32_t>(info[0]).ToChecked(), // Width
                                 Nan::To<int32_t>(info[1]).ToChecked(), // Height
-                                Nan::To<bool>(info[2]).ToChecked(),    // Alpha
-                                Nan::To<bool>(info[3]).ToChecked(),    // Depth
-                                Nan::To<bool>(info[4]).ToChecked(),    // Stencil
-                                Nan::To<bool>(info[5]).ToChecked(),    // antialias
-                                Nan::To<bool>(info[6]).ToChecked(),    // premultipliedAlpha
-                                Nan::To<bool>(info[7]).ToChecked(),    // preserve drawing buffer
-                                Nan::To<bool>(info[8]).ToChecked(),    // fail if crap
                                 createWebGL2Context);
 
   if (instance->state != GLCONTEXT_STATE_OK) {
