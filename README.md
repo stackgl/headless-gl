@@ -220,14 +220,22 @@ On macOS and Windows, `headless-gl` should work out of the box, as it does on Gi
 
 ### How can `headless-gl` be used on a headless Linux machine?
 
-If you are running your own minimal Linux server, such as the one one would want to use on Amazon AWS or equivalent, it will likely not provide an X11 nor an OpenGL environment. To setup such an environment you can use those two packages:
+On Linux, `headless-gl` needs an X server and an OpenGL driver, which a minimal Linux server, such as a cloud instance or a container, usually doesn't have. Two packages provide them:
 
-1. [Xvfb](https://en.wikipedia.org/wiki/Xvfb) is a lightweight X11 server which provides a back buffer for displaying X11 application offscreen and reading back the pixels which were drawn offscreen. It is typically used in Continuous Integration systems. It can be installed on CentOS with `yum install -y Xvfb`, and comes preinstalled on Ubuntu.
-2. [Mesa](https://docs.mesa3d.org) is the reference open source software implementation of OpenGL. It can be installed on CentOS with `yum install -y mesa-dri-drivers`, or `apt-get install libgl1-mesa-dev`. Since a cloud Linux instance will typically run on a machine that does not have a GPU, a software implementation of OpenGL will be required.
+1. [Xvfb](https://en.wikipedia.org/wiki/Xvfb) is a lightweight X11 server which provides a back buffer for displaying X11 applications offscreen and reading back the pixels which were drawn offscreen. It is typically used in continuous integration systems.
+2. [Mesa](https://docs.mesa3d.org) is the reference open source implementation of OpenGL. Its llvmpipe driver renders in software, which a machine without a GPU needs.
 
-Interacting with `Xvfb` requires you to start it on the background and to execute your `node` program with the DISPLAY environment variable set to whatever was configured when running Xvfb (the default being :99). If you want to do that reliably you'll have to start Xvfb from an init.d script at boot time, which is extra configuration burden. Fortunately there is a wrapper script shipped with Xvfb known as `xvfb-run` which can start Xvfb on the fly, execute your Node.js program and finally shut Xvfb down. Here's how to run it:
+Installing Xvfb installs Mesa too:
+
+* Debian and Ubuntu: `apt-get install -y xvfb xauth`
+* RHEL, Fedora and Amazon Linux: `dnf install -y xorg-x11-server-Xvfb`
+* Alpine: `apk add xvfb-run mesa-gl mesa-dri-gallium`
+
+Interacting with `Xvfb` requires you to start it in the background and to execute your `node` program with the DISPLAY environment variable set to whatever was configured when running Xvfb (the default being :99). If you want to do that reliably you'll have to start Xvfb as a service at boot time, which is extra configuration burden. Fortunately there is a wrapper script shipped with Xvfb known as `xvfb-run` which can start Xvfb on the fly, execute your Node.js program and finally shut Xvfb down. Here's how to run it:
 
     xvfb-run -s "-ac -screen 0 1280x1024x24" <node program>
+
+In a Docker container, start the container with `docker run --init`, or `init: true` in Docker Compose, since `xvfb-run` waits forever when it's the container's first process.
 
 ### Does headless-gl work in a browser?
 
