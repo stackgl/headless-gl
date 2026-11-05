@@ -50,7 +50,7 @@ npm install-scripts approve gl
 npm rebuild gl
 ```
 
-Prebuilt binaries are generally available for LTS node versions (e.g. 22, 24, 26) until they reach EOL. If your system is not supported, then please see the [development](#system-dependencies) section on how to configure your build environment. Patches to improve support are always welcome!
+Prebuilt binaries are generally available for LTS Node.js versions (e.g. 22, 24, 26) until they reach EOL. If your system is not supported, then please see the [system dependencies](#system-dependencies) section on how to configure your build environment. Patches to improve support are always welcome!
 
 When `gl` builds from source, it downloads the ANGLE libraries for your platform from this repository's [GitHub releases](https://github.com/stackgl/headless-gl/releases), since the npm package doesn't include them. To build without access to GitHub, set `HEADLESS_GL_ANGLE_MIRROR` to a URL or a local folder with the same `.gz` files.
 
@@ -114,7 +114,7 @@ In addition to all the usual WebGL methods, `headless-gl` exposes some custom ex
 
 This extension provides a mechanism to resize the drawing buffer of a WebGL context once it is created.
 
-In a pure DOM implementation, this method would implemented by resizing the WebGLContext's canvas element by modifying its `width/height` properties. This canvas manipulation is not possible in headless-gl, since a headless context doesn't have a DOM or a canvas element associated to it.
+In a pure DOM implementation, this would be implemented by resizing the context's canvas element by modifying its `width/height` properties. This canvas manipulation is not possible in headless-gl, since a headless context doesn't have a DOM or a canvas element associated with it.
 
 ##### Example
 
@@ -146,7 +146,7 @@ Resizes the drawing buffer of a WebGL rendering context
 
 Destroys the WebGL context immediately, reclaiming all resources associated with it.
 
-For long running jobs, garbage collection of contexts is often not fast enough. To prevent the system from becoming overloaded with unused contexts, you can force the system to reclaim a WebGL context immediately by calling `.destroy()`.
+For long-running jobs, garbage collection of contexts is often not fast enough. To prevent the system from becoming overloaded with unused contexts, you can force the system to reclaim a WebGL context immediately by calling `.destroy()`.
 
 ##### Example
 
@@ -179,10 +179,10 @@ Unlike in browsers, query results and sync objects are ready as soon as the GPU 
 
 In most cases installing `headless-gl` from npm should just work. However, if you run into problems you might need to adjust your system configuration and make sure all your dependencies are up to date. For general information on building native modules, see the [`node-gyp`](https://github.com/nodejs/node-gyp) documentation.
 
-#### Mac OS X
+#### macOS
 
 * [Python 3](https://www.python.org/)
-* [XCode](https://developer.apple.com/xcode/)
+* [Xcode](https://developer.apple.com/xcode/)
 
 #### Ubuntu/Debian
 
@@ -259,7 +259,7 @@ Yes, with [browserify](http://browserify.org/). The `STACKGL_destroy_context` an
 
 In a browser, `createGL` creates a canvas and calls its `getContext`, and throws the same errors as in Node. The reason in the error message comes from the browser, which often gives little or no detail.
 
-### How are `<image>` and `<video>` elements implemented?
+### How are `<img>` and `<video>` elements implemented?
 
 They aren't. Texture uploads take a typed array, an object with pixel data like `ImageData`, or an object with a 2D context like a node-canvas `Canvas`. The RGBA pixels of the last two are converted to the upload's format and type, as browsers convert images. In WebGL2 contexts, an upload's width and height, with `UNPACK_SKIP_PIXELS` and `UNPACK_SKIP_ROWS`, select a rectangle of the image, and 3D uploads take slices of it, as in browsers. To help reading and saving images, you should check out the following modules:
 
@@ -323,10 +323,10 @@ After you have your [system dependencies installed](#system-dependencies), do th
 1. Install npm dependencies: `npm install`
 1. Run node-gyp to generate build scripts: `npm run rebuild`
 
-Once this is done, you should be good to go! A few more things
+Once this is done, you should be good to go! A few more things:
 
 * To run the test cases, use the command `npm test`, or execute specific tests by just running them using `node`.
-* On a Unix-like platform, you can do incremental rebuilds by going into the `build/` directory and running `make`. This is **way faster** running `npm build` each time you make a change.
+* On a Unix-like platform, you can do incremental rebuilds by going into the `build/` directory and running `make`. This is **way faster** than running `npm run rebuild` each time you make a change.
 * `webgl.d.ts` holds WebGL declarations copied from TypeScript's DOM types. After updating the `typescript` dev dependency, run `node scripts/webgl-types.js` to copy them again.
 * When you replace the ANGLE libraries in `deps/`, run `node scripts/angle-assets.js <release tag> <folder>` with a new release tag, and commit the updated `src/angle.json` with the libraries. When the change reaches master, the ANGLE release workflow creates that release for source builds to download from.
 
