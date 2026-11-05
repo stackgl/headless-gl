@@ -72,7 +72,7 @@ const gl = createGL(width, height)
 
 * `width` is the width of the drawing buffer
 * `height` is the height of the drawing buffer
-* `contextAttributes` is an optional object whose properties are the [context attributes for the WebGLRendering context](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2). Only `alpha`, `depth` and `stencil` change the drawing buffer, and `antialias` is always off. Nothing composites the drawing buffer in Node, so it's always preserved whatever `preserveDrawingBuffer` is. The rest, such as `premultipliedAlpha`, only change what `getContextAttributes` reports.
+* `contextAttributes` is an optional object whose properties are the [WebGL context attributes](https://www.khronos.org/registry/webgl/specs/latest/1.0/#5.2), and `createWebGL2Context`, which creates a WebGL2 context when it's `true`. Only `alpha`, `depth` and `stencil` change the drawing buffer, and `antialias` is always off. Nothing composites the drawing buffer in Node, so it's always preserved whatever `preserveDrawingBuffer` is. The rest, such as `premultipliedAlpha`, only change what `getContextAttributes` reports.
 
 If `width` or `height` is larger than the GPU allows, the drawing buffer is made as large as it allows, as in browsers, and `gl.drawingBufferWidth` and `gl.drawingBufferHeight` give its size. The `STACKGL_resize_drawingbuffer` extension does the same.
 
