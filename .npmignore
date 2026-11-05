@@ -1,7 +1,5 @@
 example/*
 test/*
-.travis.yml
-appveyor.yml
 build/*
 prebuilds/*
 scripts/*
