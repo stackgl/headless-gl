@@ -22,7 +22,6 @@
       "libGLESv2.so": "fe5ae310619c505e5e0561f950013c259a80bce9e3a8b66091c268aaa26d30d6"
     },
     "windows/dll": {
-      "d3dcompiler_47.dll": "a05f99734f7c4822fefc12b367af21fd0976ed6608752fb1e1e80b6ece7ecbbb",
       "libEGL.dll": "c8d3089aabde9e9f080fe0ebbf7ab0dba50202e8003ad290fa809f2842841758",
       "libGLESv2.dll": "91acdc0649325d52c3619f9376156f00adeca89114fadaf9c51595fe52cbd707"
     }

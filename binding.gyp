@@ -134,7 +134,6 @@
                 'files': [
                   '<(module_root_dir)/<(angle_dir)/libEGL.dll',
                   '<(module_root_dir)/<(angle_dir)/libGLESv2.dll',
-                  '<(module_root_dir)/<(angle_dir)/d3dcompiler_47.dll'
                 ]
               }
            ]
