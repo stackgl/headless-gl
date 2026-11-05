@@ -216,31 +216,7 @@ To build from source, also install `build-base` and `python3`. For headless use 
 
 ### How can I use headless-gl with a continuous integration service?
 
-`headless-gl` should work out of the box on most CI systems. Some notes on specific CI systems:
-
-* GitHub Actions: refer to the workflow files, specifially the `ci` workflow for an example.
-* [CircleCI](https://circleci.com/): `headless-gl` should just work in the default node environment.
-* [AppVeyor](http://www.appveyor.com/): Again it should just work
-* [TravisCI](https://travis-ci.org/): Works out of the box on the OS X image. For Linux VMs, you need to install mesa and xvfb. To do this, create a file in the root of your repo called `.travis.yml` and paste the following into it:
-
-```
-language: node_js
-os: linux
-sudo: required
-dist: trusty
-addons:
-  apt:
-    packages:
-    - mesa-utils
-    - xvfb
-    - libgl1-mesa-dri
-    - libglapi-mesa
-    - libosmesa6
-node_js:
-  - '20'
-before_script:
-  - export DISPLAY=:99.0; sh -e /etc/init.d/xvfb start
-```
+On macOS and Windows, `headless-gl` should work out of the box, as it does on GitHub Actions' macOS and Windows runners. On Linux, it needs an X server and an OpenGL driver, such as Xvfb and Mesa, as described [below](#how-can-headless-gl-be-used-on-a-headless-linux-machine). For an example, see the [`ci` workflow](https://github.com/stackgl/headless-gl/blob/master/.github/workflows/ci.yml), which runs this repository's tests on GitHub Actions.
 
 ### How can `headless-gl` be used on a headless Linux machine?
 
