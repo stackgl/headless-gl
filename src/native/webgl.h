@@ -271,6 +271,7 @@ struct WebGLRenderingContext : public node::ObjectWrap {
   static NAN_METHOD(EXTWEBGL_draw_buffers);
 
   static NAN_METHOD(BindVertexArrayOES);
+  static NAN_METHOD(ProvokingVertexANGLE);
   static NAN_METHOD(CreateVertexArrayOES);
   static NAN_METHOD(DeleteVertexArrayOES);
   static NAN_METHOD(IsVertexArrayOES);

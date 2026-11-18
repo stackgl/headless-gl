@@ -288,6 +288,7 @@ Supported extensions by WebGL version. "Built in" means WebGL2 has the feature i
 | [`WEBGL_compressed_texture_s3tc_srgb`](https://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc_srgb/) | Yes | Yes |
 | [`WEBGL_debug_renderer_info`](https://www.khronos.org/registry/webgl/extensions/WEBGL_debug_renderer_info/) | Yes | Yes |
 | [`EXT_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/) | No | Yes |
+| [`WEBGL_provoking_vertex`](https://www.khronos.org/registry/webgl/extensions/WEBGL_provoking_vertex/) | No | Yes |
 | [`WEBGL_color_buffer_float`](https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/) | Yes | Use `EXT_color_buffer_float` |
 | [`ANGLE_instanced_arrays`](https://www.khronos.org/registry/webgl/extensions/ANGLE_instanced_arrays/) | Yes | Built in |
 | [`EXT_blend_minmax`](https://www.khronos.org/registry/webgl/extensions/EXT_blend_minmax/) | Yes | Built in |

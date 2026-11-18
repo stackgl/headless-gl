@@ -164,6 +164,7 @@ NAN_MODULE_INIT(Init) {
   JS_GL_METHOD("deleteVertexArrayOES", DeleteVertexArrayOES);
   JS_GL_METHOD("isVertexArrayOES", IsVertexArrayOES);
   JS_GL_METHOD("bindVertexArrayOES", BindVertexArrayOES);
+  JS_GL_METHOD("provokingVertexANGLE", ProvokingVertexANGLE);
 
   // WebGL 2.0 functions:
   JS_GL_METHOD("copyBufferSubData", CopyBufferSubData);
