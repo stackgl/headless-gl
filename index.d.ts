@@ -119,12 +119,20 @@ declare namespace createContext {
     readonly MIRROR_CLAMP_TO_EDGE_EXT: 0x8743;
   }
 
+  interface WEBGL_provoking_vertex {
+    readonly FIRST_VERTEX_CONVENTION_WEBGL: 0x8E4D;
+    readonly LAST_VERTEX_CONVENTION_WEBGL: 0x8E4E;
+    readonly PROVOKING_VERTEX_WEBGL: 0x8E4F;
+    provokingVertexWEBGL(provokeMode: GLenum): void;
+  }
+
   /**
    * getExtension for the extensions headless-gl supports that TypeScript's DOM types don't declare yet.
    */
   interface SupplementalExtensions {
     getExtension(extensionName: "EXT_depth_clamp"): EXT_depth_clamp | null;
     getExtension(extensionName: "EXT_texture_mirror_clamp_to_edge"): EXT_texture_mirror_clamp_to_edge | null;
+    getExtension(extensionName: "WEBGL_provoking_vertex"): WEBGL_provoking_vertex | null;
   }
 
   /**

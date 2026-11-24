@@ -417,6 +417,7 @@ WebGLRenderingContext::WebGLRenderingContext(int width, int height, bool createW
       {"EXT_texture_compression_bptc", {"GL_EXT_texture_compression_bptc"}});
   if (createWebGL2Context) {
     webGLToANGLEExtensions.insert({"EXT_color_buffer_float", {"GL_EXT_color_buffer_float"}});
+    webGLToANGLEExtensions.insert({"WEBGL_provoking_vertex", {"GL_ANGLE_provoking_vertex"}});
     webGLToANGLEExtensions.insert(
         {"EXT_color_buffer_half_float", {"GL_EXT_color_buffer_half_float"}});
   } else {
@@ -2690,6 +2691,12 @@ GL_METHOD(DeleteVertexArrayOES) {
   inst->unregisterGLObj(GLOBJECT_TYPE_VERTEX_ARRAY, array);
 
   glDeleteVertexArraysOES(1, &array);
+}
+
+GL_METHOD(ProvokingVertexANGLE) {
+  GL_BOILERPLATE;
+
+  glProvokingVertexANGLE(Nan::To<int32_t>(info[0]).ToChecked());
 }
 
 GL_METHOD(IsVertexArrayOES) {

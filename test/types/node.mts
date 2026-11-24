@@ -22,6 +22,8 @@ gl.createVertexArray()
 
 const gl2 = createGL(1, 1, { createWebGL2Context: true, alpha: false })
 gl2.bindVertexArray(gl2.createVertexArray())
+const provokingVertex = gl2.getExtension('WEBGL_provoking_vertex')
+provokingVertex?.provokingVertexWEBGL(provokingVertex.FIRST_VERTEX_CONVENTION_WEBGL)
 const texture3D: number = WebGL2RenderingContext.TEXTURE_3D
 const textureCube: number = WebGLRenderingContext.TEXTURE_CUBE_MAP
 // @ts-expect-error The classes have the constants but not the methods.
