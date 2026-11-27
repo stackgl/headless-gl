@@ -849,4 +849,8 @@ void SetWebGL2Constants(v8::Local<v8::Object> target) {
   JS_SET_GL_CONSTANT(RGBA8);
 }
 
+#if NODE_MAJOR_VERSION >= 10
+NAN_MODULE_WORKER_ENABLED(webgl, Init)
+#else
 NODE_MODULE(webgl, Init)
+#endif
